@@ -187,6 +187,16 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .chat-user-preview.unread{color:var(--tx2);font-weight:600}
 .chat-user-time{font-family:var(--fm);font-size:.58rem;color:var(--dm);flex-shrink:0;align-self:flex-start;margin-top:.15rem}
 .chat-unread-pill{background:var(--rd);color:#fff;font-family:var(--fm);font-size:.58rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;padding:0 .25rem}
+.perso-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:.9rem}
+.perso{background:var(--s1);border:1px solid var(--ln);border-left:2px solid var(--pc,var(--ac));padding:1rem 1.1rem;transition:border-color .2s,transform .2s}
+.perso:hover{border-color:var(--ls);transform:translateY(-2px)}
+.perso-h{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;margin-bottom:.15rem}
+.perso-mat{font-family:var(--fm);font-size:.72rem;color:var(--pc,var(--ac));letter-spacing:.06em}
+.perso-nm{font-family:var(--fs);font-size:.92rem;font-weight:700;letter-spacing:.04em;color:var(--tx)}
+.perso-gr{font-family:var(--fm);font-size:.6rem;font-weight:600;letter-spacing:.1em;border:1px solid;padding:.1rem .4rem;margin-left:auto}
+.perso-k{font-family:var(--fm);font-size:.58rem;letter-spacing:.12em;color:var(--pc,var(--ac));text-transform:uppercase;margin-bottom:.25rem}
+.perso-t{font-size:.83rem;line-height:1.65;color:var(--tx2);margin-bottom:.85rem}
+.perso-t:last-child{margin-bottom:0}
 .chat-user-del{background:none;border:none;color:var(--dm);cursor:pointer;font-size:.85rem;padding:.2rem .25rem;
   opacity:0;transition:opacity .15s,color .15s;flex-shrink:0;align-self:center}
 .chat-user:hover .chat-user-del{opacity:1}
@@ -601,9 +611,6 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 .cmd-rank:last-child{border-bottom:none}
 .cmd-rank-pos{font-family:var(--fs);font-weight:700;font-size:1rem;color:var(--ac);opacity:.35;width:22px;flex-shrink:0}
 .cmd-rank-nm{font-weight:600;flex:1}.cmd-rank-pts{font-family:var(--fm);font-size:.82rem;color:var(--ac)}
-
-50%{opacity:1;transform:scale(1.15)}}
-50%{border-color:rgba(168,85,247,.45)}}
 
 @keyframes pulseBadge{0%,100%{opacity:1;transform:scale(1);box-shadow:0 0 0 0 rgba(255,59,92,.6)}50%{opacity:.7;transform:scale(1.3);box-shadow:0 0 0 4px rgba(255,59,92,0)}}
 
@@ -1279,6 +1286,12 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div class="panel"><div class="panel-body" id="reglementDisplay" style="font-family:var(--fr);font-size:.85rem;color:var(--tx);line-height:1.8;min-height:80px">
           <div class="empty"><p>Aucun règlement défini.</p></div>
         </div></div>
+      </div>
+
+      <div class="dash-tab" data-dtc="personnages" style="display:none">
+        <div class="sec-head"><h2>Personnages connus</h2><span class="line"></span></div>
+        <p class="card-b" style="margin-bottom:1.3rem">Figures de l'unité — comportement à respecter en RP et contexte essentiel.</p>
+        <div id="persoList" class="perso-grid"></div>
       </div>
 
       <!-- TAB: SONDAGES -->
@@ -2911,7 +2924,7 @@ const DEFAULT_NAV_GROUPS = [
   {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","reserve","blacklist","absences","reports"]},
   {id:"activite", label:"Activité", icon:"◈", tabs:["cmd","polls"]},
   {id:"discipline", label:"Discipline", icon:"⚑", tabs:["blames","announce","reglement"]},
-  {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","tasks","journal"]},
+  {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","personnages","tasks","journal"]},
   {id:"admin", label:"Admin", icon:"⚙", tabs:["admin"]}
 ];
 
@@ -2929,6 +2942,7 @@ const TAB_META = {
   blames:{label:"Blâmes", icon:""},
   announce:{label:"Annonces", icon:""},
   reglement:{label:"Règlement", icon:"📋"},
+  personnages:{label:"Personnages connus", icon:"🎭"},
   documents:{label:"Documents", icon:"📁"},
   tasks:{label:"Tâches", icon:"✅"},
   journal:{label:"Journal", icon:"📜"},
@@ -3080,6 +3094,7 @@ function dashTab(tab){
   if(tab==="reglement")renderReglement();
   if(tab==="monespace")renderMonEspace();
   if(tab==="admin")renderAdmin();
+  if(tab==="personnages")renderPersonnages();
   if(tab==="documents")renderDocuments();
   if(tab==="polls")renderPolls();
   if(tab==="tasks")renderTasks();
@@ -3351,8 +3366,6 @@ function renderQuickActions(){
 
   const openPolls=state.polls.filter(p=>p.active&&!isPollExpired(p));
 
-  const activeBlames=state.blames.filter(b=>!b.resolved);
-
   const eligible=activeMembers().filter(m=>{const e=getEligibility(m);return e.eligible===true;});
 
   const cards=[];
@@ -3394,16 +3407,6 @@ function renderQuickActions(){
       color:"var(--gr)",
       icon:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
       tab:"roster"
-    });
-  }
-
-  if(canEdit("blames")&&activeBlames.length>0){
-    cards.push({
-      count:activeBlames.length,
-      label:activeBlames.length>1?"blâmes actifs":"blâme actif",
-      color:"var(--rd)",
-      icon:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
-      tab:"blames"
     });
   }
 
@@ -4990,6 +4993,7 @@ const TAB_RENDER={
   blames    :{fn:"renderBlames",    on:["blames"]},
   announce  :{fn:"renderAnnounces", on:["announces"]},
   reglement :{fn:"renderReglement", on:["config"]},
+  personnages:{fn:"renderPersonnages", on:[]},
   documents :{fn:"renderDocuments", on:["documents"]},
   tasks     :{fn:"renderTasks",     on:["tasks","members"]},
   journal   :{fn:"renderJournal",   on:["activity"]},
@@ -5237,6 +5241,56 @@ function openDocUrl(id){
   if(!ok){toast("Lien invalide ou non sécurisé","error");return;}
   window.open(d.url,"_blank","noopener,noreferrer");
 }
+const PERSO_GRADE_COLORS={MJR:"#ff8a3d",CPT:"#ff3b5c",LTN:"#6f9bff"};
+const PERSO_GRADE_RANK={MJR:3,CPT:2,LTN:1};
+const PERSONNAGES=[
+  {mat:"A-58",nom:"Trantos",grade:"MJR",
+   rp:"Autoritaire et direct, il décide vite et assume seul. Il ne supporte pas l'hésitation en pleine opération et coupe court aux débats. Dur mais juste : il ne demande jamais à ses hommes ce qu'il ne ferait pas lui-même. À jouer comme celui qui tranche quand personne d'autre n'ose.",
+   lore:"Monté en grade sur le terrain plutôt que par la formation. Il a repris le commandement d'unités décapitées en pleine bataille plus d'une fois, et en a gardé l'habitude de décider sans attendre l'aval du haut commandement."},
+  {mat:"A-26",nom:"Maze",grade:"CPT",
+   rp:"Le plus insubordonné des Alphas. Il obéit, mais fait sentir ce qu'il pense. Sarcastique, direct, allergique aux ordres mal justifiés. Il respecte la compétence, pas le grade. À jouer sur la tension permanente, jamais sur la révolte ouverte.",
+   lore:"Affecté à la protection rapprochée d'officiers Jedi, une mission qu'il vit comme une punition. Sa relation avec sa hiérarchie est une friction constante : il fait le travail, impeccablement, tout en refusant de prétendre que ça lui plaît."},
+  {mat:"A-77",nom:"Fordo",grade:"CPT",
+   rp:"Calme absolu sous le feu. Il ne hausse jamais le ton, sa voix reste égale même quand tout s'effondre autour. Protecteur envers ses hommes, respectueux envers les Jedi. C'est le modèle que les autres cherchent à devenir.",
+   lore:"Meneur de l'assaut sur Muunilinst. Il est surtout connu pour être arrivé en extraction sur Hypori et avoir sorti d'une mort certaine des Jedi encerclés par les droïdes. Sa réputation le précède sur tous les fronts."},
+  {mat:"A-98",nom:"Jangotat",grade:"CPT",
+   rp:"Réservé, grave, tourné vers les autres. Il s'interroge sur ce qu'il est au-delà de son matricule, sans jamais en faire un fardeau pour son escouade. Loyal jusqu'au sacrifice — et à jouer comme tel.",
+   lore:"Envoyé en infiltration longue durée sur Ord Cestus, il a vécu parmi des civils et y a entrevu une vie qui n'était pas la sienne. Il a fini par choisir de mourir pour que sa mission réussisse plutôt que de rentrer."},
+  {mat:"A-17",nom:"Alpha",grade:"LTN",
+   rp:"Froid, cassant, sans patience pour l'approximation. Il parle peu et chaque mot est un ordre ou un reproche. Il ne félicite jamais : chez lui, le silence vaut déjà approbation. Méfiant envers les Jedi, qu'il juge trop tendres pour la guerre. Une autorité qu'on ne discute pas.",
+   lore:"Entraîné directement par Jango Fett, il a survécu à sa captivité et aux interrogatoires d'Asajj Ventress. C'est lui qui a formé la majorité des ARC en service. Sa doctrine : un ARC réfléchit seul et n'attend l'ordre de personne pour faire ce qui doit être fait."},
+  {mat:"A-38",nom:"Aven",grade:"LTN",
+   rp:"Posé, méthodique, difficile à faire sortir de ses gonds. Il écoute avant de parler et tempère les fortes têtes. C'est la voix de la raison du groupe — celui vers qui on se tourne quand un plan part en morceaux.",
+   lore:"Réputé pour avoir ramené son escouade d'opérations que personne ne donnait gagnables, en faisant systématiquement passer le retour de ses hommes avant l'objectif."},
+  {mat:"A-49",nom:"Stec",grade:"LTN",
+   rp:"Bruyant, enthousiaste, franchement trop content de faire sauter des choses. Il détend l'ambiance et se moque de tout, y compris de lui-même. Mais dès que ça tourne mal, l'humour s'arrête net et le professionnel prend le relais.",
+   lore:"Spécialiste des charges et du déminage. Sa réputation tient autant à son travail qu'aux histoires qu'il raconte à la caserne, dont la véracité diminue à chaque répétition."},
+  {mat:"A-30",nom:"Sull",grade:"LTN",
+   rp:"Silencieux, observateur, mal à l'aise dans le rôle qu'on lui a assigné. Il pose les questions que les autres évitent : pourquoi on se bat, pour qui, jusqu'à quand. À jouer comme quelqu'un qui doute sans jamais se plaindre.",
+   lore:"Ses interrogations sur la guerre et sur la condition des clones l'ont mené à quitter les rangs en pleine campagne. Son nom reste un sujet sensible : pour les uns un déserteur, pour les autres le seul qui soit allé au bout de sa pensée."},
+  {mat:"A-66",nom:"Muzzle",grade:"",
+   rp:"Économe en mots au point d'en être déroutant. Il répond par monosyllabes et observe plus qu'il ne participe. Rien ne semble l'atteindre. Quand il parle enfin, tout le monde écoute — parce que ça n'arrive presque jamais pour rien.",
+   lore:"Son surnom lui vient d'une opération entière conduite sans un mot à la radio, sa position tenue pendant des heures. Il ne raconte jamais ses propres missions."}
+];
+
+function renderPersonnages(){
+  const el=document.getElementById("persoList");
+  if(!el)return;
+  const sorted=[...PERSONNAGES].sort((a,b)=>
+    (PERSO_GRADE_RANK[b.grade]||0)-(PERSO_GRADE_RANK[a.grade]||0)
+    || a.mat.localeCompare(b.mat,"fr",{numeric:true}));
+  el.innerHTML=sorted.map(p=>{
+    const c=PERSO_GRADE_COLORS[p.grade]||"var(--dm)";
+    return `<div class="perso" style="--pc:${c}">
+    <div class="perso-h"><span class="perso-mat">${esc(p.mat)}</span><span class="perso-nm">${esc(p.nom)}</span>
+      ${p.grade?`<span class="perso-gr" style="color:${c};border-color:${c}">${esc(p.grade)}</span>`:""}</div>
+    <div class="perso-k">Comportement</div>
+    <div class="perso-t">${esc(p.rp)}</div>
+    <div class="perso-k">Contexte</div>
+    <div class="perso-t">${esc(p.lore)}</div>
+  </div>`;}).join("");
+}
+
 function renderDocuments(){
   const el=document.getElementById("docCategories");if(!el)return;
   const addBtn=document.getElementById("addDocBtn");
