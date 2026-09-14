@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ARC ALPHA — Centre de Commandement</title>
+<title>ARC ALPHA - Centre de Commandement</title>
 <script>addEventListener("DOMContentLoaded",function(){try{var v=getComputedStyle(document.documentElement).getPropertyValue("--logo");var i=v.indexOf("data:");if(i<0)return;var u=v.substring(i);var q=String.fromCharCode(34),a=String.fromCharCode(39);var e=u.length;for(var k=0;k<u.length;k++){var c=u.charAt(k);if(c===q||c===a||c===")"){e=k;break;}}var l=document.createElement("link");l.rel="icon";l.type="image/png";l.href=u.substring(0,e);document.head.appendChild(l);}catch(err){}});</script>
 <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -519,11 +519,6 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .mlc-rk{font-size:.76rem;color:var(--dm);font-weight:300}
 .mlc-body{padding:1rem 1.2rem}
 .mlc-body p{font-size:.83rem;color:var(--tx2);font-weight:300;line-height:1.65}
-.mlc-meta{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.8rem}
-.mlc-tag{font-family:var(--fm);font-size:.6rem;color:var(--dm);padding:.2rem .5rem;background:var(--s2);border-left:2px solid var(--ls)}
-.mlc-rp{font-size:.82rem;color:var(--tx2);line-height:1.6;margin-top:.7rem;padding-top:.7rem;border-top:1px dashed var(--ln)}
-.mlc-rp strong{color:var(--ac);font-weight:600;font-family:var(--fm);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:.25rem}
-.mlc-cat-label{font-family:var(--fm);font-size:.58rem;color:var(--dm);letter-spacing:.08em;text-transform:uppercase;margin-top:.8rem;margin-bottom:.35rem}
 
 .ann{display:flex;gap:1rem;padding:1rem 1.2rem;background:var(--s1);border:1px solid var(--ln);
   border-left:3px solid var(--ac);margin-bottom:.7rem;transition:all .25s;position:relative}
@@ -753,7 +748,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 }
 
 /* ══════════════════════════════════════════
-   MODE INDIEN — easter egg (code Konami)
+   MODE INDIEN - easter egg (code Konami)
    ══════════════════════════════════════════ */
 .indian-rain{position:fixed;top:0;right:0;bottom:0;left:0;inset:0;z-index:9994;pointer-events:none;overflow:hidden}
 .indian-rain[hidden]{display:none}
@@ -805,7 +800,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 <div class="fx-grid"></div>
 <div class="fx-glow"></div>
 
-<!-- MODE INDIEN — easter egg (code Konami : ↑↑↓↓←→←→ B A) -->
+<!-- MODE INDIEN - easter egg (code Konami : ↑↑↓↓←→←→ B A) -->
 <div id="indianRain" class="indian-rain" hidden aria-hidden="true"></div>
 <div id="indianBanner" class="indian-banner" hidden role="status" aria-live="polite">
   <span class="ib-flag" aria-hidden="true">🇮🇳</span>
@@ -824,7 +819,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <button class="nav-tab" data-v="dashboard" onclick="nav('dashboard')"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard<span class="nav-lock" id="dashLock">🔒</span></button>
     </div>
     <div class="nav-right">
-      <span class="sync-dot" id="syncDot" title="À jour — les modifications apparaissent automatiquement" aria-hidden="true"></span>
+      <span class="sync-dot" id="syncDot" title="À jour - les modifications apparaissent automatiquement" aria-hidden="true"></span>
       <button class="login-btn" id="loginBtn" onclick="openLogin()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Connexion</button>
       <div class="user-chip" id="userChip" style="display:none" onclick="openAccount()">
         <div class="uc-av" id="ucAv">N</div>
@@ -835,7 +830,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   </div>
 </nav>
 <div class="maint-bar" id="maintBar">
-  <span class="d"></span>Mode maintenance actif — seuls les admins voient le site
+  <span class="d"></span>Mode maintenance actif - seuls les admins voient le site
   <button class="sbtn" style="margin-left:1rem;padding:.2rem .6rem" onclick="toggleMaint(false)">Désactiver</button>
 </div>
 <div class="mob-ov" id="mobOv" onclick="closeMob()"></div>
@@ -850,7 +845,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 <div class="view on" id="v-home">
   <div class="hero">
     <div class="hero-left">
-      <div class="hero-tag"><span class="dot"></span><span data-e="hero_tag">UNITÉ CLASSIFIÉE — NIVEAU OMEGA</span></div>
+      <div class="hero-tag"><span class="dot"></span><span data-e="hero_tag">UNITÉ CLASSIFIÉE - NIVEAU OMEGA</span></div>
       <h1>Advanced<br>Recon<br><em>Commando</em></h1>
       <p data-e="hero_desc">L'élite absolue de la Grande Armée de la République. Cent clones de seconde génération, entraînés personnellement par Jango Fett, à l'esprit indépendant et à l'autonomie tactique totale.</p>
       <div class="hero-cta">
@@ -919,10 +914,10 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
     </div>
 
     <div class="sec-head"><h2>Missions</h2><span class="line"></span></div>
-    <div class="grid g3"><div class="card on-anim"><div class="card-k">// MISSION 01</div><div class="card-t" data-e="mission_t1">Reconnaissance</div><div class="card-b" data-e="mission_d1">Infiltration profonde derrière les lignes ennemies pour collecter des renseignements inaccessibles aux unités standard.</div></div><div class="card on-anim"><div class="card-k">// MISSION 02</div><div class="card-t" data-e="mission_t2">Sabotage</div><div class="card-b" data-e="mission_d2">Destruction d'infrastructures séparatistes : relais de communication, usines à droïdes, dépôts d'armement.</div></div><div class="card on-anim"><div class="card-k">// MISSION 03</div><div class="card-t" data-e="mission_t3">Élimination ciblée</div><div class="card-b" data-e="mission_d3">Neutralisation de cibles à haute valeur : commandants droïdes, ingénieurs CSI, agents séparatistes.</div></div><div class="card on-anim"><div class="card-k">// MISSION 04</div><div class="card-t" data-e="mission_t4">Extraction</div><div class="card-b" data-e="mission_d4">Récupération d'officiers capturés, de Jedi en difficulté ou de civils stratégiques en zone hostile.</div></div><div class="card on-anim"><div class="card-k">// MISSION 05</div><div class="card-t" data-e="mission_t5">Commandement</div><div class="card-b" data-e="mission_d5">Entraînement et coordination de résistances locales et formation des commandants clones.</div></div><div class="card on-anim"><div class="card-k">// MISSION 06</div><div class="card-t" data-e="mission_t6">Autonomie totale</div><div class="card-b" data-e="mission_d6">Capacité unique d'agir sans supervision ni ordres directs, même en coupure totale de communication.</div></div></div>
+    <div class="grid g3"><div class="card on-anim"><div class="card-k">// MISSION 01</div><div class="card-t" data-e="mission_t1">Contre-terrorisme</div><div class="card-b" data-e="mission_d1">Opérations menées là où les lignes tombent et où l'ennemi se croit hors d'atteinte.</div></div><div class="card on-anim"><div class="card-k">// MISSION 02</div><div class="card-t" data-e="mission_t2">Élimination stratégique</div><div class="card-b" data-e="mission_d2">Neutralisation de cibles prioritaires : commandants droïdes, ingénieurs CSI, agents séparatistes.</div></div><div class="card on-anim"><div class="card-k">// MISSION 03</div><div class="card-t" data-e="mission_t3">Sabotage tactique</div><div class="card-b" data-e="mission_d3">Destruction d'infrastructures derrière les lignes ennemies : relais, usines à droïdes, dépôts d'armement.</div></div><div class="card on-anim"><div class="card-k">// MISSION 04</div><div class="card-t" data-e="mission_t4">Libération d'otages</div><div class="card-b" data-e="mission_d4">Opérations à haut risque pour récupérer officiers capturés, Jedi en difficulté ou civils stratégiques.</div></div><div class="card on-anim"><div class="card-k">// MISSION 05</div><div class="card-t" data-e="mission_t5">Reconnaissance avancée</div><div class="card-b" data-e="mission_d5">Infiltration profonde pour collecter des renseignements inaccessibles aux unités standard.</div></div><div class="card on-anim"><div class="card-k">// MISSION 06</div><div class="card-t" data-e="mission_t6">Missions impossibles</div><div class="card-b" data-e="mission_d6">Toute opération jugée impossible pour une unité standard, en autonomie totale et sans ordres directs.</div></div></div>
 
     <div class="sec-head"><h2>Équipement</h2><span class="line"></span></div>
-    <div class="grid g3"><div class="card on-anim"><div class="card-k">// Armement signature</div><div class="card-t" data-e="equip_t1">DC-17 Hand Blaster</div><div class="card-b" data-e="equip_d1">Pistolets lourds maniés en duo, à la manière de Jango Fett. Modulables en mode sniper ou anti-véhicule.</div></div><div class="card on-anim"><div class="card-k">// Fusils</div><div class="card-t" data-e="equip_t2">WESTAR-M5 / DC-15</div><div class="card-b" data-e="equip_d2">WESTAR-M5 mandalorien, DC-15A longue portée, DC-15S carbine et DC-15x sniper selon la mission.</div></div><div class="card on-anim"><div class="card-k">// Armure</div><div class="card-t" data-e="equip_t3">ARC Phase I / II</div><div class="card-b" data-e="equip_d3">Plaques grises renforcées, double pauldron, kama, rangefinder et visière macro-binoculaire.</div></div><div class="card on-anim"><div class="card-k">// Mobilité</div><div class="card-t" data-e="equip_t4">JT-12 Jetpack</div><div class="card-b" data-e="equip_d4">Câbles ascensionnels, grappin de poignet et jetpack pour l'infiltration verticale et l'extraction.</div></div><div class="card on-anim"><div class="card-k">// Lourd</div><div class="card-t" data-e="equip_t5">Z-6 & PLX-1</div><div class="card-b" data-e="equip_d5">Canon rotatif Z-6, lanceurs RPS-6 / PLX-1 et détonateurs thermiques V-1 pour les spécialistes.</div></div><div class="card on-anim"><div class="card-k">// Recon</div><div class="card-t" data-e="equip_t6">Capteurs avancés</div><div class="card-b" data-e="equip_d6">Comlink crypté de gauntlet, détecteurs de mouvement, capteurs thermiques et HUD biosignes.</div></div></div>
+    <div class="grid g3"><div class="card on-anim"><div class="card-k">// Armement signature</div><div class="card-t" data-e="equip_t1">Blaster M5</div><div class="card-b" data-e="equip_d1">WESTAR-M5 mandalorien, arme de prédilection de l'unité, maniée avec une précision redoutable.</div></div><div class="card on-anim"><div class="card-k">// Standard</div><div class="card-t" data-e="equip_t2">DC-17S / DC-15</div><div class="card-b" data-e="equip_d2">DC-17S maniés en duo à la manière de Jango Fett, DC-15A longue portée et DC-15S carbine selon la mission.</div></div><div class="card on-anim"><div class="card-k">// Lourd</div><div class="card-t" data-e="equip_t3">Z-6 & Quad Blaster</div><div class="card-b" data-e="equip_d3">Canon rotatif Z-6 et quad blaster pour la puissance de feu de saturation des spécialistes.</div></div><div class="card on-anim"><div class="card-k">// Explosifs</div><div class="card-t" data-e="equip_t4">PLX-1 & Grenades</div><div class="card-b" data-e="equip_d4">Lanceur PLX-1, détonateurs thermiques et charges de démolition pour le sabotage et l'ouverture de brèches.</div></div><div class="card on-anim"><div class="card-k">// Mobilité</div><div class="card-t" data-e="equip_t5">Jetpack & Grappin</div><div class="card-b" data-e="equip_d5">Jetpack, grappin de poignet et câbles ascensionnels pour l'infiltration verticale et l'extraction.</div></div><div class="card on-anim"><div class="card-k">// Spécialisé</div><div class="card-t" data-e="equip_t6">Dispositifs avancés</div><div class="card-b" data-e="equip_d6">Équipements tactiques dédiés à la mission - un ARC n'est jamais pris au dépourvu.</div></div></div>
 
     <div class="sec-head"><h2>Membres légendaires</h2><span class="line"></span></div>
     <div class="grid g2"><div class="mlc on-anim">
@@ -936,9 +931,6 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   </div>
   <div class="mlc-body">
     <p data-e="mem_bio1">Le tout premier clone à recevoir un nom, donné par Anakin Skywalker. Défend Kamino, résiste à la torture sur Rattatak, puis forme les commandants clones Cody, Bly, Bacara et Gree.</p>
-    <p class="mlc-rp" data-e="mem_rp1"><strong>Comment le jouer</strong>Soldat d'élite jusqu'au bout des ongles : il respecte la compétence, pas le grade. Calme, méthodique, impossible à briser sous la pression. Il conteste sans hésiter un ordre incompétent, mais reste d'une loyauté absolue envers ceux qui la méritent. À jouer posé, direct, avec l'autorité tranquille d'un vétéran qui a déjà tout vu.</p>
-    <div class="mlc-cat-label" data-e="mem_catlabel1">Caractère</div>
-    <div class="mlc-meta"><span class="mlc-tag" data-e="mem_bat1">Discipliné · Indépendant · Mentor</span></div>
   </div>
 </div><div class="mlc on-anim">
   <div class="mlc-top">
@@ -946,14 +938,11 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
     <div>
       <div class="mlc-mat" data-e="mem_mat2">A-77</div>
       <div class="mlc-nm" data-e="mem_nm2">Fordo</div>
-      <div class="mlc-rk" data-e="mem_rk2">Capitaine — Muunilinst 10</div>
+      <div class="mlc-rk" data-e="mem_rk2">Capitaine - Muunilinst 10</div>
     </div>
   </div>
   <div class="mlc-body">
     <p data-e="mem_bio2">Chef des légendaires Muunilinst 10. Capture San Hill, sauve des Jedi sur Hypori face à Grievous. A gagné les Yeux Jaig pour sa bravoure. Maniait deux DC-17 simultanément.</p>
-    <p class="mlc-rp" data-e="mem_rp2"><strong>Comment le jouer</strong>Le meneur né. Il fonce en première ligne, deux DC-17 au poing, et entraîne ses hommes par l'exemple. Bravoure frôlant l'imprudence, répliques qui claquent, fierté mandalorienne assumée. À jouer énergique et protecteur envers son escouade, toujours prêt à relever un défi impossible avec le sourire.</p>
-    <div class="mlc-cat-label" data-e="mem_catlabel2">Caractère</div>
-    <div class="mlc-meta"><span class="mlc-tag" data-e="mem_bat2">Audacieux · Charismatique · Intrépide</span></div>
   </div>
 </div><div class="mlc on-anim">
   <div class="mlc-top">
@@ -961,14 +950,11 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
     <div>
       <div class="mlc-mat" data-e="mem_mat3">A-26</div>
       <div class="mlc-nm" data-e="mem_nm3">Maze</div>
-      <div class="mlc-rk" data-e="mem_rk3">Capitaine ARC — B.O.S</div>
+      <div class="mlc-rk" data-e="mem_rk3">Capitaine ARC - B.O.S</div>
     </div>
   </div>
   <div class="mlc-body">
     <p data-e="mem_bio3">Affecté à la Brigade des Opérations Spéciales sous le Général Arligan Zey. A refusé d'exécuter l'Ordre 66, confirmant l'autonomie morale unique de l'unité.</p>
-    <p class="mlc-rp" data-e="mem_rp3"><strong>Comment le jouer</strong>La conscience de l'unité. Il pèse chaque ordre à l'aune de sa morale — c'est lui qui a refusé l'Ordre 66. Sérieux, économe de ses mots, d'une loyauté indéfectible envers ceux qu'il juge dignes. À jouer calme et grave, avec une force tranquille et un regard qui juge avant d'agir.</p>
-    <div class="mlc-cat-label" data-e="mem_catlabel3">Caractère</div>
-    <div class="mlc-meta"><span class="mlc-tag" data-e="mem_bat3">Intègre · Réfléchi · Loyal</span></div>
   </div>
 </div><div class="mlc on-anim">
   <div class="mlc-top">
@@ -981,9 +967,6 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   </div>
   <div class="mlc-body">
     <p data-e="mem_bio4">Vétéran endurci qui a suivi les traces de Jango après la guerre en devenant chasseur de primes, fidèle à l'héritage mandalorien des Alpha.</p>
-    <p class="mlc-rp" data-e="mem_rp4"><strong>Comment le jouer</strong>Le loup solitaire. Après la guerre, il suit la voie de Jango : chasseur de primes fidèle au code mandalorien. Cynique, débrouillard, méfiant envers la République. À jouer bourru, avec un humour sec, un sens de l'honneur inflexible et l'instinct de survie d'un vétéran qui n'a plus rien à prouver.</p>
-    <div class="mlc-cat-label" data-e="mem_catlabel4">Caractère</div>
-    <div class="mlc-meta"><span class="mlc-tag" data-e="mem_bat4">Endurci · Solitaire · Pragmatique</span></div>
   </div>
 </div></div>
   </div>
@@ -1217,8 +1200,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div class="grid g4" style="margin-bottom:1.3rem">
           <div class="stat-card"><div class="stat-v" id="absTotalAct" style="color:var(--or)">0</div><div class="stat-l">Absences en cours</div></div>
           <div class="stat-card"><div class="stat-v" id="absTotalHist">0</div><div class="stat-l">Historique total</div></div>
-          <div class="stat-card"><div class="stat-v" id="absMostAbs" style="color:var(--rd);font-size:1.1rem">—</div><div class="stat-l">Plus absent</div></div>
-          <div class="stat-card"><div class="stat-v" id="absCurrent" style="color:var(--gr);font-size:1rem">—</div><div class="stat-l">Actuellement absent</div></div>
+          <div class="stat-card"><div class="stat-v" id="absMostAbs" style="color:var(--rd);font-size:1.1rem">-</div><div class="stat-l">Plus absent</div></div>
+          <div class="stat-card"><div class="stat-v" id="absCurrent" style="color:var(--gr);font-size:1rem">-</div><div class="stat-l">Actuellement absent</div></div>
         </div>
         <div class="sec-head"><h2>En cours</h2><span class="line"></span></div>
         <div id="absActiveList"></div>
@@ -1254,7 +1237,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div class="stat-card"><div class="stat-v" id="repDone" style="color:var(--gr)">0</div><div class="stat-l">Rapports soumis</div></div>
           <div class="stat-card"><div class="stat-v" id="repPending" style="color:var(--rd)">0</div><div class="stat-l">En attente</div></div>
           <div class="stat-card"><div class="stat-v" id="repExempt" style="color:var(--dm)">0</div><div class="stat-l">Dispensés</div></div>
-          <div class="stat-card"><div class="stat-v" id="repRate" style="color:var(--ac)">—</div><div class="stat-l">Taux de soumission</div></div>
+          <div class="stat-card"><div class="stat-v" id="repRate" style="color:var(--ac)">-</div><div class="stat-l">Taux de soumission</div></div>
         </div>
         <div class="panel"><div class="panel-body flush">
           <table class="tbl">
@@ -1290,7 +1273,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
       <div class="dash-tab" data-dtc="personnages" style="display:none">
         <div class="sec-head"><h2>Personnages connus</h2><span class="line"></span></div>
-        <p class="card-b" style="margin-bottom:1.3rem">Figures de l'unité — comportement à respecter en RP et contexte essentiel.</p>
+        <p class="card-b" style="margin-bottom:1.3rem">Figures de l'unité - comportement à respecter en RP et contexte essentiel.</p>
         <div id="persoList" class="perso-grid"></div>
       </div>
 
@@ -1401,9 +1384,9 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
               <div class="field">
                 <label>Style des messages de promotion</label>
                 <select id="dscStyle">
-                  <option value="detaille">Détaillé — encadré avec ancien grade, nouveau grade et régiment</option>
-                  <option value="rp">RP — transmission officielle du Commandement</option>
-                  <option value="compact">Compact — une seule ligne</option>
+                  <option value="detaille">Détaillé - encadré avec ancien grade, nouveau grade et régiment</option>
+                  <option value="rp">RP - transmission officielle du Commandement</option>
+                  <option value="compact">Compact - une seule ligne</option>
                 </select>
               </div>
               <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">
@@ -1418,7 +1401,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           </div>
           <div class="panel" id="ticketsPanel">
           <div class="panel-head">
-            <h3><span class="pk">//</span> Tickets — Récupération mot de passe <span id="ticketCount" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
+            <h3><span class="pk">//</span> Tickets - Récupération mot de passe <span id="ticketCount" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
           </div>
           <div class="panel-body flush">
             <table class="tbl">
@@ -1454,6 +1437,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div class="panel-body">
             <p class="card-b" style="margin-bottom:1rem">Modifie directement les textes des pages publiques.</p>
             <button class="sbtn" onclick="toggleEditMode()" id="editModeBtn">Activer l'édition</button>
+            <button class="sbtn danger" onclick="resetVitrineTexts()" style="margin-left:.5rem">Restaurer les textes d'origine</button>
+            <p class="card-b" style="margin-top:.7rem;font-size:.7rem;color:var(--dm)">Les textes modifiés ici sont enregistrés et remplacent ceux du fichier. « Restaurer » efface ces modifications pour les sections Missions, Équipement et Membres légendaires.</p>
           </div>
         </div>
       </div>
@@ -1480,7 +1465,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   <div id="maint-log" style="font-family:var(--fm);font-size:11px;color:rgba(0,200,255,.4);letter-spacing:.08em;text-align:left;line-height:2.1;min-height:88px;width:100%"></div>
   <div style="width:100%;height:1px;background:rgba(0,200,255,.12);margin-top:20px;margin-bottom:20px"></div>
   <div style="font-family:var(--fm);font-size:10px;letter-spacing:.14em;color:rgba(0,200,255,.25)">LE SITE SERA DE RETOUR TRÈS PROCHAINEMENT</div>
-  <div id="maint-admin-note" style="margin-top:16px;font-family:var(--fm);font-size:9px;color:rgba(0,200,255,.3);letter-spacing:.1em;display:none">// Vous êtes admin — accès maintenu</div>
+  <div id="maint-admin-note" style="margin-top:16px;font-family:var(--fm);font-size:9px;color:rgba(0,200,255,.3);letter-spacing:.1em;display:none">// Vous êtes admin - accès maintenu</div>
 </div>
 </div>
 <div id="toast"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="toastMsg">Message</span></div>
@@ -1515,7 +1500,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <p class="card-b" style="margin-bottom:1rem;text-align:center">Saisis ton identifiant. Une demande sera envoyée aux administrateurs qui réinitialiseront ton mot de passe.</p>
       <div class="field"><label>Ton identifiant</label><input type="text" id="forgotUser" placeholder="ex: A-26" onkeydown="if(event.key==='Enter')sendForgotRequest()"></div>
       <div class="field"><label>Message (optionnel)</label><textarea id="forgotMsg" rows="2" placeholder="Précision pour l'admin..." style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical"></textarea></div>
-      <div class="modal-err" id="forgotErr">—</div>
+      <div class="modal-err" id="forgotErr">-</div>
       <div id="forgotSuccess" style="display:none;color:var(--gr);font-size:.78rem;text-align:center;padding:.6rem;background:rgba(34,217,122,.08);border:1px solid rgba(34,217,122,.3);border-radius:3px">✓ Demande envoyée. Un administrateur va traiter ta requête.</div>
     </div>
     <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('forgotModal')">Fermer</button><button class="btn btn-primary" id="forgotSendBtn" onclick="sendForgotRequest()">Envoyer la demande</button></div>
@@ -1530,7 +1515,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
     </div>
     <div class="modal-b">
       <input type="hidden" id="rtTicketId">
-      <p class="card-b" style="margin-bottom:1rem">Compte concerné : <strong id="rtUser" style="color:var(--ac)">—</strong></p>
+      <p class="card-b" style="margin-bottom:1rem">Compte concerné : <strong id="rtUser" style="color:var(--ac)">-</strong></p>
       <div class="field">
         <label>Nouveau mot de passe</label>
         <div style="display:flex;gap:.5rem">
@@ -1740,7 +1725,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 <div class="modal-bg" id="modChatModal">
   <div class="modal wide" style="max-width:560px">
     <div class="modal-h">
-      <div><span class="k">// SURVEILLANCE — LECTURE INVISIBLE</span><h3 id="modChatTitle">Conversation</h3></div>
+      <div><span class="k">// SURVEILLANCE - LECTURE INVISIBLE</span><h3 id="modChatTitle">Conversation</h3></div>
       <button class="modal-x" onclick="closeModal('modChatModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-b" id="modChatThread" style="max-height:440px;overflow-y:auto"></div>
@@ -1778,9 +1763,9 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <!-- Style de bloc -->
         <select class="rte-sel" title="Style" onchange="rteExec('formatBlock',this.value);this.blur()" style="width:110px">
           <option value="p">¶ Normal</option>
-          <option value="h1">H1 — Grand titre</option>
-          <option value="h2">H2 — Titre</option>
-          <option value="h3">H3 — Sous-titre</option>
+          <option value="h1">H1 - Grand titre</option>
+          <option value="h2">H2 - Titre</option>
+          <option value="h3">H3 - Sous-titre</option>
         </select>
         <!-- Police -->
         <select class="rte-sel" title="Police" onchange="rteExec('fontName',this.value);this.blur()" style="width:130px">
@@ -1878,11 +1863,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         </div>
       </div>
       <div class="field"><label>Formation</label>
-        <select id="fmFormation" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--fm);font-size:.8rem;outline:none">
-          <option value="ARC Alpha">ARC Alpha</option>
-          <option value="ARC Trooper">ARC Trooper</option>
-          <option value="CMD de mission">CMD de mission</option>
-        </select>
+        <select id="fmFormation" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--fm);font-size:.8rem;outline:none"></select>
       </div>
       <div class="form-row fr2">
         <div class="field"><label>Date</label><input type="date" id="fmDate"></div>
@@ -1909,7 +1890,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
     <div class="modal-b">
       <input type="hidden" id="catMemberId">
       <input type="hidden" id="catTarget">
-      <p class="card-b" id="catModalDesc" style="margin-bottom:1rem">—</p>
+      <p class="card-b" id="catModalDesc" style="margin-bottom:1rem">-</p>
       <div class="field"><label>Date</label><input type="date" id="catDate"></div>
       <div class="field"><label>Raison</label><textarea id="catRaison" rows="3" placeholder="Motif du changement de statut" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical"></textarea></div>
     </div>
@@ -1927,7 +1908,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <input type="hidden" id="euUserId">
       <div style="display:flex;align-items:center;gap:1rem;padding:.8rem;background:var(--s2);border:1px solid var(--ln);margin-bottom:1rem">
         <div class="uc-av" style="width:40px;height:40px;font-size:.85rem" id="euAvatar">?</div>
-        <div><div class="uc-name" style="font-size:.9rem" id="euCurrentName">—</div><div class="uc-role" id="euCurrentRole">—</div></div>
+        <div><div class="uc-name" style="font-size:.9rem" id="euCurrentName">-</div><div class="uc-role" id="euCurrentRole">-</div></div>
       </div>
 
       <div class="field"><label>Identifiant</label><input type="text" id="euUser" placeholder="Nouvel identifiant"></div>
@@ -1937,7 +1918,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <label>Rôle</label>
         <select id="euRole" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--fm);font-size:.8rem;outline:none">
           <option value="member">Membre ARC</option>
-          <option value="brs">BRS — Renseignement (lecture seule)</option>
+          <option value="brs">BRS - Renseignement (lecture seule)</option>
           <option value="amiraute">Amirauté (édition)</option>
           <option value="admin">Admin (accès total)</option>
         </select>
@@ -2171,7 +2152,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div class="stat-card"><div class="stat-v" id="mpCmdTotal" style="color:var(--ac)">0</div><div class="stat-l">CMD Mission</div></div>
         <div class="stat-card"><div class="stat-v" id="mpBlameCount" style="color:var(--rd)">0</div><div class="stat-l">Blâmes</div></div>
         <div class="stat-card"><div class="stat-v" id="mpAbsCount" style="color:var(--or)">0</div><div class="stat-l">Absences</div></div>
-        <div class="stat-card"><div class="stat-v" id="mpEligStatus" style="font-size:1.3rem">—</div><div class="stat-l">Promo</div></div>
+        <div class="stat-card"><div class="stat-v" id="mpEligStatus" style="font-size:1.3rem">-</div><div class="stat-l">Promo</div></div>
       </div>
 
       <!-- Barre de progression promotion -->
@@ -2183,7 +2164,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:var(--ac);text-transform:uppercase">// Informations personnelles</div>
           <button id="mpInfoEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.6rem" onclick="toggleInfoEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;margin-right:.25rem"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Modifier</button>
         </div>
-        <div id="mpInfoViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">—</div>
+        <div id="mpInfoViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">-</div>
         <div id="mpInfoEditZone" style="display:none">
           <textarea id="mpInfoInline" rows="3" placeholder="Discord, disponibilités, infos RP..." style="width:100%;background:var(--s1);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical;margin-bottom:.5rem"></textarea>
           <div style="display:flex;gap:.5rem;justify-content:flex-end">
@@ -2199,7 +2180,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:var(--or);text-transform:uppercase">// Remarques officiers</div>
           <button id="mpRemarqueEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.6rem" onclick="toggleRemarqueEdit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px;margin-right:.25rem"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Modifier</button>
         </div>
-        <div id="mpRemarqueViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">—</div>
+        <div id="mpRemarqueViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">-</div>
         <div id="mpRemarqueEditZone" style="display:none">
           <textarea id="mpRemarqueInline" rows="3" placeholder="Comportement, notes sur l'unité..." style="width:100%;background:var(--s1);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical;margin-bottom:.5rem"></textarea>
           <div style="display:flex;gap:.5rem;justify-content:flex-end">
@@ -2294,7 +2275,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
 <footer>
   <div class="foot-in">
-    <div><div class="foot-brand"><span class="foot-logo" role="img" aria-label="ARC Alpha"></span><span><b>ARC</b>&nbsp;ALPHA</span></div><p data-e="foot_desc">Unité d'élite de la Grande Armée de la République. Site officiel — Cosmos Community.</p></div>
+    <div><div class="foot-brand"><span class="foot-logo" role="img" aria-label="ARC Alpha"></span><span><b>ARC</b>&nbsp;ALPHA</span></div><p data-e="foot_desc">Unité d'élite de la Grande Armée de la République. Site officiel - Cosmos Community.</p></div>
     <div><h4>Navigation</h4><ul><li onclick="nav('home')">Accueil</li><li onclick="nav('about')">L'unité</li><li onclick="nav('recruitment')">Recrutement</li><li onclick="nav('dashboard')">Dashboard</li></ul></div>
     <div><h4>Cosmos Community</h4><ul>
       <li onclick="window.open('https://discord.gg/TURhQkcb9X','_blank')" style="cursor:pointer;display:flex;align-items:center;gap:.5rem">
@@ -2311,7 +2292,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       </li>
     </ul></div>
   </div>
-  <div class="foot-bar"><span>// ARC ALPHA — CLASSIFIED OMEGA</span><span><span class="on-dot"></span>OPÉRATIONNEL</span></div>
+  <div class="foot-bar"><span>// ARC ALPHA - CLASSIFIED OMEGA</span><span><span class="on-dot"></span>OPÉRATIONNEL</span></div>
 </footer>
 <div id="globalTooltip"></div>
 <script>
@@ -2846,7 +2827,7 @@ const TOUR_STEPS = [
   {icon:"⌘", title:"Palette de commandes",
    text:"Appuie sur Ctrl+K (ou Cmd+K) n'importe où pour ouvrir la palette : navigue instantanément vers un onglet ou cherche un membre au clavier. Le raccourci le plus rapide du dashboard."},
   {icon:"🔒", title:"Permissions par grade",
-   text:"Selon ton grade et ton rôle (Admin, Amirauté, BRS, membre), tu peux modifier certains onglets ou seulement les consulter. Tout s'adapte automatiquement — les officiers supérieurs débloquent plus d'actions."},
+   text:"Selon ton grade et ton rôle (Admin, Amirauté, BRS, membre), tu peux modifier certains onglets ou seulement les consulter. Tout s'adapte automatiquement - les officiers supérieurs débloquent plus d'actions."},
   {icon:"✓", title:"C'est parti !",
    text:"Tu connais l'essentiel. Explore à ton rythme, et souviens-toi de Ctrl+K pour aller vite. Bonne gestion, soldat ! 🫡"}
 ];
@@ -3283,7 +3264,7 @@ async function resetCmdOnPromotion(m,oldGrade,newGrade){
   state.cmdmissions=state.cmdmissions.filter(c=>c.member_id!=m.id);
   if(!supaOK)saveLS();
   toast(`CMD de ${m.matricule} remis à 0 (promotion)`,"success");
-  await logActivity(`${session?.user} — CMD de mission de ${m.matricule} remis à 0 suite à la promotion ${oldGrade} → ${newGrade}`);
+  await logActivity(`${session?.user} - CMD de mission de ${m.matricule} remis à 0 suite à la promotion ${oldGrade} → ${newGrade}`);
   renderRoster();renderOverview();
   if(typeof renderCmd==="function")renderCmd();
 }
@@ -3436,7 +3417,7 @@ function renderJournal(){
   const logs=(state.activity||[]).slice().sort((a,b)=>(b.created_at||"").localeCompare(a.created_at||""));
   if(!logs.length){tbody.innerHTML='<tr><td colspan="2"><div class="empty"><p>Aucune activité enregistrée</p></div></td></tr>';return;}
   const fmtDateTime=(iso)=>{
-    if(!iso)return "—";
+    if(!iso)return "-";
     try{
       const d=new Date(iso);
       return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"})+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
@@ -3444,7 +3425,7 @@ function renderJournal(){
   };
   tbody.innerHTML=logs.map(l=>`<tr>
     <td><span style="font-family:var(--fm);font-size:.7rem;color:var(--dm)">${fmtDateTime(l.created_at)}</span></td>
-    <td><span style="font-size:.82rem;color:var(--tx2)">${esc(l.text)||"—"}</span></td>
+    <td><span style="font-size:.82rem;color:var(--tx2)">${esc(l.text)||"-"}</span></td>
   </tr>`).join("");
 }
 
@@ -3460,13 +3441,13 @@ function renderFormations(){
   tbody.innerHTML=list.map(f=>{
     const sc=stColors[f.statut]||"var(--dm)";
     return `<tr>
-      <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.formateur_id,f.formateur,"—"))}</span></td>
-      <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.eleve_id,f.eleve,"—"))}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${esc(f.formation)||"—"}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${f.date?fmtDate(f.date):"—"}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.68rem;color:${sc};border:1px solid ${sc}44;background:${sc}11;padding:.15rem .5rem;border-radius:3px">${esc(f.statut)||"—"}</span></td>
+      <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.formateur_id,f.formateur,"-"))}</span></td>
+      <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.eleve_id,f.eleve,"-"))}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${esc(f.formation)||"-"}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${f.date?fmtDate(f.date):"-"}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.68rem;color:${sc};border:1px solid ${sc}44;background:${sc}11;padding:.15rem .5rem;border-radius:3px">${esc(f.statut)||"-"}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
-        ${canEditF?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openFormationModal('${f.id}')">Modifier</button>
+        ${canEditF&&canEditFormationType(f.formation)?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openFormationModal('${f.id}')">Modifier</button>
 `:""}
         ${canDelF?`<button class="icon-btn del" onclick="deleteFormation('${f.id}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
       </div></td>
@@ -3479,11 +3460,11 @@ function populateMemberSelect(selectId,currentId,legacyText){
   if(!sel)return;
   const members=sortMembers((state.members||[]).filter(m=>(m.categorie||"effectif")!=="blacklist"));
   const known=memberById(currentId);
-  let html='<option value="">— Sélectionner —</option>';
+  let html='<option value="">Sélectionner…</option>';
   const orphan=!known&&legacyText;
   if(orphan)html+=`<option value="${LEGACY_MEMBER_OPT}" selected>${esc(legacyText)} (ancienne saisie)</option>`;
   html+=members.map(m=>{
-    const label=`${m.matricule||"?"} — ${m.nom||"?"} (${m.grade||"ARC"})`;
+    const label=`${m.matricule||"?"} - ${m.nom||"?"} (${m.grade||"ARC"})`;
     const on=known&&String(known.id)===String(m.id)?" selected":"";
     return `<option value="${esc(m.id)}"${on}>${esc(label)}</option>`;
   }).join("");
@@ -3491,7 +3472,7 @@ function populateMemberSelect(selectId,currentId,legacyText){
 }
 const LEGACY_MEMBER_OPT="__legacy__";
 
-const MEMBER_SUGGEST_SEP=" — ";
+const MEMBER_SUGGEST_SEP=" - ";
 function populateMemberDatalist(listId){
   const dl=document.getElementById(listId);
   if(!dl)return;
@@ -3513,17 +3494,42 @@ function resolveMemberFromText(txt){
   return{id:null,name:s,chosen:true};
 }
 
+const FORMATION_TYPES=["ARC Alpha","ARC Trooper","CMD de mission"];
+const SGT_FORMATION_TYPES=["ARC Trooper","CMD de mission"];
+function allowedFormationTypes(){
+  if(!session)return[];
+  if(session.role==="brs")return[];
+  if(session.role==="admin"||session.role==="amiraute")return FORMATION_TYPES.slice();
+  return gradeLevel(getSessionGrade())<=1?SGT_FORMATION_TYPES.slice():FORMATION_TYPES.slice();
+}
+function canEditFormationType(type){
+  if(!session)return false;
+  if(session.role==="brs")return false;
+  if(session.role==="admin"||session.role==="amiraute")return true;
+  if(gradeLevel(getSessionGrade())>1)return true;
+  return !type||SGT_FORMATION_TYPES.includes(type);
+}
+function populateFormationTypes(current){
+  const sel=document.getElementById("fmFormation");
+  if(!sel)return;
+  const list=allowedFormationTypes();
+  if(current&&!list.includes(current))list.unshift(current);
+  sel.innerHTML=list.map(t=>`<option value="${esc(t)}"${t===current?" selected":""}>${esc(t)}</option>`).join("");
+  if(!current&&list.length)sel.value=list[0];
+}
+
 function openFormationModal(id){
   if(!canEdit("formations")){toast("Réservé aux SGT et plus","error");return;}
   const err=document.getElementById("formationErr");if(err)err.style.display="none";
   if(id){
     const f=(state.formations||[]).find(x=>x.id==id);
     if(!f)return;
+    if(!canEditFormationType(f.formation)){toast(`Formation ${f.formation} : réservée aux LT et plus`,"error");return;}
     document.getElementById("fmId").value=f.id;
     populateMemberSelect("fmFormateur",f.formateur_id,f.formateur);
     populateMemberDatalist("fmEleveList");
     document.getElementById("fmEleve").value=memberLabel(f.eleve_id,f.eleve,"");
-    document.getElementById("fmFormation").value=f.formation||"ARC Alpha";
+    populateFormationTypes(f.formation||"");
     document.getElementById("fmDate").value=f.date||"";
     document.getElementById("fmStatut").value=f.statut||"En cours";
     document.getElementById("formationModalTitle").textContent="Modifier la formation";
@@ -3532,7 +3538,7 @@ function openFormationModal(id){
     populateMemberSelect("fmFormateur","","");
     populateMemberDatalist("fmEleveList");
     document.getElementById("fmEleve").value="";
-    document.getElementById("fmFormation").value="ARC Alpha";
+    populateFormationTypes("");
     document.getElementById("fmDate").value=new Date().toISOString().slice(0,10);
     document.getElementById("fmStatut").value="En cours";
     document.getElementById("formationModalTitle").textContent="Nouvelle formation";
@@ -3554,7 +3560,7 @@ async function supaWriteOptional(table,filter,obj,optionalCols){
     const legacy={...obj};
     optionalCols.forEach(c=>delete legacy[c]);
     r=await send(legacy);
-    if(r!==null)console.warn(`${table} : colonnes absentes (${optionalCols.join(", ")}) — écriture en mode compatible.`);
+    if(r!==null)console.warn(`${table} : colonnes absentes (${optionalCols.join(", ")}) - écriture en mode compatible.`);
   }
   return r;
 }
@@ -3574,6 +3580,8 @@ async function saveFormation(){
   const date=document.getElementById("fmDate").value;
   const statut=document.getElementById("fmStatut").value;
   if(!fRef.chosen||!eRef.chosen){showErr("Formateur et élève sont requis.");return;}
+  const badType=!canEditFormationType(formation)?formation:(prev&&!canEditFormationType(prev.formation)?prev.formation:null);
+  if(badType){showErr(`Les formations ${badType} sont réservées aux LT et plus.`);return;}
 
   const obj={formateur:fRef.name,eleve:eRef.name,formateur_id:fRef.id,eleve_id:eRef.id,
              formation,date:date||null,statut};
@@ -3591,10 +3599,13 @@ async function saveFormation(){
     if(supaOK){const fresh=await supaGet(T.formations);if(fresh)state.formations=fresh;}
   }
   const formateur=obj.formateur,eleve=obj.eleve;
+  const autoRep=await autoReportForFormation(fRef.id,obj.date);
   closeModal("formationModal");
   renderFormations();
-  toast("Formation enregistrée","success");
+  if(autoRep){renderReports();renderOverview();}
+  toast(autoRep?`Formation enregistrée. Rapport validé pour ${autoRep.name}`:"Formation enregistrée","success");
   await logActivity(`${session?.user} a enregistré une formation ${formation} : ${formateur} → ${eleve}`);
+  if(autoRep)await logActivity(`Rapport de ${autoRep.name} validé automatiquement (sem. ${autoRep.week}) suite à une formation`);
   if(state.discord.formations){
     await discordConfirmSend("formation",discordFormationPayload(obj,session?.user,!!id));
   }
@@ -3621,10 +3632,10 @@ function renderCategorieTable(categorie,bodyId){
     const gc=GRADE_COLORS[m.grade||"ARC"]||"#e9eef7";
     return `<tr>
       <td><span class="grade-pill" style="color:${gc}">${m.grade||"ARC"}</span></td>
-      <td><span class="mat">${esc(m.matricule)||"—"}</span></td>
-      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"—"}</td>
-      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${m.cat_date?fmtDate(m.cat_date):"—"}</span></td>
-      <td><span style="font-size:.78rem;color:var(--tx2)">${esc(m.cat_raison)||"—"}</span></td>
+      <td><span class="mat">${esc(m.matricule)||"-"}</span></td>
+      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
+      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${m.cat_date?fmtDate(m.cat_date):"-"}</span></td>
+      <td><span style="font-size:.78rem;color:var(--tx2)">${esc(m.cat_raison)||"-"}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
         ${canManage?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="moveToCategorie('${m.id}','effectif')">↩ Réintégrer</button>
         <button class="icon-btn del" onclick="deleteMember('${m.id}')" title="Supprimer définitivement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
@@ -3649,7 +3660,7 @@ function openCatModal(memberId,target){
   const isBL=target==="blacklist";
   document.getElementById("catModalKind").textContent=isBL?"// BLACKLIST":"// RÉSERVE";
   document.getElementById("catModalTitle").textContent=isBL?"Passer en blacklist":"Passer en réserve";
-  document.getElementById("catModalDesc").textContent=`${m.matricule||"?"} ${m.nom?"— "+m.nom:""} va être déplacé vers ${isBL?"la blacklist":"les réservistes"}.`;
+  document.getElementById("catModalDesc").textContent=`${m.matricule||"?"} ${m.nom?"- "+m.nom:""} va être déplacé vers ${isBL?"la blacklist":"les réservistes"}.`;
   const btn=document.getElementById("catConfirmBtn");
   btn.textContent=isBL?"Blacklister":"Mettre en réserve";
   document.getElementById("catModal").classList.add("show");
@@ -3677,7 +3688,7 @@ async function applyCategorie(memberId,target,date,raison){
   const patch={categorie:target,cat_date:date||null,cat_raison:raison||null};
   if(supaOK){
     let r=await supaPatch(T.members,"id=eq."+memberId,patch);
-    if(r===null){toast("Erreur réseau — réessaie","error");return;}
+    if(r===null){toast("Erreur réseau - réessaie","error");return;}
   }
   Object.assign(m,patch);
   if(!supaOK)saveLS();
@@ -3726,20 +3737,20 @@ function renderRoster(){
       : `<span class="grade-pill gp-${(m.grade||"arc").toLowerCase()}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${m.grade||"ARC"}</span>`;
 
     const regCell=editable
-      ? `<input class="inline-inp" value="${m.regiment||""}" placeholder="—" style="width:70px" onchange="updateField('${m.id}','regiment',this.value)">`
-      : `<span style="color:var(--tx2);font-size:.82rem">${m.regiment||"—"}</span>`;
+      ? `<input class="inline-inp" value="${m.regiment||""}" placeholder="-" style="width:70px" onchange="updateField('${m.id}','regiment',this.value)">`
+      : `<span style="color:var(--tx2);font-size:.82rem">${m.regiment||"-"}</span>`;
 
     const rctCol=m.regiment_rct?(REGIMENT_COLORS[m.regiment_rct]||"var(--ac)"):"var(--dm)";
-    const rctCell=`<span style="font-family:var(--fm);font-size:.72rem;font-weight:${m.regiment_rct?"700":"400"};color:${rctCol}">${m.regiment_rct||"—"}</span>`;
+    const rctCell=`<span style="font-family:var(--fm);font-size:.72rem;font-weight:${m.regiment_rct?"700":"400"};color:${rctCol}">${m.regiment_rct||"-"}</span>`;
 
     const formBadge=(on,label,color)=>on?`<span style="display:inline-flex;align-items:center;padding:1px 6px;border-radius:9px;font-family:var(--fm);font-size:.52rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;background:${color}1f;color:${color};border:1px solid ${color}55">${label}</span>`:"";
     const _isCpt=(GRADE_LEVEL[m.grade]||0)>=3;
     const _forms=`${formBadge(m.f_arc_alpha,"Alpha",FORMATION_COLORS.alpha)}${formBadge(m.f_arc_trooper,"Trooper",FORMATION_COLORS.trooper)}${formBadge(m.f_cmd_mission,"CMD",FORMATION_COLORS.cmd)}${_isCpt?formBadge(m.f_negociation,"Négo",FORMATION_COLORS.nego):""}`;
-    const formCell=`<div style="display:flex;gap:3px;flex-wrap:wrap;align-items:center">${_forms||'<span style="color:var(--dm);font-size:.6rem">—</span>'}</div>`;
+    const formCell=`<div style="display:flex;gap:3px;flex-wrap:wrap;align-items:center">${_forms||'<span style="color:var(--dm);font-size:.6rem">-</span>'}</div>`;
 
     const _absNow=absNowBy.get(String(m.id));
     const statCell=_absNow
-      ? `<span class="st-badge st-absent" title="Absence enregistrée jusqu'au ${fmtDate(_absNow.end_date)} — retour automatique à Présent à son terme"><span class="d"></span>${stLabel("absent")} <span style="font-family:var(--fm);font-size:.58rem;color:var(--dm)">→ ${fmtDate(_absNow.end_date)}</span></span>`
+      ? `<span class="st-badge st-absent" title="Absence enregistrée jusqu'au ${fmtDate(_absNow.end_date)} - retour automatique à Présent à son terme"><span class="d"></span>${stLabel("absent")} <span style="font-family:var(--fm);font-size:.58rem;color:var(--dm)">→ ${fmtDate(_absNow.end_date)}</span></span>`
       : editable
       ? `<select class="inline-sel" style="color:${stColors[m.status||"present"]}"
           onchange="updateField('${m.id}','status',this.value);this.style.color=({present:'var(--gr)',absent:'var(--rd)',reserve:'var(--dm)'})[this.value]">
@@ -3752,7 +3763,7 @@ function renderRoster(){
     const promoCell=editable
       ? `<input type="date" class="inline-inp" value="${m.date_promo||""}" style="width:105px;font-family:var(--fm);font-size:.7rem"
           onchange="savePromoDate('${m.id}',this.value)" title="${daysSince!==null?daysSince+" j depuis la dernière promo":""}">`
-      : `<span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${m.date_promo?fmtDate(m.date_promo):"—"}</span>`;
+      : `<span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${m.date_promo?fmtDate(m.date_promo):"-"}</span>`;
 
     const canMove=canMoveCategorie();
     const moveBtns=canMove
@@ -3769,16 +3780,16 @@ function renderRoster(){
       <td>${gradeCell}</td>
       <td><div style="display:flex;align-items:center;gap:.6rem">
         <span class="grade-avatar" style="--gc:${GRADE_COLORS[m.grade||'ARC']}">${(m.matricule||'?').replace(/[^A-Z0-9]/gi,'').slice(-2).toUpperCase()}</span>
-        <span class="mat">${esc(m.matricule)||"—"}</span>
+        <span class="mat">${esc(m.matricule)||"-"}</span>
       </div></td>
-      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"—"}</td>
+      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
       <td>${regCell}</td>
       <td>${rctCell}</td>
       <td>${formCell}</td>
       <td>${statCell}</td>
       <td>${promoCell}</td>
       <td style="font-family:var(--fm);font-size:.82rem;color:var(--ac);text-align:center" title="${cmdTotal} CMD de mission">${cmdTotal}</td>
-      <td style="text-align:center;font-size:1rem" title="${esc(elig.reason)}">${elig.eligible===null?"—":elig.eligible?"✅":"⛔"}</td>
+      <td style="text-align:center;font-size:1rem" title="${esc(elig.reason)}">${elig.eligible===null?"-":elig.eligible?"✅":"⛔"}</td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.3rem;align-items:center;flex-wrap:nowrap">${delCell}</div></td>
     </tr>`;
   }).join("");
@@ -3788,7 +3799,7 @@ function openCmdModal(){
   if(!canEdit("cmd")){toast("Réservé aux officiers LT+","error");return;}
   const sel=document.getElementById("cmdMember");
   sel.innerHTML=`<option value="">Sélectionner…</option>`+
-    sortMembers(activeMembers()).map(m=>`<option value="${m.id}">${esc(m.matricule)} — ${esc(m.nom)||"?"}</option>`).join("");
+    sortMembers(activeMembers()).map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"}</option>`).join("");
   document.getElementById("cmdDate").value=new Date().toISOString().slice(0,10);
   document.getElementById("cmdModal").classList.add("show");
 }
@@ -3837,8 +3848,8 @@ function renderCmd(){
   tbody.innerHTML=state.cmdmissions.map(c=>`<tr>
     <td class="nm">${esc(memberLabel(c.member_id,c.member_name))}</td>
     <td><span style="font-family:var(--fm);font-size:.7rem;color:${c.points===1?"var(--ac)":"var(--vi)"}">${esc(c.role)||"Chef"}</span></td>
-    <td style="font-family:var(--fm);font-size:.82rem;color:var(--ac)">${c.points||"—"}</td>
-    <td style="color:var(--tx2);font-size:.82rem">${esc(c.mission_name)||"—"}</td>
+    <td style="font-family:var(--fm);font-size:.82rem;color:var(--ac)">${c.points||"-"}</td>
+    <td style="color:var(--tx2);font-size:.82rem">${esc(c.mission_name)||"-"}</td>
     <td style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${fmtDate(c.date||c.created_at)}</td>
     <td style="text-align:right">${cmdEditable?`<button class="icon-btn del" onclick="deleteCmdMission('${c.id}')" title="Supprimer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}</td>
@@ -3862,7 +3873,7 @@ function nextBlameLevel(memberId){
   return Math.min(BLAME_MAX_LEVEL,activeBlameCount(memberId)+1);
 }
 function blameLevelLabel(lvl){
-  return lvl===1?"1er blâme":lvl===2?"2ème blâme":"3ème blâme — Exclusion";
+  return lvl===1?"1er blâme":lvl===2?"2ème blâme":"3ème blâme - Exclusion";
 }
 function updateBlameLevelPreview(){
   const sel=document.getElementById("bMember"),box=document.getElementById("bLevelTxt");
@@ -3877,14 +3888,14 @@ function updateBlameLevelPreview(){
   const lvl=nextBlameLevel(mid);
   box.textContent=blameLevelLabel(lvl)+(already?` · ${already} blâme${already>1?"s":""} en cours`:"");
   box.style.color=lvl===1?"var(--or)":"var(--rd)";
-  if(already>=BLAME_MAX_LEVEL)box.textContent=`Déjà ${already} blâmes actifs — exclusion déjà atteinte`;
+  if(already>=BLAME_MAX_LEVEL)box.textContent=`Déjà ${already} blâmes actifs - exclusion déjà atteinte`;
 }
 
 function openBlameModal(){
   if(!canEdit("blames")){toast("Accès insuffisant","error");return;}
   const s=document.getElementById("bMember");
   s.innerHTML=`<option value="">Sélectionner…</option>`+
-    sortMembers(activeMembers()).map(m=>`<option value="${m.id}">${esc(m.matricule)} — ${esc(m.nom)||"?"}</option>`).join("");
+    sortMembers(activeMembers()).map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"}</option>`).join("");
   const r=document.getElementById("bReason");if(r)r.value="";
   updateBlameLevelPreview();
   document.getElementById("blameModal").classList.add("show");
@@ -3901,9 +3912,9 @@ function renderBlames(){
     list.map(b=>`<div class="ann" style="border-left-color:${lc[b.level]||"var(--rd)"}">
       <div class="ann-ico" style="color:${lc[b.level]||"var(--rd)"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
       <div class="ann-c">
-        <div class="ann-t">${esc(memberLabel(b.member_id,b.member_name))} — ${esc(blameLevelLabel(b.level||1))}</div>
+        <div class="ann-t">${esc(memberLabel(b.member_id,b.member_name))} - ${esc(blameLevelLabel(b.level||1))}</div>
         <div class="ann-d">${esc(b.reason)||"Aucun motif"}</div>
-        ${b.resolved&&b.resolve_reason?`<div class="ann-d" style="color:var(--gr);font-size:.76rem;margin-top:.25rem">↳ Levé : ${esc(b.resolve_reason)}${b.resolved_by?` — par ${esc(userLabel(b.resolved_by_id,b.resolved_by))}`:""}${b.resolved_at?` le ${fmtDate(b.resolved_at)}`:""}</div>`:""}
+        ${b.resolved&&b.resolve_reason?`<div class="ann-d" style="color:var(--gr);font-size:.76rem;margin-top:.25rem">↳ Levé : ${esc(b.resolve_reason)}${b.resolved_by?` - par ${esc(userLabel(b.resolved_by_id,b.resolved_by))}`:""}${b.resolved_at?` le ${fmtDate(b.resolved_at)}`:""}</div>`:""}
         <div class="ann-meta">${fmtDate(b.created_at)}${b.resolved?" · Levé":""}
           ${canManageBlames&&!b.resolved?`<button class="sbtn green" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="resolveBlame('${b.id}')">Résoudre</button>`:""}
           ${canManageBlames?`<button class="sbtn danger" style="margin-left:.5rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteBlame('${b.id}')">Supprimer</button>`:""}
@@ -3960,13 +3971,13 @@ async function resolveBlame(id){
   if(supaOK){
     const r=await supaWriteOptional(T.blames,`id=eq.${id}`,patch,
       ["resolve_reason","resolved_by","resolved_by_id","resolved_at"]);
-    if(r===null){toast("Erreur réseau — réessaie","error");return;}
+    if(r===null){toast("Erreur réseau - réessaie","error");return;}
   }
   Object.assign(b,patch);
   if(!supaOK)saveLS();
   renderBlames();renderOverview();refreshMemberViews();
   toast("Blâme levé","success");
-  await logActivity(`${session?.user} a levé un blâme de ${who} — ${motif}`);
+  await logActivity(`${session?.user} a levé un blâme de ${who} - ${motif}`);
 }
 
 async function deleteBlame(id){
@@ -4019,7 +4030,7 @@ function openAbsModal(){
   if(!canEdit("absences")){toast("Accès insuffisant","error");return;}
   const sel=document.getElementById("absMember");
   sel.innerHTML=`<option value="">Sélectionner…</option>`+
-    sortMembers(activeMembers()).map(m=>`<option value="${m.id}">${esc(m.matricule)} — ${esc(m.nom)||"?"}</option>`).join("");
+    sortMembers(activeMembers()).map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"}</option>`).join("");
   const today=new Date().toISOString().slice(0,10);
   document.getElementById("absStart").value=today;document.getElementById("absEnd").value=today;
   document.getElementById("absModal").classList.add("show");
@@ -4058,7 +4069,7 @@ function renderAbsences(){
     cur.n++;cnt.set(k,cur);
   });
   const most=[...cnt.values()].sort((x,y)=>y.n-x.n)[0];
-  if(ge("absMostAbs"))ge("absMostAbs").textContent=most?memberLabel(most.id,most.stored).split(" ")[0]:"—";
+  if(ge("absMostAbs"))ge("absMostAbs").textContent=most?memberLabel(most.id,most.stored).split(" ")[0]:"-";
   if(ge("absCurrent"))ge("absCurrent").textContent=active.length?active.map(a=>memberLabel(a.member_id,a.member_name).split(" ")[0]).join(", "):"Personne";
   const ael=ge("absActiveList");
   if(ael){
@@ -4067,8 +4078,8 @@ function renderAbsences(){
       const dl=Math.round((new Date(a.end_date)-new Date())/(1000*60*60*24))+1;
       return `<div class="ann" style="border-left-color:var(--or)">
         <div class="ann-ico" style="color:var(--or)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div class="ann-c"><div class="ann-t">${esc(memberLabel(a.member_id,a.member_name))}</div><div class="ann-d">${esc(a.reason)||"—"}</div>
-          <div class="ann-meta">Du <strong>${fmtDate(a.start_date)}</strong> au <strong>${fmtDate(a.end_date)}</strong> — <span style="color:var(--or)">${dl} j restant(s)</span>
+        <div class="ann-c"><div class="ann-t">${esc(memberLabel(a.member_id,a.member_name))}</div><div class="ann-d">${esc(a.reason)||"-"}</div>
+          <div class="ann-meta">Du <strong>${fmtDate(a.start_date)}</strong> au <strong>${fmtDate(a.end_date)}</strong> - <span style="color:var(--or)">${dl} j restant(s)</span>
           ${absEditable?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteAbsence('${a.id}')">Supprimer</button>`:""}</div>
         </div></div>`;
     }).join("");
@@ -4079,7 +4090,7 @@ function renderAbsences(){
     <td class="nm">${esc(memberLabel(a.member_id,a.member_name))}</td>
     <td style="font-family:var(--fm);font-size:.72rem">${fmtDate(a.start_date)}</td>
     <td style="font-family:var(--fm);font-size:.72rem">${fmtDate(a.end_date)}</td>
-    <td style="color:var(--tx2);font-size:.82rem">${esc(a.reason)||"—"}</td>
+    <td style="color:var(--tx2);font-size:.82rem">${esc(a.reason)||"-"}</td>
     <td style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${a.duration_days||"?"} j</td>
     <td style="text-align:right">${absEditable?`<button class="icon-btn del" onclick="deleteAbsence('${a.id}')" title="Supprimer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}</td>
@@ -4095,9 +4106,21 @@ async function deleteAbsence(id){
   renderAbsences();renderRoster();renderOverview();toast("Absence supprimée","info");
 }
 
+function ymdLocal(d){
+  const z=n=>String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+}
 function getWeekKey(offset=0){
   const d=new Date();d.setDate(d.getDate()-(d.getDay()===0?6:d.getDay()-1)+offset*7);
-  return d.toISOString().slice(0,10);
+  return ymdLocal(d);
+}
+function weekKeyOf(dateStr){
+  const p=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr||""));
+  if(!p)return getWeekKey(0);
+  const d=new Date(+p[1],+p[2]-1,+p[3]);
+  if(isNaN(d.getTime()))return getWeekKey(0);
+  d.setDate(d.getDate()-(d.getDay()===0?6:d.getDay()-1));
+  return ymdLocal(d);
 }
 function prevWeek(){reportWeekOffset--;renderReports();}
 function nextWeek(){if(reportWeekOffset<0){reportWeekOffset++;renderReports();}}
@@ -4130,6 +4153,26 @@ async function toggleReport(memberId,weekKey){
   renderReports();
 }
 
+async function autoReportForFormation(memberId,dateStr){
+  if(memberId===null||memberId===undefined||memberId==="")return null;
+  const m=memberById(memberId);
+  if(!m)return null;
+  if((m.categorie||"effectif")!=="effectif")return null;
+  if(REPORT_EXEMPT.includes(m.grade))return null;
+  const wk=weekKeyOf(dateStr);
+  if(!state.reports)state.reports=[];
+  if(state.reports.some(r=>String(r.member_id)===String(m.id)&&r.week_key===wk))return null;
+  const obj={member_id:m.id,member_name:`${m.matricule||"?"} ${m.nom||""}`.trim(),week_key:wk};
+  if(supaOK){
+    const r=await supaPost(T.reports,obj);
+    if(!r||!r.length)return null;
+    state.reports.push(r[0]);
+  }else{
+    obj.id=Date.now().toString();state.reports.push(obj);saveLS();
+  }
+  return{name:obj.member_name,week:wk};
+}
+
 function renderReports(){
   applyAutoReportUI();
   const wk=getWeekKey(reportWeekOffset);
@@ -4145,7 +4188,7 @@ function renderReports(){
   if(ge("repDone"))ge("repDone").textContent=done;
   if(ge("repPending"))ge("repPending").textContent=required.length-done;
   if(ge("repExempt"))ge("repExempt").textContent=exempt.length;
-  if(ge("repRate"))ge("repRate").textContent=required.length>0?Math.round(done/required.length*100)+"%":"—";
+  if(ge("repRate"))ge("repRate").textContent=required.length>0?Math.round(done/required.length*100)+"%":"-";
   const tbody=document.getElementById("repBody");if(!tbody)return;
   if(!state.members.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty"><p>Aucun membre</p></div></td></tr>';return;}
   tbody.innerHTML=[...required,...exempt].map(m=>{
@@ -4155,9 +4198,9 @@ function renderReports(){
     return `<tr style="opacity:${isEx?".45":"1"}">
       <td><div style="display:flex;align-items:center;gap:.6rem">
         <span class="grade-avatar" style="--gc:${GRADE_COLORS[m.grade||'ARC']}">${(m.matricule||'?').replace(/[^A-Z0-9]/gi,'').slice(-2).toUpperCase()}</span>
-        <span class="mat">${esc(m.matricule)||"—"}</span>
+        <span class="mat">${esc(m.matricule)||"-"}</span>
       </div></td>
-      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"—"}</td>
+      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
       <td><span class="grade-pill gp-${(m.grade||"arc").toLowerCase()}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${m.grade||"ARC"}</span></td>
       <td>${isEx?'<span style="font-family:var(--fm);font-size:.68rem;color:var(--dm)">Dispensé</span>':
         `<button onclick="toggleReport('${m.id}','${wk}')"
@@ -4278,7 +4321,7 @@ function populateRegimentSelect(selectId,currentVal){
   const sel=document.getElementById(selectId);
   if(!sel)return;
   const regs=state.regiments||[];
-  sel.innerHTML='<option value="">— Aucun —</option>'+
+  sel.innerHTML='<option value="">Aucun</option>'+
     regs.map(r=>`<option value="${esc(r)}" style="color:${REGIMENT_COLORS[r]||'var(--tx)'}" ${currentVal===r?"selected":""}>${esc(r)}</option>`).join("")+
     '<option value="__add__">➕ Ajouter un régiment...</option>';
   sel.onchange=async function(){
@@ -4472,7 +4515,7 @@ function openUserModal(type="member"){
   const nuML=document.getElementById("nuMemberLink");
   if(nuML){
     nuML.innerHTML='<option value="">Aucun lien</option>'+
-      sortMembers(state.members).map(m=>`<option value="${m.id}">${esc(m.matricule)} — ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
+      sortMembers(state.members).map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
   }
   const err=document.getElementById("userModalErr");if(err)err.classList.remove("show");
   document.getElementById("userModal").classList.add("show");
@@ -4519,7 +4562,7 @@ function renderUsers(){
       <td><span style="font-family:var(--fm);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:${rc};padding:.2rem .55rem;border:1px solid ${rc}44;background:${rc}11">${ROLE_BADGES[u.role]||"● MEMBRE"}</span></td>
       <td>${(()=>{
         const lm=u.member_id?state.members.find(m=>m.id==u.member_id):null;
-        if(lm)return `<div style="display:flex;align-items:center;gap:.5rem"><span style="font-family:var(--fm);font-size:.6rem;color:var(--ac);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);padding:.12rem .4rem;border-radius:3px">${esc(lm.grade)||"?"}</span><span style="font-size:.78rem;color:var(--tx)">${esc(lm.matricule)}${lm.nom?" — "+esc(lm.nom):""}</span></div>`;
+        if(lm)return `<div style="display:flex;align-items:center;gap:.5rem"><span style="font-family:var(--fm);font-size:.6rem;color:var(--ac);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);padding:.12rem .4rem;border-radius:3px">${esc(lm.grade)||"?"}</span><span style="font-size:.78rem;color:var(--tx)">${esc(lm.matricule)}${lm.nom?" - "+esc(lm.nom):""}</span></div>`;
         return `<span style="font-size:.72rem;color:var(--dm);font-style:italic">Non lié</span>`;
       })()}</td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
@@ -4696,7 +4739,7 @@ function openEditUser(id){
   const ml=document.getElementById("euMemberLink");
   if(ml){
     ml.innerHTML='<option value="">Aucun lien</option>'+
-      sortMembers(state.members).map(m=>`<option value="${m.id}" ${u.member_id==m.id?"selected":""}>${esc(m.matricule)} — ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
+      sortMembers(state.members).map(m=>`<option value="${m.id}" ${u.member_id==m.id?"selected":""}>${esc(m.matricule)} - ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
   }
   document.getElementById("euMemberLinkField").style.display=(u.role==="member")?"block":"none";
   document.getElementById("euRole").onchange=function(){
@@ -4840,7 +4883,7 @@ function renderTickets(){
     const notFound=t.account_exists===false;
     return `<tr style="${isOpen?"":"opacity:.5"}">
       <td><span style="font-family:var(--fm);font-size:.8rem;color:var(--tx)">${t.user_ident||"?"}</span>${notFound?'<span style="color:var(--rd);font-size:.6rem;margin-left:.4rem">compte introuvable</span>':''}</td>
-      <td><span style="font-size:.78rem;color:var(--tx2)">${t.message||"—"}</span></td>
+      <td><span style="font-size:.78rem;color:var(--tx2)">${t.message||"-"}</span></td>
       <td><span style="font-family:var(--fm);font-size:.68rem;color:${isOpen?"var(--ye)":"var(--gr)"}">${isOpen?"⏳ En attente":"✓ Traité"}</span><br><span style="font-family:var(--fm);font-size:.6rem;color:var(--dm)">${fmtDT(t.created_at)}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
         ${isOpen&&!notFound?`<button class="sbtn green" style="padding:.2rem .6rem;font-size:.64rem" onclick="openResetTicket('${t.id}')">Réinitialiser</button>`:""}
@@ -4933,6 +4976,24 @@ function toggleEditMode(){
   document.querySelectorAll("[data-e]").forEach(el=>el.contentEditable=editMode?"true":"false");
 }
 
+async function resetVitrineTexts(){
+  if(!session||session.role!=="admin"){toast("Réservé à l'administrateur","error");return;}
+  const rx=/^(mission_|equip_|mem_rp|mem_bat|mem_catlabel)/;
+  const keys=Object.keys(state.content||{}).filter(k=>rx.test(k));
+  if(!keys.length){toast("Aucun texte personnalisé sur ces sections","info");return;}
+  const ok=await uiConfirm({
+    kicker:"// VITRINE",
+    title:"Restaurer les textes d'origine",
+    message:`${keys.length} texte(s) personnalisé(s) des sections Missions, Équipement et Membres légendaires seront effacés : le site reprendra les textes du fichier.\n\nLes autres contenus (accueil, présentation de l'unité, noms et bios des membres) ne sont pas touchés.`,
+    okText:"Restaurer",cancelText:"Annuler",danger:true});
+  if(!ok)return;
+  keys.forEach(k=>delete state.content[k]);
+  if(supaOK)await setConfig("content",state.content);else saveLS();
+  await logActivity(`${session.user} a restauré les textes d'origine de la vitrine`);
+  toast("Textes restaurés - rechargement…","success");
+  setTimeout(()=>location.reload(),900);
+}
+
 async function saveEdits(){
   if(!session||session.role!=="admin"){toast("Réservé à l'administrateur","error");return;}
   const st=document.getElementById("editSt");if(st)st.textContent="Sauvegarde…";
@@ -5004,9 +5065,9 @@ function syncBadge(mode){
   const el=document.getElementById("syncDot");
   if(!el) return;
   el.className="sync-dot "+(mode||"");
-  el.title = mode==="off" ? "Hors ligne — nouvelle tentative en cours"
+  el.title = mode==="off" ? "Hors ligne - nouvelle tentative en cours"
            : mode==="busy" ? "Synchronisation…"
-           : "À jour — les modifications apparaissent automatiquement";
+           : "À jour - les modifications apparaissent automatiquement";
 }
 
 async function pollRealtime(){
@@ -5087,7 +5148,7 @@ document.addEventListener("visibilitychange",()=>{
 window.addEventListener("online",()=>{ _pollDelay=POLL_BASE; schedulePoll(); });
 window.addEventListener("offline",()=>syncBadge("off"));
 function stLabel(s){return{present:"Présent",absent:"Absent",reserve:"Réserve"}[s]||s||"Présent";}
-function fmtDate(d){if(!d)return"—";try{return new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"});}catch{return d;}}
+function fmtDate(d){if(!d)return"-";try{return new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"});}catch{return d;}}
 
 let toastTimer;
 let _confirmResolver=null,_confirmMode="confirm";
@@ -5254,13 +5315,13 @@ const PERSONNAGES=[
    rp:"Calme absolu sous le feu. Il ne hausse jamais le ton, sa voix reste égale même quand tout s'effondre autour. Protecteur envers ses hommes, respectueux envers les Jedi. C'est le modèle que les autres cherchent à devenir.",
    lore:"Meneur de l'assaut sur Muunilinst. Il est surtout connu pour être arrivé en extraction sur Hypori et avoir sorti d'une mort certaine des Jedi encerclés par les droïdes. Sa réputation le précède sur tous les fronts."},
   {mat:"A-98",nom:"Jangotat",grade:"CPT",
-   rp:"Réservé, grave, tourné vers les autres. Il s'interroge sur ce qu'il est au-delà de son matricule, sans jamais en faire un fardeau pour son escouade. Loyal jusqu'au sacrifice — et à jouer comme tel.",
+   rp:"Réservé, grave, tourné vers les autres. Il s'interroge sur ce qu'il est au-delà de son matricule, sans jamais en faire un fardeau pour son escouade. Loyal jusqu'au sacrifice - et à jouer comme tel.",
    lore:"Envoyé en infiltration longue durée sur Ord Cestus, il a vécu parmi des civils et y a entrevu une vie qui n'était pas la sienne. Il a fini par choisir de mourir pour que sa mission réussisse plutôt que de rentrer."},
   {mat:"A-17",nom:"Alpha",grade:"LTN",
    rp:"Froid, cassant, sans patience pour l'approximation. Il parle peu et chaque mot est un ordre ou un reproche. Il ne félicite jamais : chez lui, le silence vaut déjà approbation. Méfiant envers les Jedi, qu'il juge trop tendres pour la guerre. Une autorité qu'on ne discute pas.",
    lore:"Entraîné directement par Jango Fett, il a survécu à sa captivité et aux interrogatoires d'Asajj Ventress. C'est lui qui a formé la majorité des ARC en service. Sa doctrine : un ARC réfléchit seul et n'attend l'ordre de personne pour faire ce qui doit être fait."},
   {mat:"A-38",nom:"Aven",grade:"LTN",
-   rp:"Posé, méthodique, difficile à faire sortir de ses gonds. Il écoute avant de parler et tempère les fortes têtes. C'est la voix de la raison du groupe — celui vers qui on se tourne quand un plan part en morceaux.",
+   rp:"Posé, méthodique, difficile à faire sortir de ses gonds. Il écoute avant de parler et tempère les fortes têtes. C'est la voix de la raison du groupe - celui vers qui on se tourne quand un plan part en morceaux.",
    lore:"Réputé pour avoir ramené son escouade d'opérations que personne ne donnait gagnables, en faisant systématiquement passer le retour de ses hommes avant l'objectif."},
   {mat:"A-49",nom:"Stec",grade:"LTN",
    rp:"Bruyant, enthousiaste, franchement trop content de faire sauter des choses. Il détend l'ambiance et se moque de tout, y compris de lui-même. Mais dès que ça tourne mal, l'humour s'arrête net et le professionnel prend le relais.",
@@ -5269,7 +5330,7 @@ const PERSONNAGES=[
    rp:"Silencieux, observateur, mal à l'aise dans le rôle qu'on lui a assigné. Il pose les questions que les autres évitent : pourquoi on se bat, pour qui, jusqu'à quand. À jouer comme quelqu'un qui doute sans jamais se plaindre.",
    lore:"Ses interrogations sur la guerre et sur la condition des clones l'ont mené à quitter les rangs en pleine campagne. Son nom reste un sujet sensible : pour les uns un déserteur, pour les autres le seul qui soit allé au bout de sa pensée."},
   {mat:"A-66",nom:"Muzzle",grade:"",
-   rp:"Économe en mots au point d'en être déroutant. Il répond par monosyllabes et observe plus qu'il ne participe. Rien ne semble l'atteindre. Quand il parle enfin, tout le monde écoute — parce que ça n'arrive presque jamais pour rien.",
+   rp:"Économe en mots au point d'en être déroutant. Il répond par monosyllabes et observe plus qu'il ne participe. Rien ne semble l'atteindre. Quand il parle enfin, tout le monde écoute - parce que ça n'arrive presque jamais pour rien.",
    lore:"Son surnom lui vient d'une opération entière conduite sans un mot à la radio, sa position tenue pendant des heures. Il ne raconte jamais ses propres missions."}
 ];
 
@@ -5339,7 +5400,7 @@ function openTaskModal(){
   const sel=document.getElementById("taskAssignee");
   const officers=sortMembers(activeMembers()).filter(m=>(GRADE_LEVEL[m.grade]||0)>=3);
   sel.innerHTML='<option value="">Sélectionner…</option>'+
-    officers.map(m=>`<option value="${m.id}">${esc(m.matricule)} — ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
+    officers.map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
   document.getElementById("taskModal").classList.add("show");
 }
 async function saveTask(){
@@ -5860,13 +5921,13 @@ async function processReportAutomation(){
       if(reportAbsenceExempt(m.id,wk))continue;
       const marker=`${REPORT_AUTO_MARK} ${wk}]`;
       if(state.blames.some(b=>b.member_id==m.id&&(b.reason||"").includes(marker)))continue;
-      const reason=`${marker} Absence de rapport hebdomadaire (semaine du ${dateLabel}) — blâme automatique (règlement 3.4)`;
+      const reason=`${marker} Absence de rapport hebdomadaire (semaine du ${dateLabel}) - blâme automatique (règlement 3.4)`;
       const obj={member_id:m.id,member_name:`${m.matricule} ${m.nom||""}`.trim(),
         level:nextBlameLevel(m.id),reason,resolved:false};
       if(supaOK){const r=await supaPost(T.blames,obj);if(r&&r.length>0)state.blames.unshift(r[0]);}
       else{obj.id=Date.now().toString()+Math.random().toString(36).slice(2,6);state.blames.unshift(obj);saveLS();}
       applied++;
-      await logActivity(`Blâme automatique appliqué à ${obj.member_name} — absence de rapport (semaine du ${dateLabel})`);
+      await logActivity(`Blâme automatique appliqué à ${obj.member_name} - absence de rapport (semaine du ${dateLabel})`);
     }
   }
   if(applied>0){
@@ -5922,7 +5983,7 @@ function renderCmdK(q){
     members=state.members.filter(m=>(m.categorie||"effectif")!=="blacklist")
       .filter(m=>[m.nom,m.matricule,m.grade].some(v=>v&&String(v).toLowerCase().includes(ql)))
       .slice(0,8)
-      .map(m=>({type:"member",id:m.id,label:`${m.matricule||"?"} — ${m.nom||"?"}`,grade:m.grade||"",role:""}));
+      .map(m=>({type:"member",id:m.id,label:`${m.matricule||"?"} - ${m.nom||"?"}`,grade:m.grade||"",role:""}));
   }
   _cmdkItems=[];let html="";
   if(tabs.length){
@@ -6168,7 +6229,7 @@ async function deleteConversation(hash){
   if(supaOK){
     const filter=`or=(and(from_hash.eq.${me},to_hash.eq.${hash}),and(from_hash.eq.${hash},to_hash.eq.${me}))`;
     const done=await supaDelete(T.messages,filter);
-    if(!done){toast("Suppression impossible — réessaie","error");return;}
+    if(!done){toast("Suppression impossible - réessaie","error");return;}
   }
   if(_chatWith===hash){_chatWith=null;}
   _chatLastCount=-1;
@@ -6281,7 +6342,7 @@ function renderMonEspace(){
     <div class="me-hero-av" style="--gc:${roleAvColor}">${esc((session.user[0]||'?').toUpperCase())}</div>
     <div>
       <div class="me-hero-name">${esc(session.user)}</div>
-      <div class="me-hero-sub">${me?esc(me.matricule)+' · '+(me.grade||'—'):roleTxt}${me&&me.regiment_rct?` · <span style="color:${REGIMENT_COLORS[me.regiment_rct]||'var(--ac)'}">${esc(me.regiment_rct)}</span>`:''}</div>
+      <div class="me-hero-sub">${me?esc(me.matricule)+' · '+(me.grade||'-'):roleTxt}${me&&me.regiment_rct?` · <span style="color:${REGIMENT_COLORS[me.regiment_rct]||'var(--ac)'}">${esc(me.regiment_rct)}</span>`:''}</div>
     </div>
   </div>`;
 
@@ -6302,7 +6363,7 @@ function renderMonEspace(){
   if(exempt){
     repInner=`<div class="me-badge" style="--c:var(--ac)">Dispensé</div><p class="me-note">À partir du grade de Capitaine, tu es dispensé du rapport hebdomadaire.</p>`;
   }else if(absExempt){
-    repInner=`<div class="me-badge" style="--c:var(--ac)">Dispensé — absence</div><p class="me-note">Tu es en absence sur cette semaine : aucun rapport n'est attendu et aucun blâme ne sera appliqué.</p>`;
+    repInner=`<div class="me-badge" style="--c:var(--ac)">Dispensé - absence</div><p class="me-note">Tu es en absence sur cette semaine : aucun rapport n'est attendu et aucun blâme ne sera appliqué.</p>`;
   }else if(esc_){
     const stageLbl=esc_.blamed?"Blâme appliqué":"Avertissement";
     const col=esc_.blamed?"var(--rd)":esc_.hoursLeft<=12?"var(--or)":"var(--ye)";
@@ -6321,7 +6382,7 @@ function renderMonEspace(){
   const elig=getEligibility(me);
   let progInner;
   if(!elig.progress){
-    progInner=`<p class="me-note">Promotion manuelle à ce grade — pas de critères automatiques.</p>`;
+    progInner=`<p class="me-note">Promotion manuelle à ce grade - pas de critères automatiques.</p>`;
   }else{
     const p=elig.progress;
     const bar=(label,cur,need,pct,unit)=>`
@@ -6329,7 +6390,7 @@ function renderMonEspace(){
         <div class="me-prog-top"><span>${label}</span><span class="me-prog-val">${cur}/${need}${unit}</span></div>
         <div class="me-prog-track"><div class="me-prog-fill" style="width:${pct}%;background:${pct>=100?'var(--gr)':'var(--ac)'}"></div></div>
       </div>`;
-    progInner=`<div class="me-next">Prochain grade : <strong style="color:${GRADE_COLORS[p.nextGrade]||'var(--ac)'}">${p.nextGrade||'—'}</strong></div>`;
+    progInner=`<div class="me-next">Prochain grade : <strong style="color:${GRADE_COLORS[p.nextGrade]||'var(--ac)'}">${p.nextGrade||'-'}</strong></div>`;
     progInner+=bar("Ancienneté",p.days,p.needDays,p.daysPct," j");
     if(p.hasCmd)progInner+=bar("CMD de mission",p.cmd,p.needCmd,p.cmdPct,"");
     progInner+=`<div class="me-elig ${elig.eligible?'ok':'no'}">${elig.eligible?'✅ Éligible à la promotion':'⏳ '+esc(elig.reason)}</div>`;
@@ -6427,7 +6488,7 @@ async function saveInfoOnly(){
   const val=document.getElementById("mpInfoInline").value.trim();
   if(supaOK){
     const r=await supaPatch(T.members,"id=eq."+_mpCurrentId,{infos_perso:val});
-    if(r===null){toast("Erreur réseau — réessaie","error");return;}
+    if(r===null){toast("Erreur réseau - réessaie","error");return;}
   }
   m.infos_perso=val;
   if(!supaOK)saveLS();
@@ -6459,7 +6520,7 @@ async function saveRemarqueOnly(){
   const val=document.getElementById("mpRemarqueInline").value.trim();
   if(supaOK){
     const r=await supaPatch(T.members,"id=eq."+_mpCurrentId,{remarque:val});
-    if(r===null){toast("Erreur réseau — réessaie","error");return;}
+    if(r===null){toast("Erreur réseau - réessaie","error");return;}
   }
   m.remarque=val;
   if(!supaOK)saveLS();
@@ -6513,7 +6574,7 @@ function renderMemberTimeline(m,el){
     <div class="tl-item">
       <div class="tl-marker" style="--tc:${e.color}"><span>${e.icon}</span></div>
       <div class="tl-content">
-        <div class="tl-top"><span class="tl-title">${esc(e.title)}</span><span class="tl-date">${e.date?fmtDate(e.date):"—"}</span></div>
+        <div class="tl-top"><span class="tl-title">${esc(e.title)}</span><span class="tl-date">${e.date?fmtDate(e.date):"-"}</span></div>
         ${e.sub?`<div class="tl-sub">${esc(e.sub)}</div>`:""}
       </div>
     </div>`).join("")+'</div>';
@@ -6524,7 +6585,7 @@ function medalBadgesHTML(m,size){
   if(!ids.length)return"";
   return ids.map(id=>{
     const md=MEDAL_BY_ID[id];if(!md)return"";
-    return`<span class="medal-badge" title="${esc(md.name)} — ${esc(md.desc)}" style="--mc:${md.color};${size==="sm"?"font-size:.9rem;width:26px;height:26px":""}">${md.icon}</span>`;
+    return`<span class="medal-badge" title="${esc(md.name)} - ${esc(md.desc)}" style="--mc:${md.color};${size==="sm"?"font-size:.9rem;width:26px;height:26px":""}">${md.icon}</span>`;
   }).join("");
 }
 function renderMpMedals(m,el){
@@ -6580,7 +6641,7 @@ function openMemberProfile(memberId){
   _mpCurrentId=memberId;
   _mpEditMode=false;
 
-  document.getElementById("mpName").textContent=`${m.matricule} — ${m.nom||"?"}`;
+  document.getElementById("mpName").textContent=`${m.matricule} - ${m.nom||"?"}`;
   const mpMedalRow=document.getElementById("mpMedalRow");
   if(mpMedalRow)mpMedalRow.innerHTML=medalBadgesHTML(m);
   document.getElementById("mpEditSection").style.display="none";
@@ -6594,7 +6655,7 @@ function openMemberProfile(memberId){
   document.getElementById("mpCmdTotal").textContent=cmdTotal;
   document.getElementById("mpBlameCount").textContent=blameCount;
   document.getElementById("mpAbsCount").textContent=absCount;
-  document.getElementById("mpEligStatus").textContent=elig.eligible===null?"—":elig.eligible?"✅":"⛔";
+  document.getElementById("mpEligStatus").textContent=elig.eligible===null?"-":elig.eligible?"✅":"⛔";
   renderPromoProgress(m, elig);
 
   document.getElementById("mpMat").value=m.matricule||"";
@@ -6696,7 +6757,7 @@ async function saveMemberProfile(){
       const minimal={matricule:mat,nom,grade,regiment:reg,status:stat};
       if(promo)minimal.date_promo=promo;
       r=await supaPatch(T.members,"id=eq."+_mpCurrentId,minimal);
-      if(r===null){toast("Erreur réseau — réessaie","error");return;}
+      if(r===null){toast("Erreur réseau - réessaie","error");return;}
     }
   }
   Object.assign(m,patch);
@@ -6716,7 +6777,7 @@ async function saveMemberProfile(){
   document.getElementById("mpEditSection").style.display="none";
   const eb=document.getElementById("mpEditToggleBtn");
   if(eb)eb.textContent="Modifier la fiche";
-  document.getElementById("mpName").textContent=`${mat} — ${nom||"?"}`;
+  document.getElementById("mpName").textContent=`${mat} - ${nom||"?"}`;
 
   renderRoster();
   renderOverview();
@@ -6735,7 +6796,7 @@ function mpTab(tab){
     const mine=state.cmdmissions.filter(c=>c.member_id==_mpCurrentId);
     if(!mine.length){el.innerHTML='<div class="empty"><p>Aucun CMD de mission</p></div>';return;}
     el.innerHTML=mine.map(c=>`<div class="log-item"><div class="log-dot"></div>
-      <div class="log-txt">${esc(c.role)||"Chef"} — ${esc(c.mission_name)||"Mission"} (+${c.points} pt${c.points>1?"s":""})</div>
+      <div class="log-txt">${esc(c.role)||"Chef"} - ${esc(c.mission_name)||"Mission"} (+${c.points} pt${c.points>1?"s":""})</div>
       <div class="log-time">${fmtDate(c.date||c.created_at)}</div></div>`).join("");
   }
   if(tab==="medals"){
@@ -6751,7 +6812,7 @@ function mpTab(tab){
     const mine=state.blames.filter(b=>b.member_id==_mpCurrentId);
     if(!mine.length){el.innerHTML='<div class="empty"><p>Aucun blâme</p></div>';return;}
     el.innerHTML=mine.map(b=>`<div class="log-item"><div class="log-dot" style="background:${b.resolved?"var(--gr)":"var(--rd)"}"></div>
-      <div class="log-txt">${esc(blameLevelLabel(b.level||1))} — ${esc(b.reason)||"Sans motif"}${b.resolved?` <span style="color:var(--gr)">(levé${b.resolve_reason?" : "+esc(b.resolve_reason):""})</span>`:""}</div>
+      <div class="log-txt">${esc(blameLevelLabel(b.level||1))} - ${esc(b.reason)||"Sans motif"}${b.resolved?` <span style="color:var(--gr)">(levé${b.resolve_reason?" : "+esc(b.resolve_reason):""})</span>`:""}</div>
       <div class="log-time">${fmtDate(b.created_at)}</div></div>`).join("");
   }
   if(tab==="absences"){
@@ -6759,7 +6820,7 @@ function mpTab(tab){
     const mine=state.absences.filter(a=>a.member_id==_mpCurrentId);
     if(!mine.length){el.innerHTML='<div class="empty"><p>Aucune absence</p></div>';return;}
     el.innerHTML=mine.map(a=>`<div class="log-item"><div class="log-dot"></div>
-      <div class="log-txt">Du ${fmtDate(a.start_date)} au ${fmtDate(a.end_date)} (${esc(a.duration_days)}j) — ${esc(a.reason)||"—"}</div>
+      <div class="log-txt">Du ${fmtDate(a.start_date)} au ${fmtDate(a.end_date)} (${esc(a.duration_days)}j) - ${esc(a.reason)||"-"}</div>
       <div class="log-time">${fmtDate(a.created_at)}</div></div>`).join("");
   }
   if(tab==="reports"){
@@ -6767,7 +6828,7 @@ function mpTab(tab){
     const mine=state.reports.filter(r=>r.member_id==_mpCurrentId);
     if(!mine.length){el.innerHTML='<div class="empty"><p>Aucun rapport soumis</p></div>';return;}
     el.innerHTML=mine.map(r=>`<div class="log-item"><div class="log-dot" style="background:var(--gr)"></div>
-      <div class="log-txt">Rapport validé — semaine du ${fmtDate(r.week_key)}</div>
+      <div class="log-txt">Rapport validé - semaine du ${fmtDate(r.week_key)}</div>
       <div class="log-time">${fmtDate(r.created_at)}</div></div>`).join("");
   }
 }
@@ -6822,7 +6883,7 @@ function renderPromoProgress(m, elig){
   const p=elig.progress;
   if(!p||!p.nextGrade){
     el.innerHTML=`<div style="padding:1rem;background:var(--s2);border:1px solid var(--ln);text-align:center">
-      <span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">Promotion manuelle — décidée par le commandement</span>
+      <span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">Promotion manuelle - décidée par le commandement</span>
     </div>`;
     return;
   }
@@ -6986,7 +7047,7 @@ function renderCmdMode(){
         return `<li>
           <span class="cmd-dot" style="background:${stc}"></span>
           <span style="color:${gc};font-family:var(--fm);font-size:.7rem;font-weight:700;min-width:60px">${esc(m.matricule)}</span>
-          <span style="flex:1;color:var(--tx2);font-size:.78rem">${esc(m.nom)||"—"}</span>
+          <span style="flex:1;color:var(--tx2);font-size:.78rem">${esc(m.nom)||"-"}</span>
           <span class="cmd-tag" style="background:color-mix(in srgb,${gc} 12%,transparent);color:${gc}">${esc(m.grade)}</span>
           ${elig.eligible===true?`<span style="color:var(--gr);font-size:.7rem" title="Éligible promotion">▲</span>`:""}
         </li>`;
@@ -7002,7 +7063,7 @@ function renderCmdMode(){
           ${missing.slice(0,5).map(m=>`<li>
             <span class="cmd-dot" style="background:var(--rd)"></span>
             <span style="font-family:var(--fm);font-size:.72rem;color:var(--rd)">${esc(m.matricule)}</span>
-            <span style="color:var(--tx2);font-size:.75rem">${esc(m.nom)||"—"}</span>
+            <span style="color:var(--tx2);font-size:.75rem">${esc(m.nom)||"-"}</span>
           </li>`).join("")}
           ${missing.length>5?`<li style="color:var(--dm);font-size:.7rem">+${missing.length-5} autres…</li>`:""}
         </ul>`
@@ -7045,7 +7106,7 @@ function renderCmdMode(){
           ${absActive.slice(0,5).map(a=>`<li>
             <span class="cmd-dot" style="background:var(--ye)"></span>
             <span style="font-family:var(--fm);font-size:.72rem;color:var(--ye)">${esc(memberLabel(a.member_id,a.member_name).split(" ")[0])}</span>
-            <span style="flex:1;color:var(--tx2);font-size:.73rem">${esc(a.reason)||"—"}</span>
+            <span style="flex:1;color:var(--tx2);font-size:.73rem">${esc(a.reason)||"-"}</span>
             <span style="font-family:var(--fm);font-size:.6rem;color:var(--fd)">→ ${fmtDate(a.end_date)}</span>
           </li>`).join("")}
           ${absActive.length>5?`<li style="color:var(--dm);font-size:.7rem">+${absActive.length-5} autres…</li>`:""}
@@ -7066,11 +7127,11 @@ const IND_EMOJI  = ["🇮🇳","🐘","🛺","🥘","🫓","🍛","🪕","🐅",
 const IND_TICKER = [
   "cheese naan localisé ✓",
   "coordonnées du tikka massala acquises ✓",
-  "samosa chaud détecté — croustillant confirmé ✓",
+  "samosa chaud détecté - croustillant confirmé ✓",
   "liaison sécurisée avec le lassi mangue ✓",
   "niveau d'épices : CRITIQUE 🌶️",
   "éléphant repéré en approche du secteur 7 ✓",
-  "MISSION TOURISTA : SUCCÈS — NAMASTÉ 🙏"
+  "MISSION TOURISTA : SUCCÈS - NAMASTÉ 🙏"
 ];
 
 const IND_EXACT = {
@@ -7518,7 +7579,7 @@ function discordIdentity(payload){
   return payload;
 }
 
-function gradeLabel(g){ return GRADE_LABELS[g]||g||"—"; }
+function gradeLabel(g){ return GRADE_LABELS[g]||g||"-"; }
 function gradeColorInt(g){
   const hex=(GRADE_COLORS[g]||"#00e5ff").replace("#","");
   const v=parseInt(hex.length===3?hex.split("").map(c=>c+c).join(""):hex,16);
@@ -7571,7 +7632,7 @@ function discordPromoPayload(m,oldGrade,newGrade,author){
 
   if(style==="rp"){
     return {      embeds:[{
-        title:"📡 TRANSMISSION — COMMANDEMENT ARC ALPHA",
+        title:"📡 TRANSMISSION - COMMANDEMENT ARC ALPHA",
         description: up
           ? `Par décision du Commandement, **${who}** accède au grade de **${newL}**.\n\nFélicitations, soldat. 🫡`
           : `Par décision du Commandement, **${who}** est ramené au grade de **${newL}**.`,
@@ -7660,7 +7721,7 @@ const FORMATION_STATUTS={
 
 function discordFormationPayload(f,author,maj){
   const st=FORMATION_STATUTS[f.statut]||{color:0x00e5ff,icon:"•"};
-  let dateTxt="—";
+  let dateTxt="-";
   if(f.date){ try{ dateTxt=fmtDate(f.date); }catch(e){ dateTxt=String(f.date); } }
   return {
     embeds:[{
@@ -7668,8 +7729,8 @@ function discordFormationPayload(f,author,maj){
       description:`**${memberLabel(f.formateur_id,f.formateur)}** a formé **${memberLabel(f.eleve_id,f.eleve)}**.`,
       color:st.color,
       fields:[
-        {name:"Formation",value:String(f.formation||"—"),inline:true},
-        {name:"Statut",value:`${st.icon} ${f.statut||"—"}`,inline:true},
+        {name:"Formation",value:String(f.formation||"-"),inline:true},
+        {name:"Statut",value:`${st.icon} ${f.statut||"-"}`,inline:true},
         {name:"Date",value:dateTxt,inline:true}
       ],
       footer:{text:`Enregistré par ${author||"?"} · Centre de Commandement`},
@@ -7761,7 +7822,7 @@ async function testDiscord(kind){
                 : kind==="formation" ? discordFormationPayload({formateur:"A-93 Karma",eleve:"4477 Thire",formation:"CMD de mission",statut:"Validé",date:new Date().toISOString().slice(0,10)},session?.user,false)
                 : discordAnnoncePayload("Test de liaison","Si tu lis ceci, le webhook fonctionne.",false,session?.user);
   const sent=await discordSend(url,payload,kind!=="formation");
-  toast(sent?"Message de test envoyé ✓":"Échec — vérifie l'URL",sent?"success":"error");
+  toast(sent?"Message de test envoyé ✓":"Échec - vérifie l'URL",sent?"success":"error");
 }
 
 document.querySelectorAll(".modal-bg").forEach(bg=>{
