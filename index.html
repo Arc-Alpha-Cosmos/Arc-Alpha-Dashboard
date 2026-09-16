@@ -3628,6 +3628,11 @@ const MANUAL_TESTS=[
    etapes:["Onglet Formations : « Nouvelle formation » avec un formateur SGT ou LT dont le rapport de la semaine n'est pas encore validé",
      "Enregistre, puis ouvre l'onglet Rapports"],
    attendu:"Le message de confirmation indique « Rapport validé pour ... », et le rapport du formateur est coché sur la semaine de la date de formation."},
+  {id:"cmd-rapport",v:1,date:"2026-09-17",zone:"CMD de Mission",titre:"Un CMD de mission valide le rapport du membre",
+   etapes:["Section CMD de Mission : « Ajouter » pour un membre dont le rapport de la semaine n'est pas encore validé",
+     "Laisse la date du jour, choisis Chef ou Second, puis « Enregistrer »",
+     "Ouvre l'onglet Rapports, semaine courante"],
+   attendu:"Le message de confirmation indique « CMD enregistré. Rapport validé pour ... », le membre est coché dans Rapports et le Journal indique « validé automatiquement ... suite à un CMD de mission »."},
   {id:"formation-sgt",v:1,date:"2026-09-16",zone:"Formations",titre:"Types de formation limités pour un SGT",
    etapes:["Connecte-toi avec un compte lié à un membre SGT",
      "Onglet Formations : « Nouvelle formation »",
@@ -4836,7 +4841,7 @@ async function saveFormation(){
     if(supaOK){const fresh=await supaGet(T.formations);if(fresh)state.formations=fresh;}
   }
   const formateur=obj.formateur,eleve=obj.eleve;
-  const autoRep=await autoReportForFormation(fRef.id,obj.date);
+  const autoRep=await autoReportForActivity(fRef.id,obj.date);
   closeModal("formationModal");
   renderFormations();
   if(autoRep){renderReports();renderOverview();}
@@ -5050,11 +5055,16 @@ async function saveCmdMission(){
   if(!mid){toast("Sélectionne un membre","error");return;}
   const m=state.members.find(x=>x.id==mid);
   const obj={member_id:mid,member_name:m?`${m.matricule} ${m.nom||""}`.trim():"?",points:pts,mission_name:mname,date,role:pts===1?"Chef":"Second"};
-  if(supaOK){const r=await supaPost(T.cmdmissions,obj);if(r&&r.length>0)state.cmdmissions.unshift(r[0]);}
+  let saved=true;
+  if(supaOK){const r=await supaPost(T.cmdmissions,obj);if(r&&r.length>0)state.cmdmissions.unshift(r[0]);else saved=false;}
   else{obj.id=Date.now().toString();state.cmdmissions.unshift(obj);saveLS();}
+  if(!saved){toast("Erreur réseau : CMD non enregistré","error");return;}
+  const autoRep=await autoReportForActivity(mid,date);
   closeModal("cmdModal");renderCmd();renderRoster();
-  toast(`CMD enregistré pour ${obj.member_name}`,"success");
+  if(autoRep){renderReports();renderOverview();}
+  toast(autoRep?`CMD enregistré. Rapport validé pour ${autoRep.name}`:`CMD enregistré pour ${obj.member_name}`,"success");
   await logActivity(`${session?.user} a ajouté un CMD ${pts===1?"chef":"second"} à ${obj.member_name}`);
+  if(autoRep)await logActivity(`Rapport de ${autoRep.name} validé automatiquement (sem. ${autoRep.week}) suite à un CMD de mission`);
   if(state.discord.promo){
     await discordConfirmSend("cmd",discordCmdPayload(obj,m,session?.user));
   }
@@ -5390,7 +5400,7 @@ async function toggleReport(memberId,weekKey){
   renderReports();
 }
 
-async function autoReportForFormation(memberId,dateStr){
+async function autoReportForActivity(memberId,dateStr){
   if(memberId===null||memberId===undefined||memberId==="")return null;
   const m=memberById(memberId);
   if(!m)return null;
