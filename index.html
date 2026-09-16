@@ -1921,7 +1921,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div id="aiLog" style="height:min(50vh,440px);overflow-y:auto;padding:.3rem .2rem;border:1px solid var(--ln);background:var(--s2)"></div>
         <div id="aiPending" style="display:none;margin-top:.7rem;padding:.6rem .7rem;border:1px solid rgba(255,210,61,.35);background:rgba(255,210,61,.06)"></div>
         <div style="display:flex;gap:.5rem;margin-top:.7rem;align-items:stretch">
-          <textarea id="aiInput" rows="2" placeholder="Ex : pourquoi A-31 apparaît absent cette semaine ?" onkeydown="aiInputKey(event)" style="flex:1;min-width:0;resize:vertical;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:inherit;font-size:.82rem;outline:none"></textarea>
+          <textarea id="aiInput" rows="2" placeholder="Ex : pourquoi ce membre apparaît absent cette semaine ?" onkeydown="aiInputKey(event)" style="flex:1;min-width:0;resize:vertical;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:inherit;font-size:.82rem;outline:none"></textarea>
           <button class="btn btn-primary" id="aiSendBtn" onclick="aiSend()">Envoyer</button>
         </div>
         <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
@@ -3677,24 +3677,21 @@ const MANUAL_TESTS=[
      "Reviens à la semaine courante et clique sur « Rétablir »",
      "Regarde le Journal, puis l'activité récente de la Vue d'ensemble"],
    attendu:"Le membre passe en « Dispensé (manuel) » sur la semaine courante seulement. Après « Rétablir », il redevient « À valider ». Les deux actions figurent au Journal mais pas dans l'activité récente."},
-  {id:"absence-a-venir",v:2,date:"2026-09-17",zone:"Rapports",titre:"Absence de A-31 Vekad (20 au 27 septembre)",
-   etapes:["Cette semaine (jusqu'au dimanche 20 inclus) : onglet Rapports, semaine courante, regarde A-31 Vekad",
-     "À partir du lundi 21 septembre : regarde de nouveau la semaine courante et passe la souris sur « Absent »"],
-   attendu:"Cette semaine, A-31 reste « À valider » : son absence ne couvre qu'un jour (le dimanche). À partir du 21, il apparaît « Absent », et le survol indique 7 jours sur cette semaine."},
-  {id:"absence-moitie-semaine",v:1,date:"2026-09-17",zone:"Rapports",titre:"Absence dispensée à partir de 4 jours",
-   etapes:["Onglet Absences : crée une absence de test pour un membre de l'effectif sans absence, du lundi 14 au mercredi 16 septembre (3 jours)",
+  {id:"absence-moitie-semaine",v:2,date:"2026-09-17",zone:"Rapports",titre:"Une absence dispense à partir de 4 jours dans la semaine",
+   etapes:["Onglet Absences : crée une absence de test pour un membre de l'effectif qui n'a aucune absence, sur 3 jours de la semaine courante (par exemple du lundi au mercredi)",
      "Onglet Rapports, semaine courante : regarde ce membre",
-     "Supprime cette absence et recrée-la du lundi 14 au jeudi 17 septembre (4 jours), puis regarde de nouveau",
-     "Supprime l'absence de test"],
-   attendu:"Avec 3 jours, le membre reste « À valider ». Avec 4 jours, il passe « Absent » et le survol indique 4 jours sur cette semaine. Après suppression, il redevient « À valider »."},
-  {id:"automatisation-semaine",v:1,date:"2026-09-17",zone:"Rapports",titre:"Activation de l'automatisation à partir de la semaine courante",
-   etapes:["Onglet Rapports, panneau « Automatisation des rapports » : clique sur l'interrupteur pour l'activer (il est désactivé en ce moment)",
-     "Lis le message de confirmation, puis ouvre l'onglet Blâmes"],
-   attendu:"Le message indique « activée à partir de la semaine du 14 sept. 2026 ». Aucun blâme automatique n'est créé pour les semaines d'avant. Le Journal contient la même mention."},
-  {id:"historique-fige",v:1,date:"2026-09-17",zone:"Rapports",titre:"Historique figé de la semaine du 14 septembre",
-   etapes:["À partir du mercredi 23 septembre : ouvre le tableau de bord avec ton compte, puis l'onglet Rapports",
-     "Clique sur la flèche de gauche pour afficher la semaine du 14 au 20 septembre"],
-   attendu:"Le titre de la semaine se termine par « historique figé ». Les statuts sont ceux de la fin de cette semaine, et une promotion faite après ne les change plus."},
+     "Supprime cette absence et recrée-la sur 4 jours de la même semaine (par exemple du lundi au jeudi), puis regarde de nouveau",
+     "Recrée-la enfin sur deux périodes séparées de 2 jours chacune dans la semaine, regarde, puis supprime les absences de test"],
+   attendu:"Avec 3 jours, le membre reste « À valider ». Avec 4 jours, puis avec 2 + 2 jours, il passe « Absent » et le survol indique 4 jours sur cette semaine. Après suppression, il redevient « À valider »."},
+  {id:"automatisation-semaine",v:2,date:"2026-09-17",zone:"Rapports",titre:"Activation de l'automatisation à partir de la semaine courante",
+   etapes:["Onglet Rapports, panneau « Automatisation des rapports » : si l'interrupteur est activé, désactive-le d'abord",
+     "Active-le, lis le message de confirmation, puis ouvre l'onglet Blâmes"],
+   attendu:"Le message indique « activée à partir de la semaine du » suivi du lundi de la semaine courante. Aucun blâme automatique n'est créé pour les semaines d'avant. Le Journal contient la même mention."},
+  {id:"historique-fige",v:2,date:"2026-09-17",zone:"Rapports",titre:"Historique figé d'une semaine terminée",
+   etapes:["Attends qu'une semaine soit terminée depuis plus de 48 h (à partir du mercredi suivant)",
+     "Ouvre le tableau de bord avec ton compte, puis l'onglet Rapports, et clique sur la flèche de gauche pour afficher cette semaine",
+     "Dans le menu de débug, « Copier le rapport pour Claude » : regarde la ligne « Historique des semaines »"],
+   attendu:"Le titre de la semaine se termine par « historique figé », et la ligne du rapport indique [ok]. Une promotion ou une absence modifiée après coup ne change plus les statuts de cette semaine."},
   {id:"formation-rapport",v:1,date:"2026-09-16",zone:"Formations",titre:"Une formation valide le rapport du formateur",
    etapes:["Onglet Formations : « Nouvelle formation » avec un formateur SGT ou LT dont le rapport de la semaine n'est pas encore validé",
      "Enregistre, puis ouvre l'onglet Rapports"],
@@ -4052,7 +4049,7 @@ Le site est une page unique (HTML, CSS, JavaScript) branchée sur Supabase. Règ
 - chaque membre a une fiche identifiée par son id ; les autres tables gardent une copie du nom qui ne sert que si le membre a disparu
 - une absence a une date de début et de fin ; le statut présent ou absent de l'effectif est recalculé depuis les absences
 - les rapports sont hebdomadaires, la semaine va du lundi au dimanche et est désignée par son lundi ; les grades CPT et au-dessus sont dispensés ; un officier MAJ ou plus peut dispenser un membre à partir d'une semaine donnée
-- depuis la semaine du 14 septembre 2026, une absence dispense du rapport si elle couvre au moins 4 jours de la semaine (plusieurs absences s'additionnent) ; avant, un seul jour suffisait
+- depuis la semaine du ${REPORT_RULES_SINCE}, une absence dispense du rapport si elle couvre au moins ${ABSENCE_MIN_DAYS} jours de la semaine (plusieurs absences s'additionnent) ; avant, un seul jour suffisait
 - 48 h après la fin d'une semaine, son statut est figé pour chaque membre (grade, dispense, absence, validation) et ne change plus ; au même moment, un blâme automatique est posé aux membres sans rapport si l'automatisation est active. L'automatisation ne s'applique qu'à partir de la semaine où elle a été activée
 - le niveau d'un blâme est le nombre de blâmes actifs plus un, plafonné à 3 ; lever un blâme demande un justificatif
 - une formation donnée (quel que soit son type) valide le rapport du formateur pour la semaine de sa date ; un CMD de mission valide celui du membre concerné
@@ -4077,7 +4074,7 @@ Pour modifier le site :
 const AI_TOOLS_READ=[
   {name:"chercher_membres",
    description:"Cherche des membres par matricule, nom ou grade. Renvoie au plus 15 membres avec leur id, à passer ensuite à dossier_membre.",
-   input_schema:{type:"object",properties:{requete:{type:"string",description:"Texte à chercher, par exemple A-17 ou Alpha"}},required:["requete"]}},
+   input_schema:{type:"object",properties:{requete:{type:"string",description:"Texte à chercher : un matricule, un nom ou un grade"}},required:["requete"]}},
   {name:"dossier_membre",
    description:"Dossier d'un membre : fiche, statut du rapport sur les 12 dernières semaines, absences, blâmes, dispenses de rapport, formations et nombre de CMD de mission.",
    input_schema:{type:"object",properties:{member_id:{type:"string",description:"Identifiant du membre, obtenu avec chercher_membres"}},required:["member_id"]}},
