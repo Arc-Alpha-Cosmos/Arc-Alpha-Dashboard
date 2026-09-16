@@ -1445,8 +1445,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div class="panel" id="debugPanel">
           <div class="panel-head"><h3><span class="pk">//</span> Diagnostic</h3></div>
           <div class="panel-body">
-            <p class="card-b" style="margin-bottom:1rem">Vérifie l'état du site, les erreurs et la cohérence des données. Raccourci clavier : Ctrl + Shift + D.</p>
-            <button class="sbtn" onclick="openDebug()">Ouvrir le menu de débug</button>
+            <p class="card-b" style="margin-bottom:1rem">Vérifie l'état du site, les erreurs et la cohérence des données, et note les tests que Claude te demande de faire. Raccourci clavier : Ctrl + Shift + D.</p>
+            <button class="sbtn" id="debugOpenBtn" onclick="openDebug()">Ouvrir le menu de débug</button>
             <button class="sbtn" id="aiAdminBtn" onclick="openAssistant()" style="display:none;margin-left:.5rem">Assistant Claude</button>
           </div>
         </div>
@@ -2660,7 +2660,7 @@ let reportWeekOffset=0;
 let pollCount=0;
 let state={
   recOpen:true,maintenance:false,
-  autoReport:true,autoReportSince:null,reportExempt:{},
+  autoReport:true,autoReportSince:null,reportExempt:{},manualTests:{},
   members:[],blames:[],missions:[],announces:[],users:[],activity:[],
   absences:[],reports:[],cmdmissions:[],documents:[],tasks:[],content:{},
   formations:[],tickets:[],
@@ -2808,6 +2808,10 @@ async function loadAll(){
     if(row.key==="reportExempt"){
       const parsed=JSON.parse(row.value);
       state.reportExempt=(parsed&&typeof parsed==="object")?parsed:{};
+    }
+    if(row.key==="manualTests"){
+      const parsed=JSON.parse(row.value);
+      state.manualTests=(parsed&&typeof parsed==="object")?parsed:{};
     }
     if(row.key==="discordAnnonces") state.discord.annonces=cfgStr(row.value);
     if(row.key==="discordPromo")    state.discord.promo   =cfgStr(row.value);
@@ -3571,12 +3575,215 @@ function renderQuickActions(){
 
 function colorGradeSelect(sel){sel.style.color=GRADE_COLORS[sel.value]||"#e9eef7";}
 
+const MANUAL_TESTS=[
+  {id:"vitrine-restauration",v:1,date:"2026-09-16",zone:"Vitrine publique",titre:"Textes Missions et Équipement à jour",
+   etapes:["Administration, panneau « Édition de la vitrine » : clique sur « Restaurer les textes d'origine » et confirme",
+     "Après le rechargement, ouvre l'accueil et descends jusqu'aux sections Missions et Équipement"],
+   attendu:"Missions : contre-terrorisme, élimination stratégique, sabotage tactique, libération d'otages, reconnaissance avancée, missions impossibles. Équipement : Blaster M5, DC-17S et DC-15, Z-6 et Quad Blaster, PLX-1 et grenades, jetpack et grappin, dispositifs avancés."},
+  {id:"debug-raccourci",v:1,date:"2026-09-16",zone:"Menu de débug",titre:"Raccourci clavier et copie du rapport",
+   etapes:["Appuie sur Ctrl + Shift + D : le menu s'ouvre. Appuie de nouveau : il se ferme",
+     "Rouvre-le et clique sur « Copier le rapport pour Claude »",
+     "Colle le résultat dans un bloc-notes"],
+   attendu:"Le texte collé commence par « RAPPORT DE DIAGNOSTIC ARC ALPHA » et contient les vérifications et la liste des tests manuels."},
+  {id:"fenetres-taille",v:1,date:"2026-09-16",zone:"Interface",titre:"Taille du menu de débug",
+   etapes:["Ouvre ce menu sur ton écran d'ordinateur","Ouvre-le ensuite sur ton téléphone"],
+   attendu:"Le titre et les boutons du bas restent visibles dans les deux cas, seul le contenu défile."},
+  {id:"assistant-config",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Première configuration de l'assistant",
+   etapes:["Administration, panneau Diagnostic : clique sur « Assistant Claude »",
+     "Colle ta clé d'API Anthropic, puis tape ton code d'accès dans les deux champs",
+     "Laisse la partie GitHub vide pour ce test",
+     "Clique sur « Chiffrer et enregistrer »"],
+   attendu:"Le message « Secrets chiffrés dans ce navigateur » apparaît, puis la conversation s'ouvre avec la mention « Lecture seule »."},
+  {id:"assistant-question",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Question simple à l'assistant",
+   etapes:["Dans l'assistant, écris : Qui est absent cette semaine ?","Envoie avec Entrée"],
+   attendu:"Des lignes grises montrent les lectures de données, puis une réponse en français qui correspond à la page Absences. Le nombre de jetons s'affiche sous la conversation."},
+  {id:"assistant-verrou",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Verrouillage par code",
+   etapes:["Dans l'assistant, clique sur « Verrouiller »",
+     "Tape un mauvais code puis Entrée",
+     "Tape ton vrai code puis Entrée",
+     "Déconnecte-toi, reconnecte-toi et rouvre l'assistant"],
+   attendu:"Le mauvais code affiche « Code incorrect (1/5) » et une ligne apparaît au Journal. Le bon code rouvre la conversation. Après la reconnexion, le code est redemandé."},
+  {id:"assistant-github",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Modification proposée puis abandonnée",
+   etapes:["Sur GitHub, crée un jeton à accès limité : uniquement le dépôt du site, permission « Contents » en lecture et écriture",
+     "Dans l'assistant, clique sur « Effacer les secrets », puis refais la configuration en remplissant la partie GitHub",
+     "Demande : propose de renommer le bouton « Nouvelle formation » en « Ajouter une formation », sans publier",
+     "Ouvre la proposition dans le cadre jaune, puis clique sur « Tout abandonner »"],
+   attendu:"La configuration est acceptée et l'en-tête indique « Modification du site active ». La proposition montre l'ancien texte en rouge et le nouveau en vert. Après l'abandon, rien n'a changé sur GitHub."},
+  {id:"assistant-publication",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Publication réelle puis annulation",
+   etapes:["Refais une petite proposition sans conséquence, comme au test précédent",
+     "Clique sur « Publier sur le site » et confirme",
+     "Attends une à deux minutes, recharge le site et vérifie le changement",
+     "Dans l'assistant, clique sur « Annuler cette publication », attends, puis recharge"],
+   attendu:"Le changement apparaît en ligne puis disparaît après l'annulation. Deux commits « Assistant du site » sont visibles dans l'historique du dépôt."},
+  {id:"dispense-semaines",v:1,date:"2026-09-16",zone:"Rapports",titre:"Dispense manuelle limitée à ses semaines",
+   etapes:["Onglet Rapports, semaine courante : clique sur « Dispenser » pour un membre et donne un motif",
+     "Passe à la semaine précédente et regarde ce membre",
+     "Reviens à la semaine courante et clique sur « Rétablir »",
+     "Regarde le Journal, puis l'activité récente de la Vue d'ensemble"],
+   attendu:"Le membre passe en « Dispensé (manuel) » sur la semaine courante seulement. Après « Rétablir », il redevient « À valider ». Les deux actions figurent au Journal mais pas dans l'activité récente."},
+  {id:"absence-a-venir",v:1,date:"2026-09-16",zone:"Rapports",titre:"Absence à venir de A-31 Vekad",
+   etapes:["Jusqu'au samedi 19 septembre : onglet Rapports, semaine courante, regarde A-31 Vekad",
+     "À partir du lundi 21 septembre : regarde de nouveau la semaine courante"],
+   attendu:"Jusqu'au 19, A-31 est « À valider ». À partir du 21, il apparaît « Absent », avec les dates de son absence au survol."},
+  {id:"formation-rapport",v:1,date:"2026-09-16",zone:"Formations",titre:"Une formation valide le rapport du formateur",
+   etapes:["Onglet Formations : « Nouvelle formation » avec un formateur SGT ou LT dont le rapport de la semaine n'est pas encore validé",
+     "Enregistre, puis ouvre l'onglet Rapports"],
+   attendu:"Le message de confirmation indique « Rapport validé pour ... », et le rapport du formateur est coché sur la semaine de la date de formation."},
+  {id:"formation-sgt",v:1,date:"2026-09-16",zone:"Formations",titre:"Types de formation limités pour un SGT",
+   etapes:["Connecte-toi avec un compte lié à un membre SGT",
+     "Onglet Formations : « Nouvelle formation »",
+     "Ouvre la liste Formation"],
+   attendu:"La liste ne propose que ARC Trooper et CMD de mission, et aucun bouton « Modifier » n'apparaît sur les formations ARC Alpha."},
+  {id:"blame-levee",v:1,date:"2026-09-16",zone:"Blâmes",titre:"Levée d'un blâme avec justificatif",
+   etapes:["Onglet Blâmes : sur un blâme actif, clique sur « Résoudre »",
+     "Valide sans rien écrire, puis recommence avec un justificatif",
+     "Ouvre le formulaire d'un nouveau blâme pour ce membre, sans l'enregistrer"],
+   attendu:"Sans texte, la levée est refusée. Avec un justificatif, le blâme passe en levé, et le niveau proposé pour le blâme suivant en tient compte."},
+  {id:"messagerie-suppression",v:1,date:"2026-09-16",zone:"Messagerie",titre:"Suppression d'une conversation",
+   etapes:["Ouvre la messagerie avec la bulle en bas à droite",
+     "Sur une conversation de test, clique sur la corbeille et confirme"],
+   attendu:"La conversation disparaît de ta liste, et aussi chez l'autre personne."}
+];
+
+const MANUAL_STATUS={
+  todo:{label:"À faire",color:"var(--ye)"},
+  ok:{label:"Fonctionne",color:"var(--gr)"},
+  ko:{label:"Ne fonctionne pas",color:"var(--rd)"}
+};
+
+function manualTestState(def){
+  const r=(state.manualTests||{})[def.id]||null;
+  if(!r||!MANUAL_STATUS[r.status]||r.status==="todo")return{status:"todo",r,stale:false};
+  if((r.v||1)<def.v)return{status:"todo",r,stale:true};
+  return{status:r.status,r,stale:false};
+}
+function manualTestCounts(){
+  const c={todo:0,ok:0,ko:0};
+  MANUAL_TESTS.forEach(d=>{c[manualTestState(d).status]++;});
+  return c;
+}
+
+async function configMerge(key,current,mutate){
+  let base=current||{};
+  if(supaOK){
+    const rows=await supaGet(T.config,`key=eq.${key}`);
+    if(rows===null)return null;
+    if(rows.length){try{const p=JSON.parse(rows[0].value);if(p&&typeof p==="object")base=p;}catch(e){}}
+  }
+  const next={...base};
+  mutate(next);
+  if(supaOK)await setConfig(key,next);
+  return next;
+}
+
+async function refreshManualTests(){
+  if(!supaOK)return;
+  const rows=await supaGet(T.config,"key=eq.manualTests");
+  if(rows===null)return;
+  if(!rows.length){state.manualTests={};return;}
+  try{const p=JSON.parse(rows[0].value);if(p&&typeof p==="object")state.manualTests=p;}catch(e){}
+}
+
+async function setManualTest(id,status){
+  if(!canDebug())return;
+  const def=MANUAL_TESTS.find(t=>t.id===id);
+  if(!def||!MANUAL_STATUS[status])return;
+  let note="";
+  if(status==="ko"){
+    const prev=(state.manualTests||{})[id];
+    const txt=await uiPrompt({kicker:"// TEST MANUEL",title:"Qu'est-ce qui ne marche pas ?",
+      message:`${def.titre}\n\nDécris ce que tu as fait, ce que tu as vu, et le message d'erreur s'il y en a un.`,
+      placeholder:"Ex : rien ne se passe au clic, message « ... »",
+      defaultValue:prev&&prev.status==="ko"?prev.note||"":"",okText:"Enregistrer"});
+    if(txt===null)return;
+    note=String(txt).trim();
+    if(note.length<3){toast("Décris le problème en quelques mots","error");return;}
+  }
+  const entry=status==="todo"?null:{status,note,v:def.v,by:session.user,at:new Date().toISOString()};
+  const next=await configMerge("manualTests",state.manualTests,o=>{if(entry)o[id]=entry;else delete o[id];});
+  if(next===null){toast("Supabase injoignable, résultat non enregistré","error");return;}
+  state.manualTests=next;
+  if(!supaOK)saveLS();
+  renderDebug();
+  updateDebugBtn();
+  toast(status==="ok"?"Test validé":status==="ko"?"Problème noté":"Test remis à faire",status==="ko"?"info":"success");
+}
+
+function updateDebugBtn(){
+  const b=document.getElementById("debugOpenBtn");
+  if(!b)return;
+  const mt=manualTestCounts(),pending=mt.todo+mt.ko;
+  b.textContent=pending?`Ouvrir le menu de débug (${pending} test${pending>1?"s":""} en attente)`:"Ouvrir le menu de débug";
+}
+
+function renderManualTests(){
+  const rank={ko:0,todo:1,ok:2};
+  const list=MANUAL_TESTS.map(def=>Object.assign({def},manualTestState(def)))
+    .sort((a,b)=>rank[a.status]-rank[b.status]||String(b.def.date).localeCompare(String(a.def.date)));
+  const c=manualTestCounts();
+  const small="padding:.26rem .55rem;font-size:.58rem";
+  const item=x=>{
+    const d=x.def,st=MANUAL_STATUS[x.status],r=x.r;
+    const btn=(s,label,cls)=>x.status===s?"":
+      `<button class="sbtn${cls?" "+cls:""}" style="${small}" onclick="setManualTest('${d.id}','${s}')">${label}</button>`;
+    const noteLine=r&&r.status==="ko"&&r.note
+      ?`<div style="margin-top:.35rem;font-size:.7rem;color:${x.stale?"var(--dm)":"var(--rd)"};word-break:break-word">${x.stale?"Ancienne note":"Ta note"} : ${esc(r.note)}</div>`:"";
+    const who=r&&r.at?` · ${esc(r.by||"?")}, ${fmtDate(r.at)}`:"";
+    return `<div style="padding:.5rem .65rem;margin-bottom:.4rem;border:1px solid var(--ln);border-left:2px solid ${st.color};background:var(--s2)">
+      <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:1 1 260px;min-width:0">
+          <div style="font-size:.78rem;font-weight:600;color:var(--tx)">${esc(d.titre)}</div>
+          <div style="font-family:var(--fm);font-size:.58rem;color:var(--dm);margin-top:.1rem">${esc(d.zone)} · ajouté le ${fmtDate(d.date)} · <span style="color:${st.color}">${st.label}${x.stale?", à retester":""}</span>${x.status!=="todo"?who:""}</div>
+        </div>
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap">
+          ${btn("ok","Ça marche","green")}${x.status==="ko"
+            ?`<button class="sbtn danger" style="${small}" onclick="setManualTest('${d.id}','ko')">Modifier la note</button>`
+            :btn("ko","Ça ne marche pas","danger")}${x.status!=="todo"?btn("todo","Pas encore fait",""):""}
+        </div>
+      </div>
+      <details data-k="how-${d.id}" style="margin-top:.3rem">
+        <summary style="cursor:pointer;font-size:.66rem;color:var(--ac)">Comment tester</summary>
+        <ol style="margin:.35rem 0 .3rem 1.1rem;padding:0;font-size:.72rem;color:var(--tx2);line-height:1.55">${d.etapes.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>
+        <div style="font-size:.72rem;color:var(--tx2);line-height:1.5"><span style="color:var(--gr);font-weight:600">Résultat attendu :</span> ${esc(d.attendu)}</div>
+      </details>
+      ${noteLine}
+    </div>`;
+  };
+  const open=list.filter(x=>x.status!=="ok"),done=list.filter(x=>x.status==="ok");
+  const summary=`${c.todo} à faire, ${c.ko} en échec, ${c.ok} validé${c.ok>1?"s":""}`;
+  return `<details data-k="tests"${open.length?" open":""} style="margin-top:.9rem">
+    <summary style="cursor:pointer;font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:${c.ko?"var(--rd)":(c.todo?"var(--ye)":"var(--dm)")}">// TESTS À FAIRE PAR TOI (${summary})</summary>
+    <div style="margin-top:.5rem">
+      ${open.length?open.map(item).join(""):'<div style="font-size:.74rem;color:var(--gr);padding:.3rem 0">Tous les tests sont validés.</div>'}
+      ${done.length?`<details data-k="tests-done" style="margin-top:.3rem"><summary style="cursor:pointer;font-size:.66rem;color:var(--dm)">Tests validés (${done.length})</summary><div style="margin-top:.4rem;opacity:.75">${done.map(item).join("")}</div></details>`:""}
+    </div>
+  </details>`;
+}
+
+function manualTestsReport(){
+  const L=[];
+  const c=manualTestCounts();
+  L.push(`TESTS MANUELS (${c.todo} à faire, ${c.ko} en échec, ${c.ok} validés)`);
+  MANUAL_TESTS.forEach(d=>{
+    const x=manualTestState(d);
+    const tag=x.status==="ok"?"[ok]":x.status==="ko"?"[KO]":"[à faire]";
+    let line=`${tag} ${d.id} v${d.v} : ${d.titre}`;
+    if(x.stale&&x.r)line+=` (à retester, ancien résultat ${x.r.status} en v${x.r.v||1})`;
+    if(x.r&&x.r.status==="ko"&&x.r.note)line+=` | note : ${x.r.note}`;
+    if(x.r&&x.r.at&&x.status!=="todo")line+=` | ${x.r.by||"?"}, ${x.r.at.slice(0,16).replace("T"," ")}`;
+    L.push(line);
+  });
+  return L.join("\n");
+}
+
 function canDebug(){return !!session&&session.role==="admin";}
-function openDebug(){
+async function openDebug(){
   if(!canDebug()){toast("Réservé à l'administrateur","error");return;}
   renderDebug();
   const m=document.getElementById("debugModal");
   if(m)m.classList.add("show");
+  await refreshManualTests();
+  if(m&&m.classList.contains("show"))renderDebug();
 }
 document.addEventListener("keydown",e=>{
   if(!e.ctrlKey||!e.shiftKey)return;
@@ -3658,6 +3865,9 @@ function debugChecks(){
 
   const errs=_dbgLog.filter(l=>l.kind!=="alerte").length;
   add(!errs,"Erreurs JavaScript",errs?`${errs} depuis l'ouverture de la page`:"aucune");
+
+  const mt=manualTestCounts();
+  add(!mt.ko,"Tests manuels",`${mt.todo} à faire, ${mt.ko} en échec, ${mt.ok} validé${mt.ok>1?"s":""}`);
   return out;
 }
 
@@ -3699,7 +3909,11 @@ function renderDebug(){
       <span style="color:${l.kind==="alerte"?"var(--ye)":"var(--rd)"};margin:0 .4rem">${esc(l.kind)}</span>
       <span style="color:var(--tx2)">${esc(l.msg)}${l.where?" ("+esc(l.where)+")":""}</span>
     </div>`).join(""):'<div style="font-family:var(--fm);font-size:.64rem;color:var(--dm);padding:.3rem .1rem">Aucun message capturé</div>';
+  const keepScroll=el.scrollTop;
+  const openKeys=new Set([...el.querySelectorAll("details[data-k][open]")].map(d=>d.dataset.k));
+  const closedKeys=new Set([...el.querySelectorAll("details[data-k]:not([open])")].map(d=>d.dataset.k));
   el.innerHTML=head+
+    renderManualTests()+
     sec("// VÉRIFICATIONS")+
     `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));column-gap:1.4rem">${rows}</div>`+
     `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));column-gap:1.4rem">
@@ -3721,6 +3935,11 @@ function renderDebug(){
     sec(`// MESSAGES CAPTURÉS (${logs.length})`)+
     `<div style="max-height:170px;overflow-y:auto;border:1px solid var(--ln);background:var(--s2);padding:0 .5rem">${logRows}</div>
     <pre id="dbgReportPre" style="display:none;white-space:pre-wrap;word-break:break-word;margin-top:1rem;padding:.7rem;background:var(--s2);border:1px solid var(--ln);font-family:var(--fm);font-size:.64rem;color:var(--tx2);max-height:240px;overflow:auto"></pre>`;
+  el.querySelectorAll("details[data-k]").forEach(d=>{
+    if(openKeys.has(d.dataset.k))d.open=true;
+    else if(closedKeys.has(d.dataset.k))d.open=false;
+  });
+  el.scrollTop=keepScroll;
 }
 
 function debugReport(){
@@ -3731,6 +3950,8 @@ function debugReport(){
   L.push("");
   L.push("VÉRIFICATIONS");
   checks.forEach(c=>L.push(`${c.ok?"[ok]":"[KO]"} ${c.label} : ${c.detail}`));
+  L.push("");
+  L.push(manualTestsReport());
   L.push("");
   L.push("DONNÉES EN MÉMOIRE");
   L.push(Object.keys(stats).map(k=>`${k}=${stats[k]}`).join(", "));
@@ -5767,6 +5988,7 @@ function renderAdmin(){
   });
   const aiBtn=document.getElementById("aiAdminBtn");
   if(aiBtn)aiBtn.style.display=canUseAssistant()?"":"none";
+  updateDebugBtn();
   const rp=document.getElementById("recruitPanel");
   if(rp)rp.style.display=canRecruit?"block":"none";
   const np=document.getElementById("navEditorPanel");
