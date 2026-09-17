@@ -417,6 +417,7 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .modal-f{padding:1rem 1.5rem;border-top:1px solid var(--ln);display:flex;gap:.7rem;justify-content:flex-end}
 .modal-err{font-family:var(--fm);font-size:.68rem;color:var(--rd);letter-spacing:.05em;margin-top:.6rem;display:none}
 .modal-err.show{display:block;animation:slideL .3s}
+.modal.ai-modal{max-width:1280px;height:calc(100vh - var(--nav) - 2rem);height:calc(100dvh - var(--nav) - 2rem)}
 .modal.tall .modal-b.ai-body{padding:0;overflow:hidden;display:flex;flex-direction:column}
 .ai-pad{padding:1rem 1.3rem;overflow-y:auto}
 .ai-layout{flex:1 1 auto;min-height:0;display:flex;position:relative}
@@ -460,7 +461,8 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .ai-av{flex-shrink:0;width:25px;height:25px;border:1px solid var(--ls);background:rgba(0,229,255,.08);color:var(--ac);
   font-family:var(--fm);font-size:.55rem;display:flex;align-items:center;justify-content:center}
 .ai-a-tx{flex:1;min-width:0;font-size:.84rem;color:var(--tx);line-height:1.62;white-space:pre-wrap;word-break:break-word}
-.ai-meta{margin:.25rem .3rem .25rem 2.1rem;font-family:var(--fm);font-size:.62rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.ai-meta{margin:.25rem .3rem;padding-left:1.8rem;font-family:var(--fm);font-size:.62rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.ai-log>.ai-row,.ai-log>.ai-meta{width:100%;max-width:920px;margin-left:auto;margin-right:auto}
 .ai-pending{margin:0 .9rem .5rem;padding:.6rem .7rem;border:1px solid rgba(255,210,61,.35);background:rgba(255,210,61,.06)}
 .ai-compose{display:flex;gap:.5rem;align-items:flex-end;padding:.6rem .9rem;border-top:1px solid var(--ln);background:var(--s1)}
 .ai-compose textarea{flex:1;min-width:0;max-height:150px;resize:none;background:var(--s2);border:1px solid var(--ln);
@@ -1938,7 +1940,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
 <!-- ASSISTANT MODAL -->
 <div class="modal-bg" id="aiModal">
-  <div class="modal tall" style="max-width:1060px">
+  <div class="modal tall ai-modal">
     <div class="modal-h"><div><span class="k">// ASSISTANT</span><h3>Assistant Claude</h3></div>
       <button class="modal-x" onclick="closeModal('aiModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
