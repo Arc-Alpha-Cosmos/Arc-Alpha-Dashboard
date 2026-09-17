@@ -417,6 +417,63 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .modal-f{padding:1rem 1.5rem;border-top:1px solid var(--ln);display:flex;gap:.7rem;justify-content:flex-end}
 .modal-err{font-family:var(--fm);font-size:.68rem;color:var(--rd);letter-spacing:.05em;margin-top:.6rem;display:none}
 .modal-err.show{display:block;animation:slideL .3s}
+.modal.tall .modal-b.ai-body{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.ai-pad{padding:1rem 1.3rem;overflow-y:auto}
+.ai-layout{flex:1 1 auto;min-height:0;display:flex;position:relative}
+.ai-side{width:238px;flex-shrink:0;border-right:1px solid var(--ln);background:var(--bg2);display:flex;flex-direction:column;min-height:0}
+.ai-new{margin:.7rem;padding:.55rem .7rem;background:rgba(0,229,255,.08);border:1px solid var(--ls);color:var(--ac);
+  font-family:var(--fm);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+  display:flex;align-items:center;gap:.45rem;transition:background .2s}
+.ai-new:hover{background:rgba(0,229,255,.17)}
+.ai-new svg{width:13px;height:13px;flex-shrink:0}
+.ai-list{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 .45rem .45rem}
+.ai-hint{font-family:var(--fm);font-size:.58rem;color:var(--fd);padding:.3rem .5rem .5rem;line-height:1.5}
+.ai-item{display:flex;align-items:center;gap:.4rem;padding:.45rem .5rem;margin-bottom:.2rem;
+  border-left:2px solid transparent;cursor:pointer;color:var(--tx2);transition:background .15s,color .15s}
+.ai-item:hover{background:var(--s2);color:var(--tx)}
+.ai-item.on{background:var(--s2);border-left-color:var(--ac);color:var(--tx)}
+.ai-item-b{flex:1;min-width:0}
+.ai-item-t{font-size:.76rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-item-d{font-family:var(--fm);font-size:.56rem;color:var(--dm);margin-top:.1rem}
+.ai-item-x{background:none;border:none;color:var(--fd);cursor:pointer;padding:.1rem .2rem;flex-shrink:0;transition:color .2s}
+.ai-item-x:hover{color:var(--rd)}
+.ai-item-x svg{width:13px;height:13px;display:block}
+.ai-side-f{border-top:1px solid var(--ln);padding:.55rem;display:flex;flex-direction:column;gap:.35rem}
+.ai-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.ai-top{display:flex;align-items:center;gap:.6rem;padding:.5rem .9rem;border-bottom:1px solid var(--ln)}
+.ai-state{font-family:var(--fm);font-size:.6rem;color:var(--dm);word-break:break-word}
+.ai-head-t{font-family:var(--fs);font-weight:700;font-size:.7rem;letter-spacing:.05em;color:var(--tx);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.15rem}
+.ai-burger{display:none;background:none;border:1px solid var(--ln);color:var(--tx2);cursor:pointer;padding:.25rem .35rem}
+.ai-burger:hover{color:var(--ac);border-color:var(--ls)}
+.ai-burger svg{width:15px;height:15px;display:block}
+.ai-log{flex:1 1 auto;min-height:0;overflow-y:auto;padding:.7rem .6rem 1.1rem;background:var(--bg)}
+.ai-empty{max-width:440px;margin:auto;padding:2.2rem .8rem;text-align:center}
+.ai-empty-k{font-family:var(--fm);font-size:.6rem;letter-spacing:.18em;color:var(--ac);margin-bottom:.5rem}
+.ai-empty-t{font-family:var(--fs);font-weight:700;font-size:.9rem;letter-spacing:.06em;margin-bottom:.6rem}
+.ai-empty-p{font-size:.78rem;color:var(--tx2);line-height:1.6}
+.ai-row{margin:.6rem .3rem}
+.ai-u{display:flex;justify-content:flex-end}
+.ai-u>div{max-width:82%;padding:.5rem .75rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.28);
+  font-size:.84rem;color:var(--tx);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.ai-a{display:flex;gap:.55rem;align-items:flex-start}
+.ai-av{flex-shrink:0;width:25px;height:25px;border:1px solid var(--ls);background:rgba(0,229,255,.08);color:var(--ac);
+  font-family:var(--fm);font-size:.55rem;display:flex;align-items:center;justify-content:center}
+.ai-a-tx{flex:1;min-width:0;font-size:.84rem;color:var(--tx);line-height:1.62;white-space:pre-wrap;word-break:break-word}
+.ai-meta{margin:.25rem .3rem .25rem 2.1rem;font-family:var(--fm);font-size:.62rem;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.ai-pending{margin:0 .9rem .5rem;padding:.6rem .7rem;border:1px solid rgba(255,210,61,.35);background:rgba(255,210,61,.06)}
+.ai-compose{display:flex;gap:.5rem;align-items:flex-end;padding:.6rem .9rem;border-top:1px solid var(--ln);background:var(--s1)}
+.ai-compose textarea{flex:1;min-width:0;max-height:150px;resize:none;background:var(--s2);border:1px solid var(--ln);
+  color:var(--tx);padding:.55rem .7rem;font-family:inherit;font-size:.84rem;line-height:1.5;outline:none;transition:border-color .2s}
+.ai-compose textarea:focus{border-color:var(--ls)}
+.ai-foot{padding:0 .9rem .55rem;font-family:var(--fm);font-size:.6rem;color:var(--dm);min-height:.9rem}
+@media(max-width:760px){
+  .ai-side{position:absolute;top:0;bottom:0;left:0;z-index:5;width:82%;max-width:270px;display:none;
+    box-shadow:0 0 24px rgba(3,5,10,.8)}
+  .ai-side.open{display:flex}
+  .ai-burger{display:block}
+  .ai-u>div{max-width:92%}
+}
 
 .rte-wrap{display:flex;flex-direction:column;height:100%}
 .rte-toolbar{display:flex;align-items:center;gap:.2rem;padding:.45rem .7rem;background:var(--s3);border-bottom:1px solid var(--ln);flex-wrap:wrap}
@@ -1881,12 +1938,12 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
 <!-- ASSISTANT MODAL -->
 <div class="modal-bg" id="aiModal">
-  <div class="modal tall" style="max-width:860px">
+  <div class="modal tall" style="max-width:1060px">
     <div class="modal-h"><div><span class="k">// ASSISTANT</span><h3>Assistant Claude</h3></div>
       <button class="modal-x" onclick="closeModal('aiModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="modal-b">
-      <div id="aiSetup" style="display:none">
+    <div class="modal-b ai-body">
+      <div id="aiSetup" class="ai-pad" style="display:none">
         <p class="card-b" style="margin-bottom:.7rem">Première configuration. Tes secrets sont chiffrés avec ton code et restent dans ce navigateur : ni Supabase ni le fichier du site ne les voient.</p>
         <p id="aiLegacyHint" class="card-b" style="display:none;margin-bottom:.7rem;color:var(--ac)">Une clé d'API est déjà enregistrée sans protection. Laisse le champ vide pour la reprendre : elle sera chiffrée, puis la copie non protégée sera effacée.</p>
         <div class="field"><label>Clé d'API Anthropic</label><input type="password" id="aiKeyInput" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."></div>
@@ -1908,7 +1965,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <p class="card-b" style="margin:.4rem 0 1rem;font-size:.74rem;color:var(--ye)">Choisis un code que toi seul connais. Chaque question est facturée sur ton compte Anthropic.</p>
         <button class="btn btn-primary" id="aiSetupBtn" onclick="aiSetup()">Chiffrer et enregistrer</button>
       </div>
-      <div id="aiLockBox" style="display:none">
+      <div id="aiLockBox" class="ai-pad" style="display:none">
         <p class="card-b" style="margin-bottom:.8rem">L'assistant est verrouillé. Entre ton code d'accès.</p>
         <div style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap">
           <div class="field" style="flex:1;min-width:160px;margin:0"><label>Code d'accès</label><input type="password" id="aiPinUnlock" inputmode="numeric" autocomplete="off" onkeydown="aiUnlockKey(event)"></div>
@@ -1916,20 +1973,31 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         </div>
         <button class="sbtn danger" style="margin-top:1.2rem" onclick="aiEraseVault()">Effacer les secrets de ce navigateur</button>
       </div>
-      <div id="aiChat" style="display:none">
-        <div id="aiCodeState" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);margin-bottom:.4rem;word-break:break-word"></div>
-        <div id="aiLog" style="height:min(50vh,440px);overflow-y:auto;padding:.3rem .2rem;border:1px solid var(--ln);background:var(--s2)"></div>
-        <div id="aiPending" style="display:none;margin-top:.7rem;padding:.6rem .7rem;border:1px solid rgba(255,210,61,.35);background:rgba(255,210,61,.06)"></div>
-        <div style="display:flex;gap:.5rem;margin-top:.7rem;align-items:stretch">
-          <textarea id="aiInput" rows="2" placeholder="Ex : pourquoi ce membre apparaît absent cette semaine ?" onkeydown="aiInputKey(event)" style="flex:1;min-width:0;resize:vertical;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:inherit;font-size:.82rem;outline:none"></textarea>
-          <button class="btn btn-primary" id="aiSendBtn" onclick="aiSend()">Envoyer</button>
-        </div>
-        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.6rem">
-          <span id="aiUsage" style="flex:1;min-width:0;font-family:var(--fm);font-size:.62rem;color:var(--dm)"></span>
-          <button class="sbtn" onclick="aiReset()">Nouvelle conversation</button>
-          <button class="sbtn" onclick="aiLock()">Verrouiller</button>
-          <button class="sbtn danger" onclick="aiEraseVault()">Effacer les secrets</button>
-        </div>
+      <div id="aiChat" class="ai-layout" style="display:none">
+        <aside class="ai-side" id="aiSide">
+          <button class="ai-new" onclick="aiNewChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouvelle conversation</button>
+          <div class="ai-list" id="aiList"></div>
+          <div class="ai-side-f">
+            <button class="sbtn" onclick="aiLock()">Verrouiller</button>
+            <button class="sbtn danger" onclick="aiEraseVault()">Effacer les secrets</button>
+          </div>
+        </aside>
+        <section class="ai-main">
+          <div class="ai-top">
+            <button class="ai-burger" onclick="aiToggleSide()" title="Conversations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+            <div style="flex:1;min-width:0">
+              <div id="aiChatTitle" class="ai-head-t">Nouvelle conversation</div>
+              <div id="aiCodeState" class="ai-state"></div>
+            </div>
+          </div>
+          <div id="aiLog" class="ai-log"></div>
+          <div id="aiPending" class="ai-pending" style="display:none"></div>
+          <div class="ai-compose">
+            <textarea id="aiInput" rows="1" placeholder="Écris ta question ou ta demande…" onkeydown="aiInputKey(event)" oninput="aiGrowInput(this)"></textarea>
+            <button class="btn btn-primary" id="aiSendBtn" onclick="aiSend()">Envoyer</button>
+          </div>
+          <div class="ai-foot"><span id="aiUsage"></span></div>
+        </section>
       </div>
     </div>
   </div>
@@ -3679,6 +3747,13 @@ const MANUAL_TESTS=[
   {id:"assistant-question",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Question simple à l'assistant",
    etapes:["Dans l'assistant, écris : Qui est absent cette semaine ?","Envoie avec Entrée"],
    attendu:"Des lignes grises montrent les lectures de données, puis une réponse en français qui correspond à la page Absences. Le nombre de jetons s'affiche sous la conversation."},
+  {id:"assistant-conversations",v:1,date:"2026-09-17",zone:"Assistant Claude",titre:"Conversations gardées sur le côté",
+   etapes:["Ouvre l'assistant, pose une question et attends la réponse",
+     "Clique sur « Nouvelle conversation », pose une autre question",
+     "Dans la liste de gauche, reviens sur la première conversation",
+     "Ferme la fenêtre, rouvre-la, puis rouvre la première conversation",
+     "Supprime une conversation avec la petite corbeille, et regarde aussi le rendu sur téléphone"],
+   attendu:"Chaque conversation apparaît à gauche avec son titre et son heure. En revenir dessus réaffiche tout l'échange, même après fermeture de la fenêtre. La corbeille demande confirmation. Sur téléphone, la liste s'ouvre avec le bouton des trois traits en haut à gauche."},
   {id:"assistant-verrou",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Verrouillage par code",
    etapes:["Dans l'assistant, clique sur « Verrouiller »",
      "Tape un mauvais code puis Entrée",
@@ -4195,8 +4270,10 @@ function aiTouch(){
 }
 function aiLock(){
   clearTimeout(_aiIdleTimer);
+  if(typeof aiChatStore==="function")aiChatStore();
   _aiSecrets=null;_aiRepo=null;_aiLastPublish=null;
   _aiMsgs=[];_aiView=[];_aiContext="";_aiTok={in:0,out:0};_aiNextNote="";
+  _aiChatId=null;_aiSideOpen=false;
   aiRender();
 }
 
@@ -4226,7 +4303,9 @@ async function aiSetup(){
     }catch(e){toast("Le navigateur refuse d'enregistrer","error");return;}
     ["aiKeyInput","aiPin1","aiPin2","aiGhToken"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
     aiSetLockState({fails:0,until:0});
-    _aiSecrets=secrets;aiTouch();
+    _aiSecrets=secrets;
+    aiChatsLoad();aiChatBlank();
+    aiTouch();
     toast("Secrets chiffrés dans ce navigateur","success");
     await logActivity(`${session.user} a configuré l'assistant Claude${secrets.github?" avec modification du site":""}`);
   }catch(e){
@@ -4262,17 +4341,20 @@ async function aiUnlock(){
     aiRender();return;
   }
   aiSetLockState({fails:0,until:0});
-  _aiSecrets=secrets;aiTouch();aiRender();
+  _aiSecrets=secrets;
+  aiChatsLoad();aiChatBlank();
+  aiTouch();aiRender();
   setTimeout(()=>{const el=document.getElementById("aiInput");if(el)try{el.focus();}catch(e){}},60);
 }
 function aiUnlockKey(e){if(e.key==="Enter"){e.preventDefault();aiUnlock();}}
 
 async function aiEraseVault(){
   const ok=await uiConfirm({kicker:"// ASSISTANT",title:"Effacer les secrets",
-    message:"La clé d'API, le jeton GitHub et le code seront effacés de ce navigateur. Il faudra tout ressaisir pour réutiliser l'assistant.",
+    message:"La clé d'API, le jeton GitHub, le code et toutes les conversations enregistrées seront effacés de ce navigateur. Il faudra tout ressaisir pour réutiliser l'assistant.",
     okText:"Effacer",danger:true});
   if(!ok)return;
-  try{[AI_VAULT_LS,AI_LEGACY_LS,AI_LOCK_LS].forEach(k=>localStorage.removeItem(k));}catch(e){}
+  _aiChats=[];_aiChatId=null;
+  try{[AI_VAULT_LS,AI_LEGACY_LS,AI_LOCK_LS,AI_CHATS_LS].forEach(k=>localStorage.removeItem(k));}catch(e){}
   aiLock();
   toast("Secrets effacés","info");
 }
@@ -4516,11 +4598,124 @@ function aiFormat(t){
     .replace(AI_TICK_RX,'<code style="font-family:var(--fm);font-size:.9em;color:var(--ac)">$1</code>');
 }
 function aiBubble(v){
-  if(v.kind==="user")return `<div style="display:flex;justify-content:flex-end;margin:.5rem .4rem">
-    <div style="max-width:85%;padding:.5rem .7rem;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);font-size:.82rem;color:var(--tx);white-space:pre-wrap;word-break:break-word">${aiFormat(v.text)}</div></div>`;
-  if(v.kind==="ai")return `<div style="margin:.5rem .4rem;padding:.5rem .7rem;background:var(--s3);border-left:2px solid var(--ac);font-size:.82rem;color:var(--tx);line-height:1.55;white-space:pre-wrap;word-break:break-word">${aiFormat(v.text)}</div>`;
+  if(v.kind==="user")return `<div class="ai-row ai-u"><div>${aiFormat(v.text)}</div></div>`;
+  if(v.kind==="ai")return `<div class="ai-row ai-a"><div class="ai-av">ARC</div><div class="ai-a-tx">${aiFormat(v.text)}</div></div>`;
   const col=v.kind==="error"?"var(--rd)":(v.kind==="tool"?"var(--dm)":"var(--ye)");
-  return `<div style="margin:.3rem .5rem;font-family:var(--fm);font-size:.64rem;color:${col};white-space:pre-wrap;word-break:break-word">${v.kind==="tool"?"› ":""}${aiFormat(v.text)}</div>`;
+  return `<div class="ai-meta" style="color:${col}">${v.kind==="tool"?"› ":""}${aiFormat(v.text)}</div>`;
+}
+
+const AI_CHATS_LS="arcClaudeChats";
+const AI_CHATS_MAX=40;
+let _aiChats=[],_aiChatId=null,_aiSideOpen=false;
+function aiChatsLoad(){
+  try{const a=JSON.parse(localStorage.getItem(AI_CHATS_LS)||"[]");
+    _aiChats=Array.isArray(a)?a.filter(c=>c&&c.id&&Array.isArray(c.view)):[];}
+  catch(e){_aiChats=[];}
+  _aiChats.sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
+}
+function aiChatsSave(){
+  try{localStorage.setItem(AI_CHATS_LS,JSON.stringify(_aiChats.slice(0,AI_CHATS_MAX)));}
+  catch(e){
+    if(_aiChats.length>1){_aiChats=_aiChats.slice(0,Math.ceil(_aiChats.length/2));aiChatsSave();}
+  }
+}
+function aiChatTitle(t){
+  const s=String(t||"").replace(/\s+/g," ").trim();
+  if(!s)return "Nouvelle conversation";
+  return s.length>44?s.slice(0,44)+"…":s;
+}
+function aiChatStore(){
+  if(!_aiChatId||!_aiView.length)return;
+  const first=(_aiView.find(v=>v.kind==="user")||{}).text||"";
+  const rec={id:_aiChatId,title:aiChatTitle(first),at:new Date().toISOString(),
+    msgs:_aiMsgs,view:_aiView,tok:_aiTok,ctx:_aiContext};
+  const i=_aiChats.findIndex(c=>c.id===_aiChatId);
+  if(i>=0)_aiChats[i]=rec;else _aiChats.unshift(rec);
+  _aiChats.sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
+  aiChatsSave();
+}
+function aiChatSwitchBlocked(){
+  if(_aiBusy||_aiPublishing){toast("Attends la fin de la demande en cours","info");return true;}
+  if(_aiRepo&&_aiRepo.edits.length){toast("Publie ou abandonne d'abord les modifications en attente","error");return true;}
+  return false;
+}
+function aiChatBlank(){
+  _aiChatId="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  _aiMsgs=[];_aiView=[];_aiContext="";_aiTok={in:0,out:0};_aiNextNote="";
+}
+function aiNewChat(){
+  if(!_aiSecrets||aiChatSwitchBlocked())return;
+  aiChatStore();
+  aiChatBlank();
+  _aiSideOpen=false;
+  aiTouch();aiRender();
+  setTimeout(()=>{const el=document.getElementById("aiInput");if(el)try{el.focus();}catch(e){}},50);
+}
+function aiOpenChat(id){
+  if(!_aiSecrets||id===_aiChatId||aiChatSwitchBlocked())return;
+  const rec=_aiChats.find(c=>c.id===id);
+  if(!rec)return;
+  aiChatStore();
+  _aiChatId=rec.id;
+  _aiMsgs=Array.isArray(rec.msgs)?rec.msgs:[];
+  _aiView=Array.isArray(rec.view)?rec.view:[];
+  _aiContext=rec.ctx||"";
+  _aiTok=rec.tok&&typeof rec.tok==="object"?rec.tok:{in:0,out:0};
+  _aiNextNote="";
+  _aiSideOpen=false;
+  aiTouch();aiRender();
+}
+async function aiDeleteChat(id,ev){
+  if(ev&&ev.stopPropagation)ev.stopPropagation();
+  if(!_aiSecrets||aiChatSwitchBlocked())return;
+  const rec=_aiChats.find(c=>c.id===id);
+  if(!rec)return;
+  const ok=await uiConfirm({kicker:"// ASSISTANT",title:"Supprimer la conversation",
+    message:`« ${rec.title} » sera effacée de ce navigateur.`,okText:"Supprimer",danger:true});
+  if(!ok)return;
+  _aiChats=_aiChats.filter(c=>c.id!==id);
+  aiChatsSave();
+  if(id===_aiChatId)aiChatBlank();
+  aiTouch();aiRender();
+}
+function aiToggleSide(){
+  _aiSideOpen=!_aiSideOpen;
+  const el=document.getElementById("aiSide");
+  if(el)el.classList.toggle("open",_aiSideOpen);
+}
+function aiGrowInput(el){
+  if(!el)return;
+  el.style.height="auto";
+  el.style.height=Math.min(el.scrollHeight,150)+"px";
+}
+function aiRenderSide(){
+  const side=document.getElementById("aiSide");
+  if(side)side.classList.toggle("open",_aiSideOpen);
+  const list=document.getElementById("aiList");
+  if(!list)return;
+  const cur=_aiChats.some(c=>c.id===_aiChatId);
+  const head=!cur&&_aiView.length?[{id:_aiChatId,title:aiChatTitle((_aiView.find(v=>v.kind==="user")||{}).text||""),at:new Date().toISOString()}]:[];
+  const all=head.concat(_aiChats);
+  if(!all.length){
+    list.innerHTML=`<div class="ai-hint">Aucune conversation. Pose ta première question, elle s'enregistrera ici.</div>`;
+    return;
+  }
+  list.innerHTML=all.map(c=>`<div class="ai-item${c.id===_aiChatId?" on":""}" onclick="aiOpenChat('${c.id}')" title="${esc(c.title)}">
+    <div class="ai-item-b">
+      <div class="ai-item-t">${esc(c.title)}</div>
+      <div class="ai-item-d">${esc(aiChatWhen(c.at))}</div>
+    </div>
+    <button class="ai-item-x" onclick="aiDeleteChat('${c.id}',event)" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+  </div>`).join("")+`<div class="ai-hint">Les conversations restent dans ce navigateur.</div>`;
+}
+function aiChatWhen(iso){
+  if(!iso)return "";
+  try{
+    const d=new Date(iso),now=new Date();
+    const same=d.toDateString()===now.toDateString();
+    if(same)return "aujourd'hui "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+    return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){return "";}
 }
 function aiClip(s){return s.length>4000?s.slice(0,4000)+`\n[… ${s.length-4000} caractères de plus]`:s;}
 
@@ -4553,10 +4748,10 @@ function aiRenderPending(){
 
 function aiRender(){
   const vault=aiReadVault(),unlocked=!!_aiSecrets;
-  const show=(id,on)=>{const el=document.getElementById(id);if(el)el.style.display=on?"block":"none";};
+  const show=(id,on,disp)=>{const el=document.getElementById(id);if(el)el.style.display=on?(disp||"block"):"none";};
   show("aiSetup",!vault&&!unlocked);
   show("aiLockBox",!!vault&&!unlocked);
-  show("aiChat",unlocked);
+  show("aiChat",unlocked,"flex");
   show("aiLegacyHint",!vault&&!!aiLegacyKey());
   const sb=document.getElementById("aiSetupBtn");
   if(sb){sb.disabled=_aiCryptoBusy;sb.textContent=_aiCryptoBusy?"Vérification et chiffrement…":"Chiffrer et enregistrer";}
@@ -4567,11 +4762,19 @@ function aiRender(){
   const cs=document.getElementById("aiCodeState");
   if(cs)cs.textContent=gh?`Modification du site active : ${gh.owner}/${gh.repo}, branche ${gh.branch}, fichier ${gh.path}`
     :"Lecture seule : la modification du site n'est pas configurée";
+  if(!_aiChatId)aiChatBlank();
+  aiRenderSide();
+  const ct=document.getElementById("aiChatTitle");
+  if(ct)ct.textContent=_aiView.length?aiChatTitle((_aiView.find(v=>v.kind==="user")||{}).text||""):"Nouvelle conversation";
   const log=document.getElementById("aiLog");
   if(log){
-    const intro=`<div style="margin:.6rem;font-size:.78rem;color:var(--tx2);line-height:1.55">Pose une question ou demande une correction. Claude reçoit le rapport de diagnostic et peut lire les membres, absences, rapports, blâmes et le journal.${gh?" Il peut aussi proposer des modifications du fichier du site, que tu valides avant publication.":""}</div>`;
+    const intro=`<div class="ai-empty">
+      <div class="ai-empty-k">// ASSISTANT ARC ALPHA</div>
+      <div class="ai-empty-t">Par quoi on commence ?</div>
+      <p class="ai-empty-p">Pose une question ou demande une correction. Claude reçoit le rapport de diagnostic et peut lire les membres, absences, rapports, blâmes et le journal.${gh?" Il peut aussi proposer des modifications du fichier du site, que tu valides avant publication.":""}</p>
+    </div>`;
     log.innerHTML=(_aiView.length?_aiView.map(aiBubble).join(""):intro)
-      +(_aiBusy?'<div style="margin:.5rem .6rem;font-family:var(--fm);font-size:.66rem;color:var(--ac)">Claude réfléchit…</div>':"");
+      +(_aiBusy?'<div class="ai-meta" style="color:var(--ac)">Claude réfléchit…</div>':"");
     log.scrollTop=log.scrollHeight;
   }
   aiRenderPending();
@@ -4583,6 +4786,8 @@ function aiRender(){
 
 function openAssistant(){
   if(!canUseAssistant()){toast("Assistant réservé à son propriétaire","error");return;}
+  _aiSideOpen=false;
+  if(_aiSecrets&&!_aiChats.length)aiChatsLoad();
   aiRender();
   const m=document.getElementById("aiModal");
   if(m)m.classList.add("show");
@@ -4590,12 +4795,7 @@ function openAssistant(){
   setTimeout(()=>{const el=document.getElementById(target);if(el)try{el.focus();}catch(e){}},80);
 }
 
-function aiReset(){
-  if(_aiBusy||_aiPublishing)return;
-  if(_aiRepo&&_aiRepo.edits.length){toast("Publie ou abandonne d'abord les modifications en attente","error");return;}
-  _aiMsgs=[];_aiView=[];_aiContext="";_aiTok={in:0,out:0};_aiNextNote="";
-  aiTouch();aiRender();
-}
+function aiReset(){aiNewChat();}
 
 function aiInputKey(e){
   if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();aiSend();}
@@ -4705,7 +4905,8 @@ async function aiSend(){
   const inp=document.getElementById("aiInput");
   const text=String(inp&&inp.value||"").trim();
   if(!text)return;
-  inp.value="";
+  inp.value="";aiGrowInput(inp);
+  if(!_aiChatId)aiChatBlank();
   aiTouch();
   if(!_aiMsgs.length)_aiContext=debugReport();
   const snapshot=_aiMsgs.length;
@@ -4758,6 +4959,7 @@ async function aiSend(){
     dbgPush("assistant",aiErrorText(e),"");
   }finally{
     _aiBusy=false;
+    aiChatStore();
     aiRender();
   }
 }
