@@ -1946,7 +1946,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
     </div>
     <div class="modal-b ai-body">
       <div id="aiSetup" class="ai-pad" style="display:none">
-        <p class="card-b" style="margin-bottom:.7rem">Première configuration. Tes secrets sont chiffrés avec ton code et restent dans ce navigateur : ni Supabase ni le fichier du site ne les voient.</p>
+        <p class="card-b" id="aiSetupIntro" style="margin-bottom:.7rem">Première configuration. Tes secrets sont chiffrés avec ton code et restent dans ce navigateur : ni Supabase ni le fichier du site ne les voient.</p>
         <p id="aiLegacyHint" class="card-b" style="display:none;margin-bottom:.7rem;color:var(--ac)">Une clé d'API est déjà enregistrée sans protection. Laisse le champ vide pour la reprendre : elle sera chiffrée, puis la copie non protégée sera effacée.</p>
         <div class="field"><label>Clé d'API Anthropic</label><input type="password" id="aiKeyInput" autocomplete="off" spellcheck="false" placeholder="sk-ant-..."></div>
         <div class="form-row fr2">
@@ -1965,7 +1965,10 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div class="field"><label>Fichier</label><input type="text" id="aiGhPath" autocomplete="off" spellcheck="false" value="index.html"></div>
         </div>
         <p class="card-b" style="margin:.4rem 0 1rem;font-size:.74rem;color:var(--ye)">Choisis un code que toi seul connais. Chaque question est facturée sur ton compte Anthropic.</p>
-        <button class="btn btn-primary" id="aiSetupBtn" onclick="aiSetup()">Chiffrer et enregistrer</button>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <button class="btn btn-primary" id="aiSetupBtn" onclick="aiSetup()">Chiffrer et enregistrer</button>
+          <button class="sbtn" id="aiSetupBack" style="display:none" onclick="aiCloseSettings()">Retour à la conversation</button>
+        </div>
       </div>
       <div id="aiLockBox" class="ai-pad" style="display:none">
         <p class="card-b" style="margin-bottom:.8rem">L'assistant est verrouillé. Entre ton code d'accès.</p>
@@ -1980,6 +1983,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <button class="ai-new" onclick="aiNewChat()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouvelle conversation</button>
           <div class="ai-list" id="aiList"></div>
           <div class="ai-side-f">
+            <button class="sbtn" onclick="aiOpenSettings()">Clé et jeton GitHub</button>
             <button class="sbtn" onclick="aiLock()">Verrouiller</button>
             <button class="sbtn danger" onclick="aiEraseVault()">Effacer les secrets</button>
           </div>
@@ -3746,6 +3750,12 @@ const MANUAL_TESTS=[
      "Laisse la partie GitHub vide pour ce test",
      "Clique sur « Chiffrer et enregistrer »"],
    attendu:"Le message « Secrets chiffrés dans ce navigateur » apparaît, puis la conversation s'ouvre avec la mention « Lecture seule »."},
+  {id:"assistant-secrets-modif",v:1,date:"2026-09-17",zone:"Assistant Claude",titre:"Modifier la clé ou le jeton sans tout effacer",
+   etapes:["Dans l'assistant, clique sur « Clé et jeton GitHub » en bas à gauche",
+     "Laisse la clé d'API vide, tape ton code d'accès deux fois, puis « Enregistrer les modifications »",
+     "Reviens sur « Clé et jeton GitHub », puis clique sur « Retour à la conversation »",
+     "Pose une question pour vérifier que la clé fonctionne toujours"],
+   attendu:"La page des secrets s'ouvre avec le dépôt GitHub prérempli et les champs secrets vides. Après enregistrement, le message indique « Secrets mis à jour » et l'assistant répond encore : la clé n'a pas été perdue. Le bouton « Retour à la conversation » ne change rien."},
   {id:"assistant-question",v:1,date:"2026-09-16",zone:"Assistant Claude",titre:"Question simple à l'assistant",
    etapes:["Dans l'assistant, écris : Qui est absent cette semaine ?","Envoie avec Entrée"],
    attendu:"Des lignes grises montrent les lectures de données, puis une réponse en français qui correspond à la page Absences. Le nombre de jetons s'affiche sous la conversation."},
@@ -4279,16 +4289,40 @@ function aiLock(){
   aiRender();
 }
 
+let _aiEditing=false;
+function aiOpenSettings(){
+  if(!canUseAssistant()||!_aiSecrets||_aiCryptoBusy)return;
+  if(_aiBusy||_aiPublishing){toast("Attends la fin de la demande en cours","info");return;}
+  if(_aiRepo&&_aiRepo.edits.length){toast("Publie ou abandonne d'abord les modifications en attente","error");return;}
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  const gh=_aiSecrets.github||null;
+  set("aiKeyInput","");set("aiPin1","");set("aiPin2","");set("aiGhToken","");
+  set("aiGhOwner",gh?gh.owner||"":"");
+  set("aiGhRepo",gh?gh.repo||"":"");
+  set("aiGhBranch",gh?gh.branch||"main":"main");
+  set("aiGhPath",gh?gh.path||"index.html":"index.html");
+  _aiEditing=true;_aiSideOpen=false;
+  aiRender();
+}
+function aiCloseSettings(){
+  if(_aiCryptoBusy)return;
+  ["aiKeyInput","aiPin1","aiPin2","aiGhToken"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+  _aiEditing=false;
+  aiRender();
+}
 async function aiSetup(){
   if(!canUseAssistant()||_aiCryptoBusy)return;
   const val=id=>String((document.getElementById(id)||{}).value||"").trim();
-  const key=val("aiKeyInput")||aiLegacyKey();
+  const editing=_aiEditing&&!!_aiSecrets;
+  const key=val("aiKeyInput")||(editing?_aiSecrets.anthropic:"")||aiLegacyKey();
   if(!/^sk-ant-[A-Za-z0-9_-]{20,}$/.test(key)){toast("Clé d'API Anthropic invalide","error");return;}
   const p1=val("aiPin1"),p2=val("aiPin2");
   if(!/^[0-9]{4,}$/.test(p1)){toast("Le code doit contenir au moins 4 chiffres","error");return;}
   if(p1!==p2){toast("Les deux codes ne correspondent pas","error");return;}
   const gh={token:val("aiGhToken"),owner:val("aiGhOwner"),repo:val("aiGhRepo"),
     branch:val("aiGhBranch")||"main",path:val("aiGhPath")||"index.html"};
+  if(editing&&!gh.token&&_aiSecrets.github&&_aiSecrets.github.token&&(gh.owner||gh.repo))
+    gh.token=_aiSecrets.github.token;
   const secrets={anthropic:key,github:null};
   _aiCryptoBusy=true;aiRender();
   try{
@@ -4306,10 +4340,11 @@ async function aiSetup(){
     ["aiKeyInput","aiPin1","aiPin2","aiGhToken"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
     aiSetLockState({fails:0,until:0});
     _aiSecrets=secrets;
-    aiChatsLoad();aiChatBlank();
+    if(editing){_aiRepo=null;_aiLastPublish=null;_aiEditing=false;}
+    else{aiChatsLoad();aiChatBlank();}
     aiTouch();
-    toast("Secrets chiffrés dans ce navigateur","success");
-    await logActivity(`${session.user} a configuré l'assistant Claude${secrets.github?" avec modification du site":""}`);
+    toast(editing?"Secrets mis à jour":"Secrets chiffrés dans ce navigateur","success");
+    await logActivity(`${session.user} a ${editing?"mis à jour":"configuré"} l'assistant Claude${secrets.github?" avec modification du site":""}`);
   }catch(e){
     toast("Chiffrement impossible dans ce navigateur","error");
     dbgPush("assistant","chiffrement impossible : "+dbgStr(e),"");
@@ -4751,12 +4786,18 @@ function aiRenderPending(){
 function aiRender(){
   const vault=aiReadVault(),unlocked=!!_aiSecrets;
   const show=(id,on,disp)=>{const el=document.getElementById(id);if(el)el.style.display=on?(disp||"block"):"none";};
-  show("aiSetup",!vault&&!unlocked);
+  if(!unlocked)_aiEditing=false;
+  show("aiSetup",(!vault&&!unlocked)||_aiEditing);
   show("aiLockBox",!!vault&&!unlocked);
-  show("aiChat",unlocked,"flex");
-  show("aiLegacyHint",!vault&&!!aiLegacyKey());
+  show("aiChat",unlocked&&!_aiEditing,"flex");
+  show("aiLegacyHint",!vault&&!unlocked&&!!aiLegacyKey());
+  show("aiSetupBack",_aiEditing);
+  const si=document.getElementById("aiSetupIntro");
+  if(si)si.textContent=_aiEditing
+    ?"Modifie la clé d'API ou le jeton GitHub. Laisse un champ vide pour garder ce qui est déjà enregistré. Le code d'accès est demandé pour rechiffrer le tout : garde le même, ou choisis-en un nouveau."
+    :"Première configuration. Tes secrets sont chiffrés avec ton code et restent dans ce navigateur : ni Supabase ni le fichier du site ne les voient.";
   const sb=document.getElementById("aiSetupBtn");
-  if(sb){sb.disabled=_aiCryptoBusy;sb.textContent=_aiCryptoBusy?"Vérification et chiffrement…":"Chiffrer et enregistrer";}
+  if(sb){sb.disabled=_aiCryptoBusy;sb.textContent=_aiCryptoBusy?"Vérification et chiffrement…":(_aiEditing?"Enregistrer les modifications":"Chiffrer et enregistrer");}
   const ub=document.getElementById("aiUnlockBtn");
   if(ub){ub.disabled=_aiCryptoBusy;ub.textContent=_aiCryptoBusy?"Vérification…":"Déverrouiller";}
   if(!unlocked)return;
@@ -4789,6 +4830,7 @@ function aiRender(){
 function openAssistant(){
   if(!canUseAssistant()){toast("Assistant réservé à son propriétaire","error");return;}
   _aiSideOpen=false;
+  if(!_aiCryptoBusy)_aiEditing=false;
   if(_aiSecrets&&!_aiChats.length)aiChatsLoad();
   aiRender();
   const m=document.getElementById("aiModal");
