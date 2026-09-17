@@ -2469,6 +2469,7 @@ function memberKey(id,stored){
 }
 function refreshMemberViews(){
   _midxRef=null;_midxLen=-1;
+  syncSessionGrade();
   const meta=(typeof TAB_RENDER!=="undefined")&&TAB_RENDER[_activeTab];
   if(meta){
     const fn=window[meta.fn];
@@ -2520,12 +2521,34 @@ async function syncUserNameCopies(user){
 }
 const GRADE_LEVEL = {CMDM:7,CMD:6,VCMD:5,MAJ:4,CPT:3,LT:2,SGT:1,ARC:0};
 
+function sessionMember(){
+  if(!session)return null;
+  if(session.memberId!==null&&session.memberId!==undefined&&session.memberId!==""){
+    const m=memberById(session.memberId);
+    if(m)return m;
+  }
+  return (state.members||[]).find(m=>(m.user_hash&&m.user_hash===session.userHash)||(m.linked_user&&m.linked_user===session.userHash))||null;
+}
 function getSessionGrade(){
   if(!session) return null;
   if(session.role==="admin") return "ADMIN";
-  const linked = state.members.find(m=>m.user_hash===session.userHash||m.linked_user===session.userHash);
-  if(linked) return linked.grade;
+  const m=sessionMember();
+  if(m&&m.grade) return m.grade;
   return session.grade||null;
+}
+function syncSessionGrade(){
+  if(!session)return false;
+  const m=sessionMember();
+  const g=m&&m.grade?m.grade:null;
+  if(!g||g===session.grade)return false;
+  session.grade=g;
+  try{localStorage.setItem("arcSession",JSON.stringify(session));}catch(e){}
+  updateNavUI();
+  if(session.role!=="admin"){
+    try{renderNav();}catch(e){}
+    try{applyPermissionsUI();}catch(e){}
+  }
+  return true;
 }
 
 function gradeLevel(g){
@@ -2904,6 +2927,8 @@ function hydrateSession(){
   if(u.display)session.user=u.display;
   if(u.role)session.role=u.role;
   session.memberId=u.member_id||null;
+  const m=sessionMember();
+  if(m&&m.grade)session.grade=m.grade;
   try{localStorage.setItem("arcSession",JSON.stringify(session));}catch(e){}
   updateNavUI();
 }
@@ -3353,7 +3378,7 @@ function openAccount(){document.getElementById("accountModal").classList.add("sh
   document.getElementById("accName").textContent=session.user;
   document.getElementById("accTitle").textContent=session.user;
   document.getElementById("accAv").textContent=(session.user[0]||"?").toUpperCase();
-  document.getElementById("accAv").style.background=roleAvatarColor(session.role,session.grade);
+  document.getElementById("accAv").style.background=roleAvatarColor(session.role,(sessionMember()||{}).grade||session.grade);
   document.getElementById("accRole").textContent={admin:"ADMIN",brs:"BRS",amiraute:"AMIRAUTÉ"}[session.role]||"MEMBRE";
   document.getElementById("accRole").className="uc-role "+(session.role==="admin"?"admin":"member");
   document.getElementById("accDesc").textContent={
@@ -3370,8 +3395,9 @@ function updateNavUI(){
     lb.style.display="none";uc.style.display="flex";
     document.getElementById("ucName").textContent=session.user;
     document.getElementById("ucAv").textContent=(session.user[0]||"?").toUpperCase();
-    document.getElementById("ucAv").style.background=roleAvatarColor(session.role,session.grade);
-    const displayGrade=session.grade||"";
+    const liveGrade=(sessionMember()||{}).grade||session.grade||"";
+    document.getElementById("ucAv").style.background=roleAvatarColor(session.role,liveGrade);
+    const displayGrade=liveGrade;
     const roleLabels={admin:"ADMIN",brs:"BRS",amiraute:"AMIRAUTÉ"};
     const displayRole=roleLabels[session.role]||(displayGrade||"MEMBRE");
     document.getElementById("ucRole").textContent=displayRole;
@@ -3692,6 +3718,11 @@ const MANUAL_TESTS=[
      "Ouvre le tableau de bord avec ton compte, puis l'onglet Rapports, et clique sur la flèche de gauche pour afficher cette semaine",
      "Dans le menu de débug, « Copier le rapport pour Claude » : regarde la ligne « Historique des semaines »"],
    attendu:"Le titre de la semaine se termine par « historique figé », et la ligne du rapport indique [ok]. Une promotion ou une absence modifiée après coup ne change plus les statuts de cette semaine."},
+  {id:"grade-session-promotion",v:1,date:"2026-09-17",zone:"Profil",titre:"Le grade affiché suit une promotion sans reconnexion",
+   etapes:["Ouvre le site dans deux navigateurs : l'un avec ton compte administrateur, l'autre avec le compte d'un membre lié à une fiche",
+     "Avec l'administrateur, change le grade de ce membre (onglet Effectif ou sa fiche)",
+     "Sans recharger, attends une vingtaine de secondes dans le navigateur du membre, puis regarde le badge en haut à droite et ouvre « Mon espace »"],
+   attendu:"Le badge en haut à droite affiche le nouveau grade, avec sa couleur, comme Mon espace et l'Effectif. Les onglets et boutons correspondent aux droits du nouveau grade."},
   {id:"formation-rapport",v:1,date:"2026-09-16",zone:"Formations",titre:"Une formation valide le rapport du formateur",
    etapes:["Onglet Formations : « Nouvelle formation » avec un formateur SGT ou LT dont le rapport de la semaine n'est pas encore validé",
      "Enregistre, puis ouvre l'onglet Rapports"],
@@ -6542,6 +6573,9 @@ async function pollRealtime(){
           catch(e){ console.warn("sync: statuts absences",e); }
         }
 
+        if(session && (changed.has("members")||changed.has("users"))){
+          try{ if(changed.has("users")) hydrateSession(); _midxRef=null;_midxLen=-1; syncSessionGrade(); }catch(e){}
+        }
         if(session && changed.size && !uiBusy()){
           const meta=TAB_RENDER[_activeTab];
           if(meta && meta.on.some(t=>changed.has(t))){
