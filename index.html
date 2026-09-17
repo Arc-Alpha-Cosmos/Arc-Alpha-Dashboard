@@ -417,7 +417,8 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .modal-f{padding:1rem 1.5rem;border-top:1px solid var(--ln);display:flex;gap:.7rem;justify-content:flex-end}
 .modal-err{font-family:var(--fm);font-size:.68rem;color:var(--rd);letter-spacing:.05em;margin-top:.6rem;display:none}
 .modal-err.show{display:block;animation:slideL .3s}
-.modal.ai-modal{max-width:1280px;height:calc(100vh - var(--nav) - 2rem);height:calc(100dvh - var(--nav) - 2rem)}
+.modal.ai-modal{max-width:620px}
+.modal.ai-modal.ai-full{max-width:1280px;height:calc(100vh - var(--nav) - 2rem);height:calc(100dvh - var(--nav) - 2rem)}
 .modal.tall .modal-b.ai-body{padding:0;overflow:hidden;display:flex;flex-direction:column}
 .ai-pad{padding:1rem 1.3rem;overflow-y:auto}
 .ai-layout{flex:1 1 auto;min-height:0;display:flex;position:relative}
@@ -1940,7 +1941,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
 <!-- ASSISTANT MODAL -->
 <div class="modal-bg" id="aiModal">
-  <div class="modal tall ai-modal">
+  <div class="modal tall ai-modal" id="aiModalBox">
     <div class="modal-h"><div><span class="k">// ASSISTANT</span><h3>Assistant Claude</h3></div>
       <button class="modal-x" onclick="closeModal('aiModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
@@ -1954,7 +1955,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div class="field"><label>Confirmer le code</label><input type="password" id="aiPin2" inputmode="numeric" autocomplete="new-password"></div>
         </div>
         <div style="font-family:var(--fm);font-size:.66rem;letter-spacing:.1em;color:var(--dm);margin:.9rem 0 .4rem">// MODIFICATION DU SITE (FACULTATIF)</div>
-        <p class="card-b" style="margin-bottom:.7rem;font-size:.74rem">Crée sur GitHub un jeton à accès limité : un seul dépôt, permission « Contents » en lecture et écriture. Sans jeton, l'assistant reste en lecture seule.</p>
+        <p class="card-b" style="margin-bottom:.7rem;font-size:.74rem">Jeton GitHub à accès limité : un seul dépôt, permission « Contents » en écriture. Sans jeton, l'assistant reste en lecture seule.</p>
         <div class="field"><label>Jeton GitHub</label><input type="password" id="aiGhToken" autocomplete="off" spellcheck="false" placeholder="github_pat_..."></div>
         <div class="form-row fr2">
           <div class="field"><label>Propriétaire du dépôt</label><input type="text" id="aiGhOwner" autocomplete="off" spellcheck="false" placeholder="ton pseudo GitHub"></div>
@@ -1964,7 +1965,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div class="field"><label>Branche</label><input type="text" id="aiGhBranch" autocomplete="off" spellcheck="false" value="main"></div>
           <div class="field"><label>Fichier</label><input type="text" id="aiGhPath" autocomplete="off" spellcheck="false" value="index.html"></div>
         </div>
-        <p class="card-b" style="margin:.4rem 0 1rem;font-size:.74rem;color:var(--ye)">Choisis un code que toi seul connais. Chaque question est facturée sur ton compte Anthropic.</p>
+        <p class="card-b" id="aiSetupWarn" style="margin:.4rem 0 1rem;font-size:.74rem;color:var(--ye)">Choisis un code que toi seul connais. Chaque question est facturée sur ton compte Anthropic.</p>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap">
           <button class="btn btn-primary" id="aiSetupBtn" onclick="aiSetup()">Chiffrer et enregistrer</button>
           <button class="sbtn" id="aiSetupBack" style="display:none" onclick="aiCloseSettings()">Retour à la conversation</button>
@@ -4792,10 +4793,13 @@ function aiRender(){
   show("aiChat",unlocked&&!_aiEditing,"flex");
   show("aiLegacyHint",!vault&&!unlocked&&!!aiLegacyKey());
   show("aiSetupBack",_aiEditing);
+  const box=document.getElementById("aiModalBox");
+  if(box)box.classList.toggle("ai-full",unlocked&&!_aiEditing);
   const si=document.getElementById("aiSetupIntro");
   if(si)si.textContent=_aiEditing
-    ?"Modifie la clé d'API ou le jeton GitHub. Laisse un champ vide pour garder ce qui est déjà enregistré. Le code d'accès est demandé pour rechiffrer le tout : garde le même, ou choisis-en un nouveau."
+    ?"Laisse un champ vide pour garder ce qui est enregistré. Le code d'accès rechiffre le tout : garde le même ou change-le."
     :"Première configuration. Tes secrets sont chiffrés avec ton code et restent dans ce navigateur : ni Supabase ni le fichier du site ne les voient.";
+  show("aiSetupWarn",!_aiEditing);
   const sb=document.getElementById("aiSetupBtn");
   if(sb){sb.disabled=_aiCryptoBusy;sb.textContent=_aiCryptoBusy?"Vérification et chiffrement…":(_aiEditing?"Enregistrer les modifications":"Chiffrer et enregistrer");}
   const ub=document.getElementById("aiUnlockBtn");
