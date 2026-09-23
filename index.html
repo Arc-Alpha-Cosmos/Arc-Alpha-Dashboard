@@ -388,6 +388,13 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .field{margin-bottom:1rem}
 .field label{display:block;font-family:var(--fm);font-size:.62rem;color:var(--dm);letter-spacing:.1em;
   text-transform:uppercase;margin-bottom:.4rem}
+.act-mlist{max-height:190px;overflow-y:auto;border:1px solid var(--ln);background:var(--s2);padding:.3rem}
+.field label.act-mrow{display:flex;align-items:center;gap:.55rem;margin:0;padding:.3rem .4rem;cursor:pointer;
+  font-family:var(--fr);font-size:.82rem;color:var(--tx);letter-spacing:0;text-transform:none;border-radius:3px}
+.field label.act-mrow:hover{background:rgba(0,229,255,.07)}
+.act-mrow input[type=checkbox]{width:15px;height:15px;flex:0 0 auto;padding:0;margin:0;accent-color:var(--ac);cursor:pointer}
+.act-mrow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.act-mrow .g{flex:0 0 auto;color:var(--dm);font-family:var(--fm);font-size:.62rem;letter-spacing:.04em}
 .field input,.field select,.field textarea{width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);
   padding:.6rem .8rem;font-family:var(--fr);font-size:.9rem;outline:none;transition:border-color .2s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ac)}
@@ -1947,7 +1954,11 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <div class="field"><label>Intitulé</label><input type="text" id="actIntitule" autocomplete="off" placeholder="ex: Entraînement au tir de précision"></div>
       <div class="field"><label>Membres concernés <span id="actMembersCount" style="color:var(--dm);font-family:var(--fm);font-size:.62rem;text-transform:none;letter-spacing:0"></span></label>
         <input type="text" id="actMemberSearch" autocomplete="off" placeholder="Filtrer la liste…" oninput="populateActMembers(this.value)" style="margin-bottom:.4rem">
-        <div id="actMembersBox" style="max-height:190px;overflow-y:auto;border:1px solid var(--ln);background:var(--s2);padding:.35rem"></div>
+        <div id="actMembersBox" class="act-mlist"></div>
+      </div>
+      <div class="field"><label>Autres participants (texte libre)</label>
+        <input type="text" id="actParticipants" list="actParticipantsList" autocomplete="off" placeholder="ex: recrues ou invités, séparés par une virgule">
+        <datalist id="actParticipantsList"></datalist>
       </div>
       <div class="field"><label>Validé par</label><select id="actOfficier"></select></div>
       <div class="field"><label>Commentaire (facultatif)</label><textarea id="actCommentaire" rows="2" placeholder="Précisions, résultat, remarque" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical"></textarea></div>
@@ -3657,11 +3668,11 @@ function colorGradeSelect(sel){sel.style.color=GRADE_COLORS[sel.value]||"#e9eef7
 
 const MANUAL_TESTS=[
   {id:"entrainements-base",v:1,date:"2026-09-23",zone:"Entraînements",titre:"L'enregistrement arrive bien en base",
-   etapes:["Applique d'abord le SQL de création de la table donné par Claude dans Supabase",
-     "Onglet Entraînements : clique sur « Nouvelle entrée », choisis le type Entraînement, mets un intitulé, coche deux membres, choisis l'officier qui valide, ajoute un commentaire, enregistre",
+   etapes:["Applique d'abord dans Supabase le SQL de création de la table ET la colonne participants, donnés par Claude",
+     "Onglet Entraînements : clique sur « Nouvelle entrée », choisis le type Entraînement, mets un intitulé, coche deux membres, écris deux noms libres dans « Autres participants », choisis l'officier qui valide, ajoute un commentaire, enregistre",
      "Recharge complètement la page (Ctrl + F5) et rouvre l'onglet",
      "Ouvre le site sur un autre appareil ou un autre navigateur"],
-   attendu:"L'entrée est toujours là après rechargement, avec ses deux membres, son commentaire et son officier. Elle apparaît aussi sur l'autre appareil. Si elle disparaît au rechargement, la table n'existe pas encore ou les politiques RLS la bloquent."},
+   attendu:"L'entrée est toujours là après rechargement, avec ses deux membres, ses participants libres, son commentaire et son officier. Elle apparaît aussi sur l'autre appareil. Si elle disparaît au rechargement, la table n'existe pas encore ou les politiques RLS la bloquent."},
   {id:"entrainements-rapport",v:1,date:"2026-09-23",zone:"Entraînements",titre:"Une entrée valide le rapport de chaque membre concerné",
    etapes:["Onglet Rapports, semaine courante : repère deux membres de l'effectif encore en « À valider », qui ne sont ni dispensés ni absents",
      "Onglet Entraînements : crée une entrée datée d'un jour de la semaine courante et coche ces deux membres",
@@ -3671,7 +3682,7 @@ const MANUAL_TESTS=[
   {id:"entrainements-filtres",v:1,date:"2026-09-23",zone:"Entraînements",titre:"Filtres, historique et affichage sur téléphone",
    etapes:["Crée au moins trois entrées à des dates différentes, dont une de type Tâche",
      "Utilise le filtre « Tous les types », puis le filtre par membre, puis les deux ensemble",
-     "Survole l'intitulé d'une entrée qui a un commentaire, et la colonne des membres d'une entrée qui en a plus de trois",
+     "Vérifie que la liste des membres à cocher est lisible : une case à cocher normale à gauche, le nom sur une seule ligne, le grade à droite. Survole l'intitulé d'une entrée qui a un commentaire, et la colonne des membres d'une entrée qui en a plus de trois",
      "Ouvre l'onglet sur ton téléphone"],
    attendu:"L'historique est trié de la date la plus récente à la plus ancienne. Les filtres réduisent la liste et le compteur suit. Le commentaire et la liste complète des membres apparaissent au survol. Sur téléphone, le tableau reste lisible et la fenêtre d'ajout garde son titre et ses boutons visibles."},
   {id:"entrainements-droits",v:1,date:"2026-09-23",zone:"Entraînements",titre:"Droits d'ajout et de suppression",
@@ -4319,10 +4330,11 @@ function renderEntrainements(){
     const shown=labels.slice(0,3).map(esc).join(", ");
     const more=labels.length>3?` <span style="color:var(--dm)">+${labels.length-3}</span>`:"";
     const com=a.commentaire?` <span style="color:var(--dm);cursor:help" title="${esc(a.commentaire)}">💬</span>`:"";
+    const part=a.participants?`<div style="color:var(--dm);font-size:.72rem;margin-top:.15rem">+ ${esc(a.participants)}</div>`:"";
     return `<tr>
       <td><span style="font-family:var(--fm);font-size:.68rem;color:${tc};border:1px solid ${tc}44;background:${tc}11;padding:.15rem .5rem;border-radius:3px">${esc(a.type)||"-"}</span></td>
       <td><span style="font-size:.82rem;color:var(--tx)">${esc(a.intitule)||"-"}</span>${com}</td>
-      <td><span style="font-size:.8rem;color:var(--tx)" title="${esc(labels.join(", "))}">${shown||"-"}${more}</span></td>
+      <td><span style="font-size:.8rem;color:var(--tx)" title="${esc(labels.join(", "))}">${shown||"-"}${more}</span>${part}</td>
       <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${a.date?fmtDate(a.date):"-"}</span></td>
       <td><span style="font-size:.8rem;color:var(--tx)">${esc(memberLabel(a.officier_id,a.officier,"-"))}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
@@ -4350,9 +4362,9 @@ function populateActMembers(q){
   if(!members.length){box.innerHTML='<p style="color:var(--dm);font-size:.72rem;padding:.4rem;margin:0">Aucun membre</p>';actMembersChanged();return;}
   box.innerHTML=members.map(m=>{
     const on=_actSel.has(String(m.id))?" checked":"";
-    return `<label style="display:flex;align-items:center;gap:.5rem;padding:.22rem .3rem;cursor:pointer;font-size:.78rem;color:var(--tx)">
+    return `<label class="act-mrow">
       <input type="checkbox" value="${esc(m.id)}"${on} onchange="actMembersChanged()">
-      <span>${esc(`${m.matricule||"?"} - ${m.nom||"?"}`)} <span style="color:var(--dm);font-family:var(--fm);font-size:.64rem">${esc(m.grade||"ARC")}</span></span>
+      <span class="n">${esc(`${m.matricule||"?"} - ${m.nom||"?"}`)}</span><span class="g">${esc(m.grade||"ARC")}</span>
     </label>`;
   }).join("");
   actMembersChanged();
@@ -4380,6 +4392,7 @@ function openEntrainementModal(id){
     document.getElementById("actDate").value=String(a.date||"").slice(0,10);
     populateMemberSelect("actOfficier",a.officier_id,a.officier);
     document.getElementById("actCommentaire").value=a.commentaire||"";
+    document.getElementById("actParticipants").value=a.participants||"";
     document.getElementById("entrainementModalTitle").textContent="Modifier l'entrée";
   }else{
     document.getElementById("actId").value="";
@@ -4389,14 +4402,16 @@ function openEntrainementModal(id){
     document.getElementById("actDate").value=ymdLocal(new Date());
     populateMemberSelect("actOfficier",session?.memberId||"","");
     document.getElementById("actCommentaire").value="";
+    document.getElementById("actParticipants").value="";
     document.getElementById("entrainementModalTitle").textContent="Nouvelle entrée";
   }
+  populateMemberDatalist("actParticipantsList");
   populateActMembers("");
   document.getElementById("entrainementModal").classList.add("show");
 }
 
 function writeActivite(id,obj){
-  return supaWriteOptional(T.activites,id?("id=eq."+id):null,obj,["member_ids","member_names","officier_id","commentaire"]);
+  return supaWriteOptional(T.activites,id?("id=eq."+id):null,obj,["member_ids","member_names","officier_id","commentaire","participants"]);
 }
 
 async function saveEntrainement(){
@@ -4410,6 +4425,7 @@ async function saveEntrainement(){
   const date=document.getElementById("actDate").value;
   const oRef=readMemberSelect("actOfficier",prev?.officier);
   const commentaire=(document.getElementById("actCommentaire").value||"").trim();
+  const participants=(document.getElementById("actParticipants").value||"").trim();
   const ids=[..._actSel].map(String);
   if(!intitule){showErr("L'intitulé est requis.");return;}
   if(!ids.length){showErr("Sélectionne au moins un membre concerné.");return;}
@@ -4417,7 +4433,7 @@ async function saveEntrainement(){
   const names=ids.map(i=>memberLabel(i,"",""));
   const obj={type,intitule,date:date||null,
              member_ids:JSON.stringify(ids),member_names:JSON.stringify(names),
-             officier_id:oRef.id,officier:oRef.name,commentaire:commentaire||null};
+             officier_id:oRef.id,officier:oRef.name,commentaire:commentaire||null,participants:participants||null};
 
   if(id){
     if(supaOK){const r=await writeActivite(id,obj);if(r===null){showErr("Erreur réseau.");return;}}
@@ -7571,7 +7587,7 @@ function buildMemberTimeline(m){
     const tache=a.type==="Tâche";
     ev.push({date:a.date,color:tache?"var(--or)":"var(--ac)",icon:tache?"▣":"✧",
              title:`${a.type||"Entraînement"} : ${a.intitule||"?"}`,
-             sub:`Validé par ${memberLabel(a.officier_id,a.officier)}${a.commentaire?" · "+a.commentaire:""}`});
+             sub:`Validé par ${memberLabel(a.officier_id,a.officier)}${a.participants?" · avec "+a.participants:""}${a.commentaire?" · "+a.commentaire:""}`});
   });
   ev.sort((a,b)=>{
     if(!a.date&&!b.date)return 0;
