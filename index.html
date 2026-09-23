@@ -1153,6 +1153,26 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         </div></div>
       </div>
 
+      <!-- ONGLET ENTRAÎNEMENTS -->
+      <div class="dash-tab" data-dtc="entrainements" style="display:none">
+        <div class="sec-head"><h2>Entraînements</h2><span class="line"></span>
+          <select id="actFType" onchange="actFilterType=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none">
+            <option value="">Tous les types</option>
+            <option value="Entraînement">Entraînement</option>
+            <option value="Tâche">Tâche</option>
+          </select>
+          <select id="actFMember" onchange="actFilterMember=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none;max-width:200px"></select>
+          <span class="tag" id="entrainementsCount"></span>
+          <button class="sbtn green" id="addEntrainementBtn" onclick="openEntrainementModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouvelle entrée</button>
+        </div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl">
+            <thead><tr><th>Type</th><th>Intitulé</th><th>Membres concernés</th><th>Date</th><th>Validé par</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody id="entrainementsBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
       <!-- ONGLET RÉSERVISTES -->
       <div class="dash-tab" data-dtc="reserve" style="display:none">
         <div class="sec-head"><h2>Réservistes</h2><span class="line"></span></div>
@@ -1911,6 +1931,32 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   </div>
 </div>
 
+<div class="modal-bg" id="entrainementModal">
+  <div class="modal tall">
+    <div class="modal-h"><div><span class="k">// ENTRAÎNEMENT</span><h3 id="entrainementModalTitle">Nouvelle entrée</h3></div>
+      <button class="modal-x" onclick="closeModal('entrainementModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="actId">
+      <div class="form-row fr2">
+        <div class="field"><label>Type</label>
+          <select id="actType" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--fm);font-size:.8rem;outline:none"></select>
+        </div>
+        <div class="field"><label>Date</label><input type="date" id="actDate"></div>
+      </div>
+      <div class="field"><label>Intitulé</label><input type="text" id="actIntitule" autocomplete="off" placeholder="ex: Entraînement au tir de précision"></div>
+      <div class="field"><label>Membres concernés <span id="actMembersCount" style="color:var(--dm);font-family:var(--fm);font-size:.62rem;text-transform:none;letter-spacing:0"></span></label>
+        <input type="text" id="actMemberSearch" autocomplete="off" placeholder="Filtrer la liste…" oninput="populateActMembers(this.value)" style="margin-bottom:.4rem">
+        <div id="actMembersBox" style="max-height:190px;overflow-y:auto;border:1px solid var(--ln);background:var(--s2);padding:.35rem"></div>
+      </div>
+      <div class="field"><label>Validé par</label><select id="actOfficier"></select></div>
+      <div class="field"><label>Commentaire (facultatif)</label><textarea id="actCommentaire" rows="2" placeholder="Précisions, résultat, remarque" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical"></textarea></div>
+      <div id="entrainementErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:3px"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('entrainementModal')">Annuler</button><button class="btn btn-primary" onclick="saveEntrainement()">Enregistrer</button></div>
+  </div>
+</div>
+
 <!-- CHANGE CATEGORIE MODAL (réserve / blacklist) -->
 <div class="modal-bg" id="catModal">
   <div class="modal">
@@ -2333,7 +2379,7 @@ const SUPA_URL="https://vejxnhmrrckpczjsdclx.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlanhuaG1ycmNrcGN6anNkY2x4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDI5NDcsImV4cCI6MjA5NzIxODk0N30.btczeuZJDL3o8Z8GEQ-t6DZG2BSMn0gsUFJAf34ech4";
 const T={config:"arc_config",members:"arc_members",users:"arc_users",blames:"arc_blames",
   missions:"arc_missions",announce:"arc_annonces",activity:"arc_activity",
-  absences:"arc_absences",reports:"arc_reports",cmdmissions:"arc_cmd_missions",documents:"arc_documents",tasks:"arc_tasks",polls:"arc_polls",pollvotes:"arc_poll_votes",formations:"arc_formations",tickets:"arc_tickets",messages:"arc_messages"};
+  absences:"arc_absences",reports:"arc_reports",cmdmissions:"arc_cmd_missions",documents:"arc_documents",tasks:"arc_tasks",polls:"arc_polls",pollvotes:"arc_poll_votes",formations:"arc_formations",activites:"arc_activites",tickets:"arc_tickets",messages:"arc_messages"};
 const BOOT_USER_HASH="610be245a9683";
 const BOOT_PASS_HASH="16ddc42021724a";
 
@@ -2509,6 +2555,7 @@ function canEdit(tab){
   const myTasks = getMyTasks();
 
   if(tab==="formations") return lvl>=1;
+  if(tab==="entrainements") return lvl>=1;
 
   if(lvl<2) return false;
 
@@ -2620,8 +2667,12 @@ function activityCreditFor(memberId,weekKey){
   const inWeek=r=>{const d=activityDay(r);return !!d&&d>=weekKey&&d<=end;};
   if((state.formations||[]).some(f=>f.formateur_id!=null&&String(f.formateur_id)===id&&inWeek(f)))return "formation";
   if((state.cmdmissions||[]).some(c=>String(c.member_id)===id&&inWeek(c)))return "cmd";
+  if((state.activites||[]).some(a=>actIds(a).includes(id)&&inWeek(a)))return "entrainement";
   return null;
 }
+const CREDIT_SHORT={cmd:"Validé (CMD)",formation:"Validé (formation)",entrainement:"Validé (entraînement)"};
+const CREDIT_LONG={cmd:"CMD de mission",formation:"formation donnée",entrainement:"entraînement suivi"};
+const CREDIT_MINE={cmd:"ton CMD de mission",formation:"ta formation",entrainement:"ton entraînement"};
 function frozenWeek(weekKey){
   const w=(state.reportWeeks||{})[weekKey];
   return w&&typeof w==="object"?w:null;
@@ -2682,7 +2733,7 @@ let state={
   autoReport:true,autoReportSince:null,reportExempt:{},reportWeeks:{},manualTests:{},
   members:[],blames:[],missions:[],announces:[],users:[],activity:[],
   absences:[],reports:[],cmdmissions:[],documents:[],tasks:[],content:{},
-  formations:[],tickets:[],
+  formations:[],activites:[],tickets:[],
   polls:[],pollVotes:[],
   discord:{annonces:"",promo:"",formations:"",style:"detaille",botName:"",botAvatar:""},
   regiments:["501st","212th","327th","41st","104th","408th","65th"],
@@ -2805,6 +2856,7 @@ const SYNC_TABLES=[
   {key:"polls",       table:T.polls,       into:"polls"},
   {key:"pollvotes",   table:T.pollvotes,   into:"pollVotes"},
   {key:"formations",  table:T.formations,  into:"formations"},
+  {key:"activites",   table:T.activites,   into:"activites"},
   {key:"tickets",     table:T.tickets,     into:"tickets"},
   {key:"users",       table:T.users,       into:"users"},
 ];
@@ -3093,7 +3145,7 @@ function initTooltips(){
 
 const DEFAULT_NAV_GROUPS = [
   {id:"accueil", label:"Accueil", icon:"⌂", tabs:["overview","monespace"]},
-  {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","reserve","blacklist","absences","reports"]},
+  {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","entrainements","reserve","blacklist","absences","reports"]},
   {id:"activite", label:"Activité", icon:"◈", tabs:["cmd","polls"]},
   {id:"discipline", label:"Discipline", icon:"⚑", tabs:["blames","announce","reglement"]},
   {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","personnages","tasks","journal"]},
@@ -3105,6 +3157,7 @@ const TAB_META = {
   monespace:{label:"Mon espace", icon:"👤"},
   roster:{label:"Effectif", icon:""},
   formations:{label:"Formations", icon:"🎓"},
+  entrainements:{label:"Entraînements", icon:"🎯"},
   reserve:{label:"Réservistes", icon:"🛡"},
   blacklist:{label:"Blacklist", icon:"⛔"},
   absences:{label:"Absences", icon:""},
@@ -3603,6 +3656,29 @@ function renderQuickActions(){
 function colorGradeSelect(sel){sel.style.color=GRADE_COLORS[sel.value]||"#e9eef7";}
 
 const MANUAL_TESTS=[
+  {id:"entrainements-base",v:1,date:"2026-09-23",zone:"Entraînements",titre:"L'enregistrement arrive bien en base",
+   etapes:["Applique d'abord le SQL de création de la table donné par Claude dans Supabase",
+     "Onglet Entraînements : clique sur « Nouvelle entrée », choisis le type Entraînement, mets un intitulé, coche deux membres, choisis l'officier qui valide, ajoute un commentaire, enregistre",
+     "Recharge complètement la page (Ctrl + F5) et rouvre l'onglet",
+     "Ouvre le site sur un autre appareil ou un autre navigateur"],
+   attendu:"L'entrée est toujours là après rechargement, avec ses deux membres, son commentaire et son officier. Elle apparaît aussi sur l'autre appareil. Si elle disparaît au rechargement, la table n'existe pas encore ou les politiques RLS la bloquent."},
+  {id:"entrainements-rapport",v:1,date:"2026-09-23",zone:"Entraînements",titre:"Une entrée valide le rapport de chaque membre concerné",
+   etapes:["Onglet Rapports, semaine courante : repère deux membres de l'effectif encore en « À valider », qui ne sont ni dispensés ni absents",
+     "Onglet Entraînements : crée une entrée datée d'un jour de la semaine courante et coche ces deux membres",
+     "Lis le message qui s'affiche en bas de l'écran, puis retourne dans l'onglet Rapports",
+     "Regarde aussi le Journal"],
+   attendu:"Le message annonce « Rapport validé pour 2 membres ». Dans Rapports, les deux membres sont passés à Validé. Le Journal porte une ligne par rapport validé automatiquement. Un membre déjà validé, dispensé ou absent n'est pas recompté."},
+  {id:"entrainements-filtres",v:1,date:"2026-09-23",zone:"Entraînements",titre:"Filtres, historique et affichage sur téléphone",
+   etapes:["Crée au moins trois entrées à des dates différentes, dont une de type Tâche",
+     "Utilise le filtre « Tous les types », puis le filtre par membre, puis les deux ensemble",
+     "Survole l'intitulé d'une entrée qui a un commentaire, et la colonne des membres d'une entrée qui en a plus de trois",
+     "Ouvre l'onglet sur ton téléphone"],
+   attendu:"L'historique est trié de la date la plus récente à la plus ancienne. Les filtres réduisent la liste et le compteur suit. Le commentaire et la liste complète des membres apparaissent au survol. Sur téléphone, le tableau reste lisible et la fenêtre d'ajout garde son titre et ses boutons visibles."},
+  {id:"entrainements-droits",v:1,date:"2026-09-23",zone:"Entraînements",titre:"Droits d'ajout et de suppression",
+   etapes:["Connecte-toi avec un compte de grade SGT (ou demande à un SGT) : ouvre l'onglet Entraînements",
+     "Fais la même chose avec un compte de grade ARC",
+     "Avec un compte MAJ ou plus, regarde les boutons au bout d'une ligne"],
+   attendu:"Le SGT voit le bouton « Nouvelle entrée » et peut modifier. L'ARC voit l'onglet et l'historique mais aucun bouton d'ajout ni de modification. Seul un MAJ et plus (ou un CPT porteur de la tâche effectif) voit la corbeille de suppression."},
   {id:"vitrine-restauration",v:1,date:"2026-09-16",zone:"Vitrine publique",titre:"Textes Missions et Équipement à jour",
    etapes:["Administration, panneau « Édition de la vitrine » : clique sur « Restaurer les textes d'origine » et confirme",
      "Après le rechargement, ouvre l'accueil et descends jusqu'aux sections Missions et Équipement"],
@@ -4185,6 +4261,200 @@ async function deleteFormation(id){
   renderFormations();
   toast("Formation supprimée","info");
   await logActivity(`Formation supprimée (${memberLabel(_delF?.formateur_id,_delF?.formateur)} → ${memberLabel(_delF?.eleve_id,_delF?.eleve)}) par ${session?.user}`);
+}
+
+const ACTIVITE_TYPES=["Entraînement","Tâche"];
+const ACTIVITE_COLORS={"Entraînement":"var(--ac)","Tâche":"var(--or)"};
+let actFilterMember="",actFilterType="";
+let _actSel=new Set();
+
+function actJsonList(v){
+  if(Array.isArray(v))return v.map(String);
+  if(typeof v==="string"&&v.trim()){
+    try{const p=JSON.parse(v);if(Array.isArray(p))return p.map(String);}catch(e){}
+  }
+  return [];
+}
+function actIds(a){return actJsonList(a&&a.member_ids);}
+function actNames(a){return actJsonList(a&&a.member_names);}
+function actMemberLabels(a){
+  const ids=actIds(a),names=actNames(a);
+  if(!ids.length)return names.slice();
+  return ids.map((id,i)=>memberLabel(id,names[i],"?"));
+}
+function actTypeLabel(t){return t==="Tâche"?"une tâche":"un entraînement";}
+
+function populateActFilterMembers(){
+  const sel=document.getElementById("actFMember");
+  if(!sel)return;
+  const cur=String(actFilterMember||"");
+  const members=sortMembers((state.members||[]).filter(m=>(m.categorie||"effectif")!=="blacklist"));
+  sel.innerHTML='<option value="">Tous les membres</option>'+members.map(m=>{
+    const on=String(m.id)===cur?" selected":"";
+    return `<option value="${esc(m.id)}"${on}>${esc(`${m.matricule||"?"} - ${m.nom||"?"}`)}</option>`;
+  }).join("");
+  sel.value=cur;
+}
+
+function renderEntrainements(){
+  const tbody=document.getElementById("entrainementsBody");if(!tbody)return;
+  const canEditA=canEdit("entrainements");
+  const canDelA=canEdit("roster");
+  const addBtn=document.getElementById("addEntrainementBtn");
+  if(addBtn)addBtn.style.display=canEditA?"":"none";
+  populateActFilterMembers();
+  const tf=document.getElementById("actFType");if(tf)tf.value=actFilterType||"";
+  let list=(state.activites||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  if(actFilterType)list=list.filter(a=>(a.type||"")===actFilterType);
+  if(actFilterMember)list=list.filter(a=>actIds(a).includes(String(actFilterMember)));
+  const cnt=document.getElementById("entrainementsCount");
+  if(cnt)cnt.textContent=`${list.length} entrée${list.length>1?"s":""}`;
+  if(!list.length){
+    const vide=(actFilterType||actFilterMember)?"Aucune entrée pour ce filtre":"Aucune entrée enregistrée";
+    tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><p>${vide}</p></div></td></tr>`;return;
+  }
+  tbody.innerHTML=list.map(a=>{
+    const tc=ACTIVITE_COLORS[a.type]||"var(--dm)";
+    const labels=actMemberLabels(a);
+    const shown=labels.slice(0,3).map(esc).join(", ");
+    const more=labels.length>3?` <span style="color:var(--dm)">+${labels.length-3}</span>`:"";
+    const com=a.commentaire?` <span style="color:var(--dm);cursor:help" title="${esc(a.commentaire)}">💬</span>`:"";
+    return `<tr>
+      <td><span style="font-family:var(--fm);font-size:.68rem;color:${tc};border:1px solid ${tc}44;background:${tc}11;padding:.15rem .5rem;border-radius:3px">${esc(a.type)||"-"}</span></td>
+      <td><span style="font-size:.82rem;color:var(--tx)">${esc(a.intitule)||"-"}</span>${com}</td>
+      <td><span style="font-size:.8rem;color:var(--tx)" title="${esc(labels.join(", "))}">${shown||"-"}${more}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${a.date?fmtDate(a.date):"-"}</span></td>
+      <td><span style="font-size:.8rem;color:var(--tx)">${esc(memberLabel(a.officier_id,a.officier,"-"))}</span></td>
+      <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
+        ${canEditA?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openEntrainementModal('${a.id}')">Modifier</button>`:""}
+        ${canDelA?`<button class="icon-btn del" onclick="deleteEntrainement('${a.id}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
+      </div></td>
+    </tr>`;
+  }).join("");
+}
+
+function actMembersChanged(){
+  const box=document.getElementById("actMembersBox");
+  if(box)box.querySelectorAll("input[type=checkbox]").forEach(c=>{
+    if(c.checked)_actSel.add(String(c.value));else _actSel.delete(String(c.value));
+  });
+  const n=document.getElementById("actMembersCount");
+  if(n)n.textContent=_actSel.size?`${_actSel.size} sélectionné${_actSel.size>1?"s":""}`:"aucun sélectionné";
+}
+function populateActMembers(q){
+  const box=document.getElementById("actMembersBox");
+  if(!box)return;
+  const ql=(q||"").trim().toLowerCase();
+  const members=sortMembers((state.members||[]).filter(m=>(m.categorie||"effectif")!=="blacklist"))
+    .filter(m=>!ql||[m.nom,m.matricule,m.grade].some(v=>v&&String(v).toLowerCase().includes(ql)));
+  if(!members.length){box.innerHTML='<p style="color:var(--dm);font-size:.72rem;padding:.4rem;margin:0">Aucun membre</p>';actMembersChanged();return;}
+  box.innerHTML=members.map(m=>{
+    const on=_actSel.has(String(m.id))?" checked":"";
+    return `<label style="display:flex;align-items:center;gap:.5rem;padding:.22rem .3rem;cursor:pointer;font-size:.78rem;color:var(--tx)">
+      <input type="checkbox" value="${esc(m.id)}"${on} onchange="actMembersChanged()">
+      <span>${esc(`${m.matricule||"?"} - ${m.nom||"?"}`)} <span style="color:var(--dm);font-family:var(--fm);font-size:.64rem">${esc(m.grade||"ARC")}</span></span>
+    </label>`;
+  }).join("");
+  actMembersChanged();
+}
+function populateActTypes(current){
+  const sel=document.getElementById("actType");
+  if(!sel)return;
+  const list=ACTIVITE_TYPES.slice();
+  if(current&&!list.includes(current))list.unshift(current);
+  sel.innerHTML=list.map(t=>`<option value="${esc(t)}"${t===current?" selected":""}>${esc(t)}</option>`).join("");
+  if(!current&&list.length)sel.value=list[0];
+}
+
+function openEntrainementModal(id){
+  if(!canEdit("entrainements")){toast("Réservé aux SGT et plus","error");return;}
+  const err=document.getElementById("entrainementErr");if(err)err.style.display="none";
+  const q=document.getElementById("actMemberSearch");if(q)q.value="";
+  if(id){
+    const a=(state.activites||[]).find(x=>x.id==id);
+    if(!a)return;
+    document.getElementById("actId").value=a.id;
+    _actSel=new Set(actIds(a));
+    populateActTypes(a.type||"");
+    document.getElementById("actIntitule").value=a.intitule||"";
+    document.getElementById("actDate").value=String(a.date||"").slice(0,10);
+    populateMemberSelect("actOfficier",a.officier_id,a.officier);
+    document.getElementById("actCommentaire").value=a.commentaire||"";
+    document.getElementById("entrainementModalTitle").textContent="Modifier l'entrée";
+  }else{
+    document.getElementById("actId").value="";
+    _actSel=new Set();
+    populateActTypes("");
+    document.getElementById("actIntitule").value="";
+    document.getElementById("actDate").value=ymdLocal(new Date());
+    populateMemberSelect("actOfficier",session?.memberId||"","");
+    document.getElementById("actCommentaire").value="";
+    document.getElementById("entrainementModalTitle").textContent="Nouvelle entrée";
+  }
+  populateActMembers("");
+  document.getElementById("entrainementModal").classList.add("show");
+}
+
+function writeActivite(id,obj){
+  return supaWriteOptional(T.activites,id?("id=eq."+id):null,obj,["member_ids","member_names","officier_id","commentaire"]);
+}
+
+async function saveEntrainement(){
+  if(!canEdit("entrainements")){toast("Réservé aux SGT et plus","error");return;}
+  const err=document.getElementById("entrainementErr");
+  const showErr=(m)=>{err.textContent=m;err.style.display="block";};
+  const id=document.getElementById("actId").value;
+  const prev=id?(state.activites||[]).find(x=>x.id==id):null;
+  const type=document.getElementById("actType").value;
+  const intitule=(document.getElementById("actIntitule").value||"").trim();
+  const date=document.getElementById("actDate").value;
+  const oRef=readMemberSelect("actOfficier",prev?.officier);
+  const commentaire=(document.getElementById("actCommentaire").value||"").trim();
+  const ids=[..._actSel].map(String);
+  if(!intitule){showErr("L'intitulé est requis.");return;}
+  if(!ids.length){showErr("Sélectionne au moins un membre concerné.");return;}
+  if(!oRef.chosen){showErr("L'officier qui valide est requis.");return;}
+  const names=ids.map(i=>memberLabel(i,"",""));
+  const obj={type,intitule,date:date||null,
+             member_ids:JSON.stringify(ids),member_names:JSON.stringify(names),
+             officier_id:oRef.id,officier:oRef.name,commentaire:commentaire||null};
+
+  if(id){
+    if(supaOK){const r=await writeActivite(id,obj);if(r===null){showErr("Erreur réseau.");return;}}
+    const a=(state.activites||[]).find(x=>x.id==id);if(a)Object.assign(a,obj);
+    if(!supaOK)saveLS();
+  }else{
+    if(supaOK){
+      const r=await writeActivite(null,obj);
+      if(r&&r.length>0)state.activites.unshift(r[0]);
+      else{obj.id=Date.now().toString();state.activites.unshift(obj);}
+    }else{obj.id=Date.now().toString();state.activites.unshift(obj);saveLS();}
+    if(supaOK){const fresh=await supaGet(T.activites);if(fresh)state.activites=fresh;}
+  }
+  const creds=[];
+  for(const mid of ids){
+    const c=await autoReportForActivity(mid,obj.date);
+    if(c)creds.push(c);
+  }
+  closeModal("entrainementModal");
+  renderEntrainements();
+  if(creds.length){renderReports();renderOverview();}
+  const mot=actTypeLabel(type);
+  toast(creds.length?`Entrée enregistrée. Rapport validé pour ${creds.length} membre${creds.length>1?"s":""}`:"Entrée enregistrée","success");
+  await logActivity(`${session?.user} a enregistré ${mot} : ${intitule} (${names.filter(Boolean).join(", ")})`);
+  for(const c of creds)await logActivity(`Rapport de ${c.name} validé automatiquement (sem. ${c.week}) suite à ${mot}`);
+}
+
+async function deleteEntrainement(id){
+  if(!canEdit("roster")){toast("Réservé aux MAJ et plus","error");return;}
+  const a=(state.activites||[]).find(x=>x.id==id);
+  if(!await uiConfirm({title:"Supprimer l'entrée",message:"Supprimer cette entrée ? Les rapports déjà validés ne sont pas retirés.",okText:"Supprimer",danger:true}))return;
+  if(supaOK)await supaDelete(T.activites,"id=eq."+id);
+  state.activites=(state.activites||[]).filter(x=>x.id!=id);
+  if(!supaOK)saveLS();
+  renderEntrainements();
+  toast("Entrée supprimée","info");
+  await logActivity(`${a?.type==="Tâche"?"Tâche":"Entraînement"} supprimé (${a?.intitule||"?"}) par ${session?.user}`);
 }
 
 function renderCategorieTable(categorie,bodyId){
@@ -4844,7 +5114,7 @@ function renderReports(){
       ?`Dispensé par ${manEx.by||"?"} le ${fmtDate(manEx.at)}${manEx.reason?" : "+manEx.reason:""}`
       :(absEx?`Absence du ${fmtDate(absEx.start_date)} au ${fmtDate(absEx.end_date)}${absEx.days?`, ${absEx.days} jour${absEx.days>1?"s":""} sur cette semaine`:""}${absEx.reason?" : "+absEx.reason:""}`:"");
     const creditOnly=!isEx&&!s.row&&!!s.credit;
-    const creditLbl=s.credit==="cmd"?"Validé (CMD)":"Validé (formation)";
+    const creditLbl=CREDIT_SHORT[s.credit]||"Validé (activité)";
     const hist=state.reports.filter(r=>r.member_id==m.id).length;
     return `<tr style="opacity:${s.gradeEx?".45":(isEx?".7":"1")}">
       <td><div style="display:flex;align-items:center;gap:.6rem">
@@ -4856,7 +5126,7 @@ function renderReports(){
       <td><div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">${isEx?
         `<span style="font-family:var(--fm);font-size:.68rem;color:${exColor}"${exTitle?` title="${esc(exTitle)}"`:""}>${exLabel}</span>
          ${manEx&&canEx?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="liftReportExempt('${m.id}')">Rétablir</button>`:""}`:
-        creditOnly?`<span style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid var(--gr);background:rgba(34,217,122,.12);color:var(--gr);font-family:var(--fm);font-size:.72rem" title="Compté automatiquement : ${s.credit==="cmd"?"CMD de mission":"formation donnée"} pendant cette semaine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>${creditLbl}</span>`:
+        creditOnly?`<span style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid var(--gr);background:rgba(34,217,122,.12);color:var(--gr);font-family:var(--fm);font-size:.72rem" title="Compté automatiquement : ${CREDIT_LONG[s.credit]||"activité"} pendant cette semaine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>${creditLbl}</span>`:
         `<button onclick="toggleReport('${m.id}','${wk}')"
           style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid ${hasDone?"var(--gr)":"var(--ln)"};
           background:${hasDone?"rgba(34,217,122,.12)":"transparent"};color:${hasDone?"var(--gr)":"var(--dm)"};
@@ -5701,6 +5971,7 @@ const TAB_RENDER={
   monespace :{fn:"renderMonEspace", on:["members","blames","reports","tasks","cmdmissions"]},
   roster    :{fn:"renderRoster",    on:["members","cmdmissions","formations"]},
   formations:{fn:"renderFormations",on:["formations","members"]},
+  entrainements:{fn:"renderEntrainements",on:["activites","members"]},
   reserve   :{fn:"renderReserve",   on:["members"]},
   blacklist :{fn:"renderBlacklist", on:["members"]},
   absences  :{fn:"renderAbsences",  on:["absences","members"]},
@@ -7109,7 +7380,7 @@ function renderMonEspace(){
     repInner=`<div class="me-badge" style="--c:${col}">${stageLbl}</div><p class="me-note">${sub}</p>`;
     if(!done)repInner+=`<p class="me-note" style="margin-top:.5rem;color:var(--ye)">⚠️ Ton rapport de la semaine en cours n'est pas encore validé non plus.</p>`;
   }else if(done){
-    repInner=`<div class="me-badge" style="--c:var(--gr)">✓ Rendu</div><p class="me-note">${!meSt.row&&meSt.credit?`Ton rapport de la semaine est validé par ${meSt.credit==="cmd"?"ton CMD de mission":"ta formation"}.`:"Ton rapport de la semaine est validé."} Beau travail !</p>`;
+    repInner=`<div class="me-badge" style="--c:var(--gr)">✓ Rendu</div><p class="me-note">${!meSt.row&&meSt.credit?`Ton rapport de la semaine est validé par ${CREDIT_MINE[meSt.credit]||"ton activité"}.`:"Ton rapport de la semaine est validé."} Beau travail !</p>`;
   }else{
     repInner=`<div class="me-badge" style="--c:var(--rd)">Non rendu</div><p class="me-note">Ton rapport hebdomadaire n'est pas encore validé (lundi → dimanche 23h59).</p>`;
   }
@@ -7294,6 +7565,13 @@ function buildMemberTimeline(m){
     if(!match)return;
     ev.push({date:f.date,color:"var(--vi)",icon:"✦",title:`Formation : ${f.formation||"?"}`,
              sub:`Par ${memberLabel(f.formateur_id,f.formateur)}${f.statut?" · "+f.statut:""}`});
+  });
+  (state.activites||[]).forEach(a=>{
+    if(!actIds(a).includes(String(m.id)))return;
+    const tache=a.type==="Tâche";
+    ev.push({date:a.date,color:tache?"var(--or)":"var(--ac)",icon:tache?"▣":"✧",
+             title:`${a.type||"Entraînement"} : ${a.intitule||"?"}`,
+             sub:`Validé par ${memberLabel(a.officier_id,a.officier)}${a.commentaire?" · "+a.commentaire:""}`});
   });
   ev.sort((a,b)=>{
     if(!a.date&&!b.date)return 0;
