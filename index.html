@@ -816,6 +816,27 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 @keyframes syncPulse{0%,100%{opacity:1}50%{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.sync-dot.busy{animation:none}}
 
+
+/* ===== Details d'interface animes (vitrine et dashboard) ===== */
+.sec-head .line{position:relative;overflow:hidden}
+.sec-head .line::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,.75),transparent);
+  transform:translateX(-100%);animation:lineSweep 9s ease-in-out infinite}
+.sec-head:nth-of-type(even) .line::after{animation-delay:4.5s}
+.card::before{content:'';position:absolute;top:0;right:0;width:24px;height:24px;pointer-events:none;
+  border-top:1px solid var(--ac);border-right:1px solid var(--ac);
+  animation:cornerBreathe 6.5s ease-in-out infinite}
+.panel-head{position:relative}
+.panel-head::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,var(--ac),transparent 60%);
+  animation:accentBreathe 8s ease-in-out infinite}
+.rec-closed .rb-dot::after{border:1px solid var(--rd);animation:ringPulse 2s ease-out infinite}
+@keyframes lineSweep{0%{transform:translateX(-100%)}55%,100%{transform:translateX(100%)}}
+@keyframes cornerBreathe{0%,100%{opacity:.1}50%{opacity:.3}}
+@keyframes accentBreathe{0%,100%{opacity:.12}50%{opacity:.38}}
+@media(prefers-reduced-motion:reduce){
+  .sec-head .line::after,.card::before,.panel-head::after,.rb-dot::after{animation:none}
+}
 /* ===== FICHE CDM (vue publique, styles confines a #v-fichecdm) ===== */
 #v-fichecdm .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:2.5rem;align-items:center;min-height:70vh;margin-bottom:3rem}
 #v-fichecdm .hero-tag{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--fm);font-size:.66rem;color:var(--ac);letter-spacing:.2em;text-transform:uppercase;
