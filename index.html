@@ -929,6 +929,23 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 #v-fichecdm .cdm-tabs button.on{color:var(--ac);border-bottom-color:var(--ac)}
 #v-fichecdm .cdm-tabs button span{font-family:var(--fm);font-size:.7rem;color:var(--dm);margin-right:.35rem}
 #v-fichecdm .cdm-tabs button.on span{color:var(--ac)}
+#v-fichecdm .holo .hz{animation:cdmDrift 24s linear infinite}
+#v-fichecdm .holo .hz-foe{animation-direction:reverse;animation-duration:30s}
+#v-fichecdm .holo .hr{animation:cdmFlow 2.2s linear infinite}
+#v-fichecdm .holo .hr2{animation:cdmFlow2 3.4s linear infinite}
+#v-fichecdm .holo .hw{transform-box:fill-box;transform-origin:center;animation:cdmPing 3s ease-out infinite}
+#v-fichecdm .holo .hw2{animation-delay:1s}
+#v-fichecdm .holo .hw3{animation-delay:2s}
+#v-fichecdm .holo .hm{opacity:0}
+@supports (offset-path:path("M0 0L1 1")){
+  #v-fichecdm .holo .hm{offset-path:path("M110 200 C 200 190, 220 110, 290 105 S 390 170, 440 160");
+    offset-rotate:0deg;animation:cdmRun 5s cubic-bezier(.45,0,.55,1) infinite;filter:drop-shadow(0 0 5px var(--ac))}
+}
+@keyframes cdmDrift{to{stroke-dashoffset:-110}}
+@keyframes cdmFlow{to{stroke-dashoffset:-34}}
+@keyframes cdmFlow2{to{stroke-dashoffset:-36}}
+@keyframes cdmPing{0%{transform:scale(1);opacity:.5}70%{transform:scale(2);opacity:0}100%{transform:scale(2);opacity:0}}
+@keyframes cdmRun{0%{offset-distance:0%;opacity:0}10%{opacity:1}85%{opacity:1}100%{offset-distance:100%;opacity:0}}
 @media (max-width:980px){
   #v-fichecdm .hero{grid-template-columns:1fr;min-height:0}
   #v-fichecdm .units,#v-fichecdm .split,#v-fichecdm .rd{grid-template-columns:1fr}
@@ -1218,17 +1235,18 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5 0 10z" fill="var(--ac)"/></marker>
         </defs>
         <rect width="600" height="340" fill="url(#g)"/>
-        <path d="M0 0H150L180 140 120 340H0z" fill="rgba(0,229,255,.07)" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="6 5"/>
-        <path d="M470 0H600V340H430L415 190z" fill="rgba(255,59,92,.08)" stroke="var(--rd)" stroke-width="1.5" stroke-dasharray="6 5"/>
-        <path d="M110 200 C 200 190, 220 110, 290 105 S 390 170, 440 160" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#arr)"/>
-        <path d="M290 105 C 300 180, 320 240, 360 262" fill="none" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="3 6" opacity=".6"/>
+        <path class="hz" d="M0 0H150L180 140 120 340H0z" fill="rgba(0,229,255,.07)" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <path class="hz hz-foe" d="M470 0H600V340H430L415 190z" fill="rgba(255,59,92,.08)" stroke="var(--rd)" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <path class="hr" d="M110 200 C 200 190, 220 110, 290 105 S 390 170, 440 160" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#arr)"/>
+        <circle class="hm" r="4" fill="var(--ac)"/>
+        <path class="hr2" d="M290 105 C 300 180, 320 240, 360 262" fill="none" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="3 6" opacity=".6"/>
         <g font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="1">
           <rect x="62" y="182" width="52" height="30" fill="none" stroke="var(--ac)" stroke-width="1.5"/><text x="88" y="201" text-anchor="middle" fill="var(--ac)">Z.A.</text>
           <path d="M520 150l28 16v32l-28 16-28-16v-32z" fill="none" stroke="var(--rd)" stroke-width="1.5"/><text x="520" y="186" text-anchor="middle" fill="var(--rd)">A.P.</text>
           <g fill="var(--tx)">
-            <circle cx="225" cy="140" r="5" fill="var(--ac)"/><circle cx="225" cy="140" r="11" fill="none" stroke="var(--ac)" opacity=".4"/><text x="225" y="122" text-anchor="middle">ALPHA</text>
-            <circle cx="290" cy="105" r="5" fill="var(--ac)"/><circle cx="290" cy="105" r="11" fill="none" stroke="var(--ac)" opacity=".4"/><text x="290" y="87" text-anchor="middle">BRAVO</text>
-            <circle cx="360" cy="262" r="5" fill="var(--ac)"/><circle cx="360" cy="262" r="11" fill="none" stroke="var(--ac)" opacity=".4"/><text x="360" y="290" text-anchor="middle">CHARLIE</text>
+            <circle cx="225" cy="140" r="5" fill="var(--ac)"/><circle cx="225" cy="140" r="11" class="hw hw1" fill="none" stroke="var(--ac)" opacity=".4"/><text x="225" y="122" text-anchor="middle">ALPHA</text>
+            <circle cx="290" cy="105" r="5" fill="var(--ac)"/><circle cx="290" cy="105" r="11" class="hw hw2" fill="none" stroke="var(--ac)" opacity=".4"/><text x="290" y="87" text-anchor="middle">BRAVO</text>
+            <circle cx="360" cy="262" r="5" fill="var(--ac)"/><circle cx="360" cy="262" r="11" class="hw hw3" fill="none" stroke="var(--ac)" opacity=".4"/><text x="360" y="290" text-anchor="middle">CHARLIE</text>
           </g>
           <text x="12" y="326" fill="var(--dm)" font-size="10">ZONE SÛRE</text>
           <text x="588" y="326" fill="var(--dm)" font-size="10" text-anchor="end">ZONE ENNEMIE</text>
