@@ -818,6 +818,78 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
 
 
+
+/* ===== Accueil refondu d'apres prototype-accueil.html (variables du site) ===== */
+.ov-dl{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;
+  background:linear-gradient(90deg,rgba(0,229,255,.10),rgba(0,229,255,0) 62%),var(--s1);
+  border:1px solid rgba(0,229,255,.30);padding:1rem 1.25rem;margin-bottom:1rem}
+.ov-dl.grace{background:linear-gradient(90deg,rgba(255,138,61,.12),rgba(255,138,61,0) 62%),var(--s1);
+  border-color:rgba(255,138,61,.40)}
+.ov-dl.grace .ov-dl-t{color:var(--or)}
+.ov-dl.grace .ov-dl-track i{background:var(--or)}
+.ov-dlb{display:flex;flex-direction:column;gap:.3rem}
+.ov-dl-k{font-family:var(--fm);font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dm)}
+.ov-dl-t{font-family:var(--fs);font-weight:700;font-size:1.8rem;line-height:1;color:var(--ac);font-variant-numeric:tabular-nums}
+.ov-dl-s{font-size:.74rem;color:var(--dm)}
+.ov-dl-track{flex:1;min-width:120px;height:4px;background:var(--s3);border-radius:3px;overflow:hidden}
+.ov-dl-track i{display:block;height:100%;background:var(--ac);border-radius:3px;transition:width .6s}
+.ov-dl-side{display:flex;flex-direction:column;gap:.3rem;text-align:right}
+.ov-dl-side .n{font-family:var(--fs);font-weight:700;font-size:1.25rem;line-height:1;font-variant-numeric:tabular-nums}
+.ov-dl-side .n.warn{color:var(--or)}
+.ov-dl-side .n.ok{color:var(--gr)}
+
+.ov-task{display:flex;align-items:center;gap:.9rem;padding:.7rem 1.1rem;border-left:3px solid transparent;min-width:0}
+.ov-task+.ov-task{border-top:1px solid var(--ln)}
+.ov-task.go{cursor:pointer}
+.ov-task.go:hover{background:var(--s2)}
+.ov-task.u-crit{border-left-color:var(--rd)}
+.ov-task.u-warn{border-left-color:var(--or)}
+.ov-task.u-info{border-left-color:var(--ac)}
+.ov-task.u-ok{border-left-color:var(--gr)}
+.ov-mat{font-family:var(--fm);font-size:.66rem;font-weight:600;color:var(--tx);background:var(--s2);
+  border:1px solid var(--ln);padding:.2rem .45rem;border-radius:2px;white-space:nowrap;min-width:54px;
+  text-align:center;flex-shrink:0}
+.ov-mat.n{color:var(--ac);font-family:var(--fs);font-weight:700;font-size:.82rem}
+.ov-name{font-size:.84rem;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.ov-what{font-size:.78rem;color:var(--dm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.ov-chip{font-family:var(--fm);font-size:.57rem;letter-spacing:.08em;text-transform:uppercase;padding:.2rem .5rem;
+  border-radius:2px;white-space:nowrap;border:1px solid;flex-shrink:0}
+.ov-chip.cr{color:var(--rd);border-color:rgba(255,59,92,.40);background:rgba(255,59,92,.10)}
+.ov-chip.wn{color:var(--or);border-color:rgba(255,138,61,.40);background:rgba(255,138,61,.10)}
+.ov-chip.ok{color:var(--gr);border-color:rgba(34,217,122,.40);background:rgba(34,217,122,.10)}
+.ov-chip.ac{color:var(--ac);border-color:var(--ls);background:rgba(0,229,255,.09)}
+.ov-go{color:var(--dm);font-size:1rem;line-height:1;flex-shrink:0}
+.ov-done{background:none;border:1px solid var(--ls);color:var(--tx2);cursor:pointer;font-family:var(--fm);
+  font-size:.57rem;padding:.22rem .5rem;letter-spacing:.08em;text-transform:uppercase;flex-shrink:0}
+.ov-done:hover{color:var(--gr);border-color:var(--gr)}
+
+.ov-lower{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr) minmax(0,1fr);gap:.9rem;
+  margin-bottom:1.2rem;align-items:stretch}
+.ov-lower>*{min-width:0;margin-bottom:0}
+.ov-stack{display:flex;flex-direction:column;gap:.6rem}
+.ov-stat{background:var(--s1);border:1px solid var(--ln);padding:.7rem .95rem;display:flex;align-items:center;
+  gap:.8rem;flex:1;position:relative}
+.ov-stat b{font-family:var(--fs);font-weight:700;font-size:1.3rem;line-height:1;font-variant-numeric:tabular-nums;min-width:32px}
+.ov-stat em{font-style:normal;font-family:var(--fm);font-size:.57rem;letter-spacing:.13em;text-transform:uppercase;color:var(--dm)}
+.ov-stat.acc b{color:var(--ac)}
+.ov-stat.ok b{color:var(--gr)}
+.ov-stat.crit b{color:var(--rd)}
+.ov-trend{margin-left:auto;font-family:var(--fm);font-size:.62rem;color:var(--dm)}
+.ov-bar{position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--s3)}
+.ov-bar i{display:block;height:100%;background:var(--gr);transition:width .6s}
+.ov-viz{display:flex;flex-direction:column;min-height:212px}
+.ov-vizb{position:relative;overflow:hidden;padding:0;flex:1;min-height:168px}
+#ovRadar{display:block;width:100%;height:100%;position:absolute;inset:0}
+@media (max-width:980px){
+  .ov-lower{grid-template-columns:1fr 1fr}
+  .ov-viz{grid-column:span 2}
+}
+@media (max-width:620px){
+  .ov-lower{grid-template-columns:1fr}
+  .ov-viz{grid-column:auto}
+  .ov-name{display:none}
+  .ov-dl-side{text-align:left}
+}
 /* ===== Bloc A traiter (accueil personnalise) ===== */
 .todo-row{display:flex;align-items:center;gap:.9rem;padding:.7rem 1.1rem;border-bottom:1px solid var(--ln);
   border-left:2px solid var(--ac);transition:background .2s}
@@ -1549,13 +1621,10 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
         </div>
 
-        <div class="grid g4" style="margin-bottom:1.5rem">
-          <div class="stat-card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="stat-v" id="ovTotal">0</div><div class="stat-l">Effectif total</div><div class="stat-bar"><i style="width:100%"></i></div></div>
-          <div class="stat-card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#22d97a" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="stat-v" id="ovPresent" style="color:var(--gr)">0</div><div class="stat-l">Présents</div><div class="stat-bar"><i id="ovPresentBar" style="width:0%;background:var(--gr)"></i></div></div>
-          <div class="stat-card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#ff8a3d" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stat-v" id="ovReserve" style="color:var(--dm)">0</div><div class="stat-l">Réserve</div></div>
-          <div class="stat-card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#ff3b5c" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div><div class="stat-v" id="ovBlames" style="color:var(--rd)">0</div><div class="stat-l">Blâmes actifs</div></div>
-        </div>
-        <!-- A TRAITER (personnalise, disparait si rien a faire) -->
+        <!-- ZONE 1 : bandeau echeance -->
+        <section class="ov-dl" id="ovDeadline"></section>
+
+        <!-- ZONE 2 : A traiter (personnalise, disparait si rien a faire) -->
         <section class="panel todo" id="ovTodo" hidden>
           <div class="panel-head">
             <h3><span class="pk">//</span> À traiter <span class="tag" id="ovTodoCount" style="margin-left:.5rem"></span></h3>
@@ -1563,12 +1632,22 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           </div>
           <div class="panel-body flush" id="ovTodoList"></div>
         </section>
-        <!-- CARTES D'ACTION RAPIDE -->
-        <div id="ovQuickActions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin-bottom:1.5rem"></div>
-        <div class="grid g2">
-          <div class="panel"><div class="panel-head"><h3><span class="pk">//</span> Répartition par grade</h3></div><div class="panel-body" id="ovGrades"></div></div>
-          <div class="panel"><div class="panel-head"><h3><span class="pk">//</span> Activité récente</h3></div><div class="panel-body flush" id="ovActivity"></div></div>
+
+        <!-- ZONE 3 : trois colonnes -->
+        <div class="ov-lower">
+          <div class="ov-stack">
+            <div class="ov-stat acc"><b id="ovTotal">0</b><em>Effectif total</em><span class="ov-trend">/ 15</span></div>
+            <div class="ov-stat ok"><b id="ovPresent">0</b><em>Présents</em><span class="ov-bar"><i id="ovPresentBar"></i></span></div>
+            <div class="ov-stat"><b id="ovReserve">0</b><em>Réserve</em></div>
+            <div class="ov-stat crit"><b id="ovBlames">0</b><em>Blâmes actifs</em></div>
+          </div>
+          <section class="panel"><div class="panel-head"><h3><span class="pk">//</span> Répartition par grade</h3></div><div class="panel-body" id="ovGrades"></div></section>
+          <section class="panel ov-viz"><div class="panel-head"><h3><span class="pk">//</span> Balayage</h3></div><div class="panel-body ov-vizb"><canvas id="ovRadar" aria-hidden="true"></canvas></div></section>
         </div>
+
+        <!-- CARTES D'ACTION RAPIDE -->
+        <div id="ovQuickActions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin-bottom:1.2rem"></div>
+        <section class="panel"><div class="panel-head"><h3><span class="pk">//</span> Activité récente</h3></div><div class="panel-body flush" id="ovActivity"></div></section>
       </div>
 
       <!-- MON ESPACE -->
@@ -3333,7 +3412,7 @@ window.addEventListener("DOMContentLoaded",async()=>{
   initParticles();
   initFicheCdm();
   const paintOvDate=()=>{const el=document.getElementById("ovDate");if(el)el.textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});};
-  paintOvDate();setInterval(paintOvDate,60000);
+  paintOvDate();setInterval(paintOvDate,60000);setInterval(function(){try{ovRenderDeadline();}catch(e){}},60000);
   try{const s=JSON.parse(localStorage.getItem("arcSession")||"null");if(s&&s.user){session=s;updateNavUI();}}catch{}
   supaOK=true;
   showSkeletons();
@@ -4092,7 +4171,7 @@ function renderOverview(){
       <div class="log-item"><div class="log-dot"></div><div class="log-txt">${esc(a.text)}</div><div class="log-time">${fmtDate(a.created_at)}</div></div>`).join("");
   }
   renderQuickActions();
-  renderTodo();
+  renderTodo();ovRenderDeadline();ovInitRadar();
 }
 
 function canAssignTask(){ return canEdit("tasks"); }
@@ -4192,36 +4271,124 @@ function buildTodo(){
 }
 
 function todoRow(it){
+  const me=sessionMember();
   if(it.kind==="manage"){
-    return `<div class="todo-row k-manage" onclick="dashTab('${it.goto}')">
-      <span class="todo-n">${it.count!=null?it.count:"!"}</span>
-      <div class="todo-w"><div class="todo-t">${esc(it.what)}</div></div>
-      <span class="todo-p go">Ouvrir</span>
+    return `<div class="ov-task go u-info" role="button" tabindex="0" onclick="dashTab('${it.goto}')">
+      <span class="ov-mat n">${it.count!=null?it.count:"!"}</span>
+      <span class="ov-what" style="color:var(--tx)">${esc(it.what)}</span>
+      <span class="ov-chip ac">Ouvrir</span>
+      <span class="ov-go">&rsaquo;</span>
     </div>`;
   }
+  const mat=me&&me.matricule?me.matricule:"-";
+  const nom=me&&me.nom?me.nom:"";
   if(it.kind==="report"){
-    const h=it.hoursLeft;
-    const cls=h<=12?"urgent":"warn";
-    return `<div class="todo-row k-report">
-      <div class="todo-w"><div class="todo-t">${esc(it.what)}</div>
-        <div class="todo-s">Blâme automatique dans ${h} h</div></div>
-      <span class="todo-p ${cls}">${h} h</span>
+    const h=it.hoursLeft,crit=h<=12;
+    return `<div class="ov-task u-${crit?"crit":"warn"}">
+      <span class="ov-mat">${esc(mat)}</span>
+      <span class="ov-name">${esc(nom)}</span>
+      <span class="ov-what">${esc(it.what)}</span>
+      <span class="ov-chip ${crit?"cr":"wn"}">${crit?`Blâme dans ${h} h`:`${h} h restantes`}</span>
     </div>`;
   }
   if(it.kind==="task"){
     const t=it.task,d=it.due;
-    const prio=t.priority==="haute"?'<span class="todo-p urgent">Haute</span>':"";
-    const due=d?`<span class="todo-p ${d.late?"urgent":(d.soon?"warn":"go")}">${d.late?"En retard":fmtDate(d.date)}</span>`:"";
-    const ok=canCompleteTask(t)?`<button class="todo-ok" onclick="completeMyTask('${t.id}')">Terminé</button>`:"";
-    return `<div class="todo-row k-task">
-      <div class="todo-w"><div class="todo-t">${esc(it.what)}</div>
-        ${it.by?`<div class="todo-s">Attribuée par ${esc(it.by)}</div>`:""}</div>
+    const prio=t.priority==="haute"?'<span class="ov-chip cr">Haute</span>':"";
+    const due=d?`<span class="ov-chip ${d.late?"cr":(d.soon?"wn":"ac")}">${d.late?"En retard":fmtDate(d.date)}</span>`:"";
+    const ok=canCompleteTask(t)?`<button class="ov-done" onclick="completeMyTask('${t.id}')">Terminé</button>`:"";
+    return `<div class="ov-task u-info">
+      <span class="ov-mat">${esc(mat)}</span>
+      <span class="ov-name">${esc(nom)}</span>
+      <span class="ov-what">${esc(it.what)}${it.by?` · par ${esc(it.by)}`:""}</span>
       ${prio}${due}${ok}
     </div>`;
   }
-  return `<div class="todo-row k-cmd">
-    <div class="todo-w"><div class="todo-t">${esc(it.what)}</div></div>
+  return `<div class="ov-task u-ok">
+    <span class="ov-mat">${esc(mat)}</span>
+    <span class="ov-name">${esc(nom)}</span>
+    <span class="ov-what">${esc(it.what)}</span>
+    <span class="ov-chip ok">En cours</span>
   </div>`;
+}
+
+function ovRenderDeadline(){
+  const el=document.getElementById("ovDeadline");
+  if(!el)return;
+  const now=Date.now();
+  const lastEnd=weekEndDate(getWeekKey(-1));
+  const blameAt=new Date(lastEnd.getTime()+REPORT_BLAME_HOURS*36e5);
+  let grace,target,span;
+  if(now<blameAt.getTime()){grace=true;target=blameAt;span=REPORT_BLAME_HOURS*36e5;}
+  else{grace=false;target=weekEndDate(getWeekKey(0));span=7*864e5;}
+  let ms=target.getTime()-now;if(ms<0)ms=0;
+  const d=Math.floor(ms/864e5),h=Math.floor((ms%864e5)/36e5);
+  const pct=Math.max(0,Math.min(100,(1-ms/span)*100));
+  const late=countRapportsAVerifier();
+  let quand="";
+  try{quand=target.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});}catch(e){}
+  el.className="ov-dl"+(grace?" grace":"");
+  el.innerHTML=`<div class="ov-dlb">
+      <span class="ov-dl-k">${grace?"Blâmes automatiques dans":"Clôture des rapports dans"}</span>
+      <span class="ov-dl-t">${d} j ${h<10?"0":""}${h} h</span>
+      <span class="ov-dl-s">${esc(quand)} · 23 h 59</span>
+    </div>
+    <div class="ov-dl-track"><i style="width:${pct.toFixed(1)}%"></i></div>
+    <div class="ov-dl-side">
+      <span class="n ${late?"warn":"ok"}">${late}</span>
+      <span class="ov-dl-k">${late>1?"rapports attendus":"rapport attendu"}</span>
+    </div>`;
+}
+
+let _ovRadar=null;
+function ovInitRadar(){
+  const c=document.getElementById("ovRadar");
+  if(!c)return;
+  if(_ovRadar){_ovRadar.resize();_ovRadar.start();return;}
+  const ctx=c.getContext?c.getContext("2d"):null;
+  if(!ctx)return;
+  let angle=0,raf=null,w=0,h=0,reduce=false;
+  try{reduce=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);}catch(e){}
+  function resize(){
+    const r=c.getBoundingClientRect();
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    w=r.width;h=r.height;
+    c.width=Math.max(1,Math.round(w*dpr));
+    c.height=Math.max(1,Math.round(h*dpr));
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw();
+  }
+  function draw(){
+    if(!w||!h)return;
+    const cx=w/2,cy=h/2,R=Math.min(w,h)/2-10;
+    if(R<=0)return;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle="rgba(0,229,255,0.16)";ctx.lineWidth=1;
+    for(let i=1;i<=4;i++){ctx.beginPath();ctx.arc(cx,cy,R*i/4,0,Math.PI*2);ctx.stroke();}
+    ctx.strokeStyle="rgba(0,229,255,0.10)";
+    ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+    if(ctx.createConicGradient){
+      const g=ctx.createConicGradient(angle,cx,cy);
+      g.addColorStop(0,"rgba(0,229,255,0.30)");
+      g.addColorStop(.12,"rgba(0,229,255,0.00)");
+      g.addColorStop(1,"rgba(0,229,255,0.00)");
+      ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fill();
+    }
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+    ctx.strokeStyle="rgba(0,229,255,0.75)";ctx.lineWidth=1.4;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(R,0);ctx.stroke();ctx.restore();
+    ctx.fillStyle="rgba(0,229,255,0.9)";ctx.beginPath();ctx.arc(cx,cy,2,0,Math.PI*2);ctx.fill();
+  }
+  function tick(){
+    if(c.offsetParent===null){stop();return;}
+    angle+=0.006;if(angle>Math.PI*2)angle-=Math.PI*2;
+    draw();raf=requestAnimationFrame(tick);
+  }
+  function start(){ if(!reduce&&raf==null&&!document.hidden&&c.offsetParent!==null)raf=requestAnimationFrame(tick); }
+  function stop(){ if(raf!=null){cancelAnimationFrame(raf);raf=null;} }
+  window.addEventListener("resize",resize);
+  document.addEventListener("visibilitychange",function(){ if(document.hidden)stop(); else start(); });
+  _ovRadar={start:start,stop:stop,resize:resize};
+  resize();start();
 }
 
 function renderTodo(){
