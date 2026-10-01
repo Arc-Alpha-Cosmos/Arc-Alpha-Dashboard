@@ -4132,11 +4132,12 @@ function todoDue(t){
 
 function buildTodo(){
   const me=sessionMember();
-  if(!me)return[];
-  const lvl=(session&&(session.role==="admin"||session.role==="amiraute"))?GRADE_LEVEL.CMDM:gradeLevel(me.grade||"ARC");
+  if(!session)return[];
+  if(session.role==="brs")return[];
+  const lvl=(session.role==="admin"||session.role==="amiraute")?99:gradeLevel(getSessionGrade());
   const items=[];
 
-  (state.tasks||[]).forEach(t=>{
+  if(me)(state.tasks||[]).forEach(t=>{
     if(!t.active)return;
     if(t.assignee_member_id==null||String(t.assignee_member_id)!==String(me.id))return;
     const d=todoDue(t);
@@ -4144,7 +4145,7 @@ function buildTodo(){
       rank:(t.priority==="haute"?0:60)-(d&&d.late?1:0)});
   });
 
-  if(REPORT_EXEMPT.indexOf(me.grade)===-1){
+  if(me&&REPORT_EXEMPT.indexOf(me.grade)===-1){
     const esc=reportEscalation(me);
     if(esc&&!esc.blamed){
       items.push({kind:"report",what:`Rendre ton rapport de la semaine du ${fmtDate(esc.weekKey)}`,
@@ -4152,7 +4153,7 @@ function buildTodo(){
     }
   }
 
-  const rule=PROMO_RULES[me.grade];
+  const rule=me?PROMO_RULES[me.grade]:null;
   if(rule&&rule.cmd>0){
     const done=getCmdTotal(me.id);
     if(done<rule.cmd){
@@ -4161,7 +4162,7 @@ function buildTodo(){
     }
   }
 
-  if(me.grade==="LT"&&!hasSecondMission(me.id)){
+  if(me&&me.grade==="LT"&&!hasSecondMission(me.id)){
     items.push({kind:"cmd",what:"Effectuer ton Second de mission",rank:210});
   }
 
