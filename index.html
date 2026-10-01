@@ -817,6 +817,32 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 @media(prefers-reduced-motion:reduce){.sync-dot.busy{animation:none}}
 
 
+
+/* ===== Bloc A traiter (accueil personnalise) ===== */
+.todo-row{display:flex;align-items:center;gap:.9rem;padding:.7rem 1.1rem;border-bottom:1px solid var(--ln);
+  border-left:2px solid var(--ac);transition:background .2s}
+.todo-row:last-child{border-bottom:0}
+.todo-row.k-report{border-left-color:var(--rd)}
+.todo-row.k-task{border-left-color:var(--vi)}
+.todo-row.k-cmd{border-left-color:var(--or)}
+.todo-row.k-manage{cursor:pointer}
+.todo-row.k-manage:hover{background:rgba(0,229,255,.05)}
+.todo-n{font-family:var(--fs);font-weight:700;font-size:1.05rem;color:var(--ac);min-width:2.2ch;text-align:center;flex-shrink:0}
+.todo-w{flex:1;min-width:0}
+.todo-t{font-size:.88rem;color:var(--tx)}
+.todo-s{font-family:var(--fm);font-size:.6rem;color:var(--dm);letter-spacing:.08em;text-transform:uppercase;margin-top:.15rem}
+.todo-p{font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.2rem .55rem;
+  border-radius:3px;white-space:nowrap;flex-shrink:0;border:1px solid}
+.todo-p.urgent{color:var(--rd);border-color:var(--rd);background:rgba(255,59,92,.1)}
+.todo-p.warn{color:var(--or);border-color:var(--or);background:rgba(255,138,61,.1)}
+.todo-p.go{color:var(--ac);border-color:var(--ls);background:rgba(0,229,255,.07)}
+.todo-ok{background:none;border:1px solid var(--ls);color:var(--tx2);cursor:pointer;font-family:var(--fm);
+  font-size:.6rem;padding:.26rem .6rem;letter-spacing:.08em;text-transform:uppercase;flex-shrink:0}
+.todo-ok:hover{color:var(--gr);border-color:var(--gr)}
+@media (max-width:560px){
+  .todo-row{gap:.6rem;padding:.6rem .8rem}
+  .todo-s{display:none}
+}
 /* ===== Details d'interface animes (vitrine et dashboard) ===== */
 .sec-head .line{position:relative;overflow:hidden}
 .sec-head .line::after{content:'';position:absolute;inset:0;pointer-events:none;
@@ -1489,6 +1515,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <div class="dash-tab" data-dtc="overview">
         <div class="sec-head"><h2>Vue d'ensemble</h2><span class="line"></span>
           <span class="tag" id="ovDate"></span>
+          <span class="tag" id="ovTodoOk" style="display:none;color:var(--gr);border:1px solid var(--gr);padding:.15rem .5rem;border-radius:3px">À jour</span>
           <button class="sbtn" id="cmdModeBtn" onclick="toggleCmdMode()"
             style="margin-left:auto;display:none;font-size:.65rem;letter-spacing:.1em;padding:.3rem .8rem;gap:.4rem">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="2" y="3" width="7" height="7"/><rect x="9" y="3" width="6" height="7"/><rect x="15" y="3" width="7" height="7"/><rect x="2" y="10" width="7" height="11"/><rect x="9" y="10" width="6" height="11"/><rect x="15" y="10" width="7" height="11"/></svg>
@@ -1528,6 +1555,14 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div class="stat-card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#ff8a3d" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stat-v" id="ovReserve" style="color:var(--dm)">0</div><div class="stat-l">Réserve</div></div>
           <div class="stat-card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#ff3b5c" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div><div class="stat-v" id="ovBlames" style="color:var(--rd)">0</div><div class="stat-l">Blâmes actifs</div></div>
         </div>
+        <!-- A TRAITER (personnalise, disparait si rien a faire) -->
+        <section class="panel todo" id="ovTodo" hidden>
+          <div class="panel-head">
+            <h3><span class="pk">//</span> À traiter <span class="tag" id="ovTodoCount" style="margin-left:.5rem"></span></h3>
+            <button class="sbtn green" id="ovAssignBtn" style="display:none;font-size:.64rem;padding:.3rem .7rem" onclick="openAssignModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Attribuer une tâche</button>
+          </div>
+          <div class="panel-body flush" id="ovTodoList"></div>
+        </section>
         <!-- CARTES D'ACTION RAPIDE -->
         <div id="ovQuickActions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin-bottom:1.5rem"></div>
         <div class="grid g2">
@@ -2395,6 +2430,30 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <div id="entrainementErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:3px"></div>
     </div>
     <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('entrainementModal')">Annuler</button><button class="btn btn-primary" onclick="saveEntrainement()">Enregistrer</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="assignModal">
+  <div class="modal">
+    <div class="modal-h"><div><span class="k">// ATTRIBUTION</span><h3>Attribuer une tâche</h3></div>
+      <button class="modal-x" onclick="closeModal('assignModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Destinataire</label><select id="asgMember"></select></div>
+      <div class="field"><label>Intitulé</label><input type="text" id="asgTitle" maxlength="80" autocomplete="off" placeholder="ex: Préparer la formation CMD de A-41 pour samedi"></div>
+      <div class="field"><label>Détail (facultatif)</label><textarea id="asgDetail" rows="2" placeholder="Précisions utiles" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical"></textarea></div>
+      <div class="form-row fr2">
+        <div class="field"><label>Échéance (facultatif)</label><input type="date" id="asgDue"></div>
+        <div class="field"><label>Priorité</label>
+          <div style="display:flex;gap:1.2rem;align-items:center;padding-top:.45rem">
+            <label style="display:flex;align-items:center;gap:.4rem;text-transform:none;letter-spacing:0;font-family:var(--fr);font-size:.84rem;color:var(--tx);margin:0"><input type="radio" name="asgPrio" id="asgPrioN" checked style="width:15px;height:15px;padding:0;margin:0;accent-color:var(--ac)">Normale</label>
+            <label style="display:flex;align-items:center;gap:.4rem;text-transform:none;letter-spacing:0;font-family:var(--fr);font-size:.84rem;color:var(--tx);margin:0"><input type="radio" name="asgPrio" id="asgPrioH" style="width:15px;height:15px;padding:0;margin:0;accent-color:var(--rd)">Haute</label>
+          </div>
+        </div>
+      </div>
+      <div id="asgErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:3px"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('assignModal')">Annuler</button><button class="btn btn-primary" onclick="saveAssignedTask()">Attribuer</button></div>
   </div>
 </div>
 
@@ -4033,6 +4092,220 @@ function renderOverview(){
       <div class="log-item"><div class="log-dot"></div><div class="log-txt">${esc(a.text)}</div><div class="log-time">${fmtDate(a.created_at)}</div></div>`).join("");
   }
   renderQuickActions();
+  renderTodo();
+}
+
+function canAssignTask(){ return canEdit("tasks"); }
+function canCompleteTask(t){
+  if(!session||!t)return false;
+  const me=sessionMember();
+  if(me&&t.assignee_member_id!=null&&String(t.assignee_member_id)===String(me.id))return true;
+  return canEdit("tasks");
+}
+function hasSecondMission(id){
+  return (state.cmdmissions||[]).some(c=>String(c.member_id)===String(id)&&String(c.role||"").toLowerCase()==="second");
+}
+function countRapportsAVerifier(){
+  const wk=getWeekKey(0);let n=0;
+  (state.members||[]).forEach(m=>{try{const s=reportWeekStatus(m,wk);if(s.due&&!s.done)n++;}catch(e){}});
+  return n;
+}
+function countRetardsRapport(){
+  let n=0;
+  (state.members||[]).forEach(m=>{try{const e=reportEscalation(m);if(e&&!e.blamed)n++;}catch(err){}});
+  return n;
+}
+function countEligiblesPromotion(){
+  let n=0;
+  (state.members||[]).forEach(m=>{
+    if((m.categorie||"effectif")!=="effectif")return;
+    try{if(getEligibility(m).eligible===true)n++;}catch(e){}
+  });
+  return n;
+}
+function todoDue(t){
+  const d=String(t&&t.due_date||"").slice(0,10);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return null;
+  const h=(new Date(d+"T23:59:59").getTime()-Date.now())/3600000;
+  return{date:d,hours:h,late:h<0,soon:h>=0&&h<48};
+}
+
+function buildTodo(){
+  const me=sessionMember();
+  if(!me)return[];
+  const lvl=(session&&(session.role==="admin"||session.role==="amiraute"))?GRADE_LEVEL.CMDM:gradeLevel(me.grade||"ARC");
+  const items=[];
+
+  (state.tasks||[]).forEach(t=>{
+    if(!t.active)return;
+    if(t.assignee_member_id==null||String(t.assignee_member_id)!==String(me.id))return;
+    const d=todoDue(t);
+    items.push({kind:"task",task:t,what:t.title||"Tâche",by:t.assigned_by||"",due:d,
+      rank:(t.priority==="haute"?0:60)-(d&&d.late?1:0)});
+  });
+
+  if(REPORT_EXEMPT.indexOf(me.grade)===-1){
+    const esc=reportEscalation(me);
+    if(esc&&!esc.blamed){
+      items.push({kind:"report",what:`Rendre ton rapport de la semaine du ${fmtDate(esc.weekKey)}`,
+        hoursLeft:esc.hoursLeft,rank:esc.hoursLeft});
+    }
+  }
+
+  const rule=PROMO_RULES[me.grade];
+  if(rule&&rule.cmd>0){
+    const done=getCmdTotal(me.id);
+    if(done<rule.cmd){
+      items.push({kind:"cmd",rank:200,
+        what:`Commandements de mission : ${done} / ${rule.cmd} pour passer ${GRADE_LABELS[rule.next]||rule.next||"?"}`});
+    }
+  }
+
+  if(me.grade==="LT"&&!hasSecondMission(me.id)){
+    items.push({kind:"cmd",what:"Effectuer ton Second de mission",rank:210});
+  }
+
+  if(lvl>=GRADE_LEVEL.CPT){
+    const n=countRapportsAVerifier();
+    if(n)items.push({kind:"manage",goto:"reports",count:n,rank:100,
+      what:`Vérifier ${n} rapport${n>1?"s":""} en attente`});
+  }
+  if(lvl>=GRADE_LEVEL.MAJ){
+    const r=countRetardsRapport();
+    if(r)items.push({kind:"manage",goto:"reports",count:r,rank:90,
+      what:`${r} rapport${r>1?"s":""} en retard dans l'unité`});
+    const p=countEligiblesPromotion();
+    if(p)items.push({kind:"manage",goto:"roster",count:p,rank:120,
+      what:`${p} membre${p>1?"s":""} éligible${p>1?"s":""} à une promotion`});
+  }
+  if(lvl>=GRADE_LEVEL.CMD){
+    const eff=(state.members||[]).filter(m=>(m.categorie||"effectif")==="effectif").length;
+    if(eff>=15&&state.recOpen){
+      items.push({kind:"manage",goto:"admin",rank:130,
+        what:"Effectif au plafond (15), le recrutement est encore ouvert"});
+    }
+  }
+
+  items.sort((a,b)=>a.rank-b.rank);
+  return items;
+}
+
+function todoRow(it){
+  if(it.kind==="manage"){
+    return `<div class="todo-row k-manage" onclick="dashTab('${it.goto}')">
+      <span class="todo-n">${it.count!=null?it.count:"!"}</span>
+      <div class="todo-w"><div class="todo-t">${esc(it.what)}</div></div>
+      <span class="todo-p go">Ouvrir</span>
+    </div>`;
+  }
+  if(it.kind==="report"){
+    const h=it.hoursLeft;
+    const cls=h<=12?"urgent":"warn";
+    return `<div class="todo-row k-report">
+      <div class="todo-w"><div class="todo-t">${esc(it.what)}</div>
+        <div class="todo-s">Blâme automatique dans ${h} h</div></div>
+      <span class="todo-p ${cls}">${h} h</span>
+    </div>`;
+  }
+  if(it.kind==="task"){
+    const t=it.task,d=it.due;
+    const prio=t.priority==="haute"?'<span class="todo-p urgent">Haute</span>':"";
+    const due=d?`<span class="todo-p ${d.late?"urgent":(d.soon?"warn":"go")}">${d.late?"En retard":fmtDate(d.date)}</span>`:"";
+    const ok=canCompleteTask(t)?`<button class="todo-ok" onclick="completeMyTask('${t.id}')">Terminé</button>`:"";
+    return `<div class="todo-row k-task">
+      <div class="todo-w"><div class="todo-t">${esc(it.what)}</div>
+        ${it.by?`<div class="todo-s">Attribuée par ${esc(it.by)}</div>`:""}</div>
+      ${prio}${due}${ok}
+    </div>`;
+  }
+  return `<div class="todo-row k-cmd">
+    <div class="todo-w"><div class="todo-t">${esc(it.what)}</div></div>
+  </div>`;
+}
+
+function renderTodo(){
+  const sec=document.getElementById("ovTodo");
+  if(!sec)return;
+  const btn=document.getElementById("ovAssignBtn");
+  if(btn)btn.style.display=canAssignTask()?"":"none";
+  const okTag=document.getElementById("ovTodoOk");
+  const list=buildTodo();
+  if(!list.length){
+    sec.hidden=true;
+    if(okTag)okTag.style.display="";
+    return;
+  }
+  sec.hidden=false;
+  if(okTag)okTag.style.display="none";
+  const cnt=document.getElementById("ovTodoCount");
+  if(cnt)cnt.textContent=list.length;
+  const box=document.getElementById("ovTodoList");
+  if(box)box.innerHTML=list.map(todoRow).join("");
+}
+
+function openAssignModal(){
+  if(!canAssignTask()){toast("Réservé aux MAJ et plus","error");return;}
+  const err=document.getElementById("asgErr");if(err)err.style.display="none";
+  populateMemberSelect("asgMember","","");
+  document.getElementById("asgTitle").value="";
+  document.getElementById("asgDetail").value="";
+  document.getElementById("asgDue").value="";
+  const n=document.getElementById("asgPrioN");if(n)n.checked=true;
+  document.getElementById("assignModal").classList.add("show");
+}
+
+async function saveAssignedTask(){
+  if(!canAssignTask()){toast("Réservé aux MAJ et plus","error");return;}
+  const err=document.getElementById("asgErr");
+  const showErr=(m)=>{err.textContent=m;err.style.display="block";};
+  const ref=readMemberSelect("asgMember","");
+  const title=(document.getElementById("asgTitle").value||"").trim();
+  const detail=(document.getElementById("asgDetail").value||"").trim();
+  const due=document.getElementById("asgDue").value;
+  const haute=!!(document.getElementById("asgPrioH")||{}).checked;
+  if(!ref.chosen){showErr("Choisis un destinataire.");return;}
+  if(!title){showErr("L'intitulé est requis.");return;}
+  if(title.length>80){showErr("L'intitulé ne doit pas dépasser 80 caractères.");return;}
+  const m=memberById(ref.id);
+  const linked=(state.users||[]).find(u=>String(u.member_id)===String(ref.id));
+  const obj={
+    assignee_member_id:ref.id,
+    assignee_name:m?`${m.matricule||"?"} ${m.nom||""}`.trim():"?",
+    assignee_hash:(linked&&linked.user_hash)||(m&&m.user_hash)||"",
+    type:"custom",
+    title,
+    description:detail,
+    active:true,
+    assigned_by:session?.user||"?",
+    assigned_by_id:session?.userId??null,
+    due_date:due||null,
+    priority:haute?"haute":"normale"
+  };
+  if(supaOK){
+    const r=await supaWriteOptional(T.tasks,null,obj,["assigned_by_id","due_date","priority"]);
+    if(r===null){showErr("Erreur réseau.");return;}
+    if(r&&r.length>0)state.tasks.push(r[0]);else{obj.id=Date.now().toString();state.tasks.push(obj);}
+  }else{obj.id=Date.now().toString();state.tasks.push(obj);saveLS();}
+  closeModal("assignModal");
+  renderTodo();
+  if(_activeTab==="tasks"&&typeof renderTasks==="function")renderTasks();
+  toast(`Tâche attribuée à ${obj.assignee_name}`,"success");
+  await logActivity(`${session?.user} a attribué la tâche '${title}' à ${obj.assignee_name}`);
+}
+
+async function completeMyTask(id){
+  const t=(state.tasks||[]).find(x=>String(x.id)===String(id));
+  if(!canCompleteTask(t)){toast("Réservé au destinataire ou aux MAJ et plus","error");return;}
+  if(supaOK){
+    const r=await supaWriteOptional(T.tasks,"id=eq."+id,{active:false,completed_at:new Date().toISOString()},["completed_at"]);
+    if(r===null){toast("Erreur réseau","error");return;}
+  }
+  if(t)t.active=false;
+  if(!supaOK)saveLS();
+  renderTodo();
+  if(_activeTab==="tasks"&&typeof renderTasks==="function")renderTasks();
+  toast("Tâche terminée","success");
+  await logActivity(`${session?.user} a terminé la tâche '${(t&&t.title)||"?"}'`);
 }
 
 function renderQuickActions(){
@@ -6478,7 +6751,7 @@ function uiBusy(){
 }
 
 const TAB_RENDER={
-  overview  :{fn:"renderOverview",  on:["members","blames","absences","reports","announces","cmdmissions"]},
+  overview  :{fn:"renderOverview",  on:["members","blames","absences","reports","announces","cmdmissions","tasks"]},
   monespace :{fn:"renderMonEspace", on:["members","blames","reports","tasks","cmdmissions"]},
   roster    :{fn:"renderRoster",    on:["members","cmdmissions","formations"]},
   formations:{fn:"renderFormations",on:["formations","members"]},
@@ -6933,7 +7206,7 @@ function renderTasks(){
   }
 }
 async function completeTask(id){
-  if(!canEdit("tasks")){toast("Réservé aux MAJ+","error");return;}
+  const _ct=(state.tasks||[]).find(x=>String(x.id)===String(id));if(!canCompleteTask(_ct)){toast("Réservé au destinataire ou aux MAJ et plus","error");return;}
   if(supaOK)await supaPatch(T.tasks,"id=eq."+id,{active:false});
   const t=state.tasks.find(x=>x.id==id);if(t){t.active=false;if(!supaOK)saveLS();}
   renderTasks();toast("Tâche terminée","success");
