@@ -1647,7 +1647,6 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
         <!-- CARTES D'ACTION RAPIDE -->
         <div id="ovQuickActions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;margin-bottom:1.2rem"></div>
-        <section class="panel"><div class="panel-head"><h3><span class="pk">//</span> Activité récente</h3></div><div class="panel-body flush" id="ovActivity"></div></section>
       </div>
 
       <!-- MON ESPACE -->
@@ -4163,12 +4162,6 @@ function renderOverview(){
         </div>
         <span style="font-family:var(--fm);font-size:.78rem;color:var(--tx2)">${grades[g]}</span>
       </div>`).join("");
-  }
-  const ac=ge("ovActivity");
-  if(ac){
-    if(!state.activity.length)ac.innerHTML='<div class="empty"><p>Aucune activité</p></div>';
-    else ac.innerHTML=state.activity.filter(a=>!isSensitiveLog(a.text)).slice(0,8).map(a=>`
-      <div class="log-item"><div class="log-dot"></div><div class="log-txt">${esc(a.text)}</div><div class="log-time">${fmtDate(a.created_at)}</div></div>`).join("");
   }
   renderQuickActions();
   renderTodo();ovRenderDeadline();ovInitRadar();
