@@ -408,6 +408,18 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .field textarea{resize:vertical;min-height:70px;font-weight:300}
 .form-row{display:grid;gap:.8rem}
 .fr2{grid-template-columns:1fr 1fr}
+.rec-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;align-items:stretch}
+.rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:.7rem}
+.rec-sec{font-family:var(--fm);font-size:.62rem;color:var(--ac);letter-spacing:.12em;text-transform:uppercase;
+  margin:.1rem 0 .8rem;padding-bottom:.35rem;border-bottom:1px solid var(--ln)}
+.rec-sec:not(:first-child){margin-top:1.2rem}
+.rec-tot{display:flex;align-items:baseline;gap:.5rem;margin:.1rem 0 .9rem;padding:.55rem .75rem;
+  background:var(--s2);border:1px solid var(--ln)}
+.rec-tot .n{font-family:var(--fs);font-size:1.4rem;font-weight:700;line-height:1}
+.rec-tot .k{font-family:var(--fm);font-size:.6rem;color:var(--dm);letter-spacing:.1em;text-transform:uppercase}
+.rec-card{border:1px solid var(--ln);background:var(--s2);padding:1rem;display:flex;flex-direction:column;gap:.6rem;min-width:0}
+.rec-card h4{font-family:var(--fs);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx)}
+.rec-card p{font-size:.8rem;color:var(--tx2);line-height:1.6;flex:1}
 
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(3,5,10,.8);backdrop-filter:blur(6px);
   z-index:600;align-items:center;justify-content:center;padding:1rem;animation:pageIn .3s}
@@ -1722,6 +1734,43 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         </div></div>
       </div>
 
+      <!-- ONGLET RECRUTEMENTS -->
+      <div class="dash-tab" data-dtc="recrutements" style="display:none">
+        <div class="sec-head"><h2>Recrutements</h2><span class="line"></span>
+          <span class="tag" id="recSalonTag"></span>
+        </div>
+        <div class="rec-cards">
+          <div class="rec-card">
+            <h4>Résultat ARC Trooper</h4>
+            <p>Compte rendu d'un recrutement ARC Trooper : informations des personnels,
+               sept épreuves notées sur 10, commentaire et numéro d'essai.</p>
+            <div id="recTrooperWarn" style="display:none;font-family:var(--fm);font-size:.64rem;color:var(--or)">
+              ⚠ Webhook non configuré - Administration, Webhooks Discord
+            </div>
+            <button class="btn btn-primary" id="recTrooperBtn" onclick="openRecModal('trooper')">Remplir le compte rendu</button>
+          </div>
+          <div class="rec-card">
+            <h4>Résultat ARC Alpha</h4>
+            <p>Compte rendu d'un recrutement ARC Alpha : informations des personnels,
+               onze épreuves dont la théorie sur 35, et commentaire.</p>
+            <div id="recAlphaWarn" style="display:none;font-family:var(--fm);font-size:.64rem;color:var(--or)">
+              ⚠ Webhook non configuré - Administration, Webhooks Discord
+            </div>
+            <button class="btn btn-primary" id="recAlphaBtn" onclick="openRecModal('alpha')">Remplir le compte rendu</button>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:1rem"><div class="panel-body">
+          <p style="font-size:.8rem;color:var(--tx2);line-height:1.6">
+            Le compte rendu part dans le salon Discord prévu pour lui. Comme partout ailleurs,
+            rien n'est envoyé automatiquement : un aperçu du message s'affiche et il faut
+            confirmer. Le total des notes est calculé pour toi au fur et à mesure.
+          </p>
+          <p id="recNoRight" style="display:none;font-size:.8rem;color:var(--dm);margin-top:.6rem">
+            Seuls les SGT et au-dessus peuvent déposer un compte rendu.
+          </p>
+        </div></div>
+      </div>
+
       <!-- ONGLET RÉSERVISTES -->
       <div class="dash-tab" data-dtc="reserve" style="display:none">
         <div class="sec-head"><h2>Réservistes</h2><span class="line"></span></div>
@@ -1937,7 +1986,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
               <p style="font-size:.8rem;color:var(--tx2);line-height:1.6;margin-bottom:1rem">
                 Colle ici l'URL de chaque webhook. Rien n'est jamais envoyé automatiquement :
                 une fenêtre de confirmation s'affiche à chaque fois, avec l'aperçu du message.
-                Les promotions, les mouvements d'effectif et les CMD de mission partent dans le même salon. Les annonces et les formations ont chacune le leur. Laisse un champ vide pour le désactiver.
+                Les promotions, les mouvements d'effectif et les CMD de mission partent dans le même salon. Les annonces, les formations et les deux recrutements ont chacun le leur. Laisse un champ vide pour le désactiver.
               </p>
               <div class="field">
                 <label>Annonces</label>
@@ -1950,6 +1999,14 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
               <div class="field">
                 <label>Formations <span style="color:var(--dm);font-weight:400">(salon rapports, garde le nom et l'image de Discord)</span></label>
                 <input type="password" id="dscFormations" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Recrutement ARC Trooper <span style="color:var(--dm);font-weight:400">(comptes rendus d'épreuves)</span></label>
+                <input type="password" id="dscRecrutTrooper" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Recrutement ARC Alpha <span style="color:var(--dm);font-weight:400">(comptes rendus d'épreuves)</span></label>
+                <input type="password" id="dscRecrutAlpha" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
               </div>
               <div class="field">
                 <label>Nom affiché du bot <span style="color:var(--dm);font-weight:400">(annonces et unité, vide = celui de Discord)</span></label>
@@ -1974,6 +2031,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
                 <button class="sbtn" onclick="testDiscord('mouvements')">Tester un mouvement</button>
                 <button class="sbtn" onclick="testDiscord('cmd')">Tester un CMD</button>
                 <button class="sbtn" onclick="testDiscord('formation')">Tester une formation</button>
+                <button class="sbtn" onclick="testDiscord('recrutTrooper')">Tester un recrutement Trooper</button>
+                <button class="sbtn" onclick="testDiscord('recrutAlpha')">Tester un recrutement Alpha</button>
               </div>
             </div>
           </div>
@@ -2509,6 +2568,23 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <div id="entrainementErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:3px"></div>
     </div>
     <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('entrainementModal')">Annuler</button><button class="btn btn-primary" onclick="saveEntrainement()">Enregistrer</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="recModal">
+  <div class="modal tall wide">
+    <div class="modal-h"><div><span class="k" id="recKicker">// RECRUTEMENT</span><h3 id="recTitle">Compte rendu</h3></div>
+      <button class="modal-x" onclick="closeModal('recModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="recKind">
+      <div id="recBody"></div>
+      <div id="recErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25)"></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('recModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveRecrutement()">Envoyer sur Discord</button>
+    </div>
   </div>
 </div>
 
@@ -3180,6 +3256,7 @@ function canEdit(tab){
 
   if(tab==="formations") return lvl>=1;
   if(tab==="entrainements") return lvl>=1;
+  if(tab==="recrutements") return lvl>=1;
 
   if(lvl<2) return false;
 
@@ -3359,7 +3436,7 @@ let state={
   absences:[],reports:[],cmdmissions:[],documents:[],tasks:[],content:{},
   formations:[],activites:[],tickets:[],
   polls:[],pollVotes:[],
-  discord:{annonces:"",promo:"",formations:"",style:"detaille",botName:"",botAvatar:""},
+  discord:{annonces:"",promo:"",formations:"",recrutTrooper:"",recrutAlpha:"",style:"detaille",botName:"",botAvatar:""},
   regiments:["501st","212th","327th","41st","104th","408th","65th"],
   reglement:"",
 };
@@ -3745,6 +3822,8 @@ async function loadAll(){
     if(row.key==="discordAnnonces") state.discord.annonces=cfgStr(row.value);
     if(row.key==="discordPromo")    state.discord.promo   =cfgStr(row.value);
     if(row.key==="discordFormations")state.discord.formations=cfgStr(row.value);
+    if(row.key==="discordRecrutTrooper")state.discord.recrutTrooper=cfgStr(row.value);
+    if(row.key==="discordRecrutAlpha")  state.discord.recrutAlpha  =cfgStr(row.value);
     if(row.key==="discordStyle")    state.discord.style   =cfgStr(row.value)||"detaille";
     if(row.key==="discordBotName")  state.discord.botName =cfgStr(row.value);
     if(row.key==="discordBotAvatar")state.discord.botAvatar=cfgStr(row.value);
@@ -3997,7 +4076,7 @@ function initTooltips(){
 
 const DEFAULT_NAV_GROUPS = [
   {id:"accueil", label:"Accueil", icon:"⌂", tabs:["overview","monespace"]},
-  {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","entrainements","reserve","blacklist","absences","reports"]},
+  {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","entrainements","recrutements","reserve","blacklist","absences","reports"]},
   {id:"activite", label:"Activité", icon:"◈", tabs:["cmd","polls"]},
   {id:"discipline", label:"Discipline", icon:"⚑", tabs:["blames","announce","reglement"]},
   {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","personnages","tasks","journal"]},
@@ -4010,6 +4089,7 @@ const TAB_META = {
   roster:{label:"Effectif", icon:""},
   formations:{label:"Formations", icon:"🎓"},
   entrainements:{label:"Entraînements", icon:"🎯"},
+  recrutements:{label:"Recrutements", icon:"📝"},
   reserve:{label:"Réservistes", icon:"🛡"},
   blacklist:{label:"Blacklist", icon:"⛔"},
   absences:{label:"Absences", icon:""},
@@ -7173,6 +7253,7 @@ const TAB_RENDER={
   roster    :{fn:"renderRoster",    on:["members","cmdmissions","formations"]},
   formations:{fn:"renderFormations",on:["formations","members"]},
   entrainements:{fn:"renderEntrainements",on:["activites","members"]},
+  recrutements:{fn:"renderRecrutements",on:["config"]},
   reserve   :{fn:"renderReserve",   on:["members"]},
   blacklist :{fn:"renderBlacklist", on:["members"]},
   absences  :{fn:"renderAbsences",  on:["absences","members"]},
@@ -9953,6 +10034,245 @@ function discordFormationPayload(f,author,maj){
     }]};
 }
 
+/* ============================================================
+   COMPTES RENDUS DE RECRUTEMENT
+   Reprend les questions des deux formulaires « Résultat Recrutement
+   ARC Trooper » et « Résultat Recrutement ARC Alpha ». Rien n'est stocké
+   en base : le compte rendu part dans le salon Discord prévu pour lui,
+   après confirmation, comme tout le reste du site.
+   ============================================================ */
+const REC_FORMS={
+  trooper:{
+    cle:"recrutTrooper",
+    titre:"Résultat Recrutement ARC Trooper",
+    kicker:"// RECRUTEMENT ARC TROOPER",
+    secInfos:"Informations des personnels 👥",
+    secNotes:"Résultats 💹",
+    secFin:"Conclusion 👀",
+    infos:[
+      {id:"date",     label:"Date du recrutement 📆",              type:"date"},
+      {id:"formateur",label:"Matricule de l'Alpha formateur 👨‍🏫",   type:"text", ph:"ex : A-93"},
+      {id:"presents", label:"ARC Alpha présents 🖐",               type:"text", ph:"ex : A-93, A-41, A-20"},
+      {id:"eleve",    label:"Matricule du formé 🧑",               type:"text", ph:"ex : 4477"}
+    ],
+    notes:[
+      {id:"questions", label:"Questions ❓",      max:10},
+      {id:"tir",       label:"Moyenne de tir 🔫", max:10},
+      {id:"grappin",   label:"Grappin 🌋",        max:10},
+      {id:"cqb",       label:"CQB 🏠",            max:10},
+      {id:"vehicule",  label:"Véhicule/Spé 🚁",   max:10},
+      {id:"discipline",label:"Discipline 🎭",     max:10},
+      {id:"citadelle", label:"Citadelle ⚡",       max:10}
+    ],
+    essais:true
+  },
+  alpha:{
+    cle:"recrutAlpha",
+    titre:"Résultat Recrutement ARC Alpha",
+    kicker:"// RECRUTEMENT ARC ALPHA",
+    secInfos:"Informations des personnels 👥",
+    secNotes:"Résultats aux épreuves 💹",
+    secFin:"Conclusion 👀",
+    infos:[
+      {id:"date",     label:"Date du recrutement 📆",                  type:"date"},
+      {id:"formateur",label:"Matricule de l'Alpha formateur 👨‍🏫",       type:"text", ph:"ex : A-93"},
+      {id:"presents", label:"ARC Alpha présents 🖐",                   type:"text", ph:"ex : A-93, A-41, A-20"},
+      {id:"eleve",    label:"Régiment + Matricule + Nom du formé 🧑",  type:"text", ph:"ex : 501st 4477 Thire"}
+    ],
+    notes:[
+      {id:"theorie",   label:"Théorie ❓",             max:35},
+      {id:"strategie", label:"Stratégie Militaire 🧠", max:10},
+      {id:"ordres",    label:"Ordres CMDM 📕",         max:10},
+      {id:"leadership",label:"Leadership 📕",          max:15},
+      {id:"cqb",       label:"CQB 🏠",                 max:15},
+      {id:"grappin",   label:"Grappin 🌋",             max:10},
+      {id:"jetpack",   label:"Jetpack 🌋",             max:10},
+      {id:"precision", label:"Précision 🔫",           max:10},
+      {id:"rapidite",  label:"Rapidité 💨",            max:10},
+      {id:"citadelle", label:"Citadelle ⚡",            max:10},
+      {id:"discipline",label:"Discipline 🎭",          max:10}
+    ],
+    essais:false
+  }
+};
+const REC_ESSAIS=["1er","2ème","3ème","4ème","5ème","6ème","7ème","8ème","9ème","10ème"];
+
+function recMax(spec){ return spec.notes.reduce((t,n)=>t+n.max,0); }
+function recUrl(kind){ const s=REC_FORMS[kind]; return s?(state.discord[s.cle]||""):""; }
+function recColorCss(pct){ return pct>=70?"var(--gr)":(pct>=50?"var(--or)":"var(--rd)"); }
+function recColorInt(pct){ return pct>=70?0x22d97a:(pct>=50?0xff8a3d:0xff3b5c); }
+
+function renderRecrutements(){
+  const droit=canEdit("recrutements");
+  [["trooper","recTrooperBtn","recTrooperWarn"],["alpha","recAlphaBtn","recAlphaWarn"]].forEach(([k,bid,wid])=>{
+    const b=document.getElementById(bid), w=document.getElementById(wid);
+    if(b)b.style.display=droit?"":"none";
+    if(w)w.style.display=(droit&&!recUrl(k))?"":"none";
+  });
+  const nr=document.getElementById("recNoRight");
+  if(nr)nr.style.display=droit?"none":"";
+  const tag=document.getElementById("recSalonTag");
+  if(tag){
+    const n=["trooper","alpha"].filter(k=>recUrl(k)).length;
+    tag.textContent=n===2?"2 salons configurés":(n===1?"1 salon sur 2 configuré":"aucun salon configuré");
+  }
+}
+
+function recFieldHtml(f){
+  const ph=f.ph?` placeholder="${esc(f.ph)}"`:"";
+  return `<div class="field"><label>${esc(f.label)}</label>
+    <input type="${f.type==="date"?"date":"text"}" id="rec_${esc(f.id)}" autocomplete="off"${ph}></div>`;
+}
+function recNoteHtml(n){
+  return `<div class="field"><label>${esc(n.label)} <span style="color:var(--dm);font-weight:400">/ ${n.max}</span></label>
+    <input type="number" id="rec_${esc(n.id)}" min="0" max="${n.max}" step="0.5" inputmode="decimal" oninput="recTotal()" placeholder="0"></div>`;
+}
+function recBuild(kind){
+  const s=REC_FORMS[kind];
+  let h=`<div class="rec-sec">${esc(s.secInfos)}</div>`;
+  h+=`<div class="form-row fr2">${s.infos.slice(0,2).map(recFieldHtml).join("")}</div>`;
+  h+=s.infos.slice(2).map(recFieldHtml).join("");
+  h+=`<div class="rec-sec">${esc(s.secNotes)}</div>`;
+  h+=`<div class="rec-tot"><span class="n" id="recTotN">0</span><span class="k">sur ${recMax(s)} points</span><span class="k" id="recTotPct"></span></div>`;
+  h+=`<div class="rec-grid">${s.notes.map(recNoteHtml).join("")}</div>`;
+  h+=`<div class="rec-sec">${esc(s.secFin)}</div>`;
+  h+=`<div class="field"><label>Commentaire 💬</label><textarea id="rec_commentaire" rows="4" placeholder="Ce qui a marché, ce qui doit être retravaillé"></textarea></div>`;
+  if(s.essais){
+    h+=`<div class="field"><label>Combientième d'essais 📈</label><select id="rec_essais">`
+      +`<option value="">Sélectionner…</option>`
+      +REC_ESSAIS.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join("")
+      +`</select></div>`;
+  }
+  return h;
+}
+
+function recTotal(){
+  const ke=document.getElementById("recKind");
+  const s=ke?REC_FORMS[ke.value]:null;
+  if(!s)return 0;
+  let t=0;
+  s.notes.forEach(n=>{
+    const el=document.getElementById("rec_"+n.id);
+    const v=el?parseFloat(el.value):NaN;
+    if(!isNaN(v))t+=v;
+  });
+  t=Math.round(t*2)/2;
+  const max=recMax(s), pct=max?Math.round(t/max*100):0;
+  const n=document.getElementById("recTotN"), p=document.getElementById("recTotPct");
+  if(n){n.textContent=String(t);n.style.color=recColorCss(pct);}
+  if(p)p.textContent=pct+" %";
+  return t;
+}
+
+function openRecModal(kind){
+  const s=REC_FORMS[kind];
+  if(!s)return;
+  if(!canEdit("recrutements")){toast("Réservé aux SGT et au-dessus","error");return;}
+  if(!recUrl(kind)){toast("Le webhook de ce salon n'est pas configuré","error");return;}
+  document.getElementById("recKind").value=kind;
+  document.getElementById("recKicker").textContent=s.kicker;
+  document.getElementById("recTitle").textContent=s.titre;
+  document.getElementById("recBody").innerHTML=recBuild(kind);
+  document.getElementById("recErr").style.display="none";
+  const d=document.getElementById("rec_date");
+  /* date locale, pas UTC : sinon le champ affiche la veille en soirée */
+  if(d){const z=new Date();z.setMinutes(z.getMinutes()-z.getTimezoneOffset());d.value=z.toISOString().slice(0,10);}
+  const me=sessionMember();
+  const f=document.getElementById("rec_formateur");
+  if(f&&me&&me.matricule)f.value=me.matricule;
+  recTotal();
+  document.getElementById("recModal").classList.add("show");
+}
+
+function recLire(kind){
+  const s=REC_FORMS[kind];
+  const val=(id)=>{const el=document.getElementById("rec_"+id);return el?String(el.value||"").trim():"";};
+  const d={infos:{},notes:{},commentaire:val("commentaire"),essais:s.essais?val("essais"):""};
+  s.infos.forEach(f=>{d.infos[f.id]=val(f.id);});
+  s.notes.forEach(n=>{d.notes[n.id]=val(n.id);});
+  return d;
+}
+
+async function saveRecrutement(){
+  const ke=document.getElementById("recKind");
+  const kind=ke?ke.value:"";
+  const s=REC_FORMS[kind];
+  const err=document.getElementById("recErr");
+  const fail=(m)=>{err.textContent=m;err.style.display="block";};
+  if(err)err.style.display="none";
+  if(!s)return;
+  if(!canEdit("recrutements")){fail("Réservé aux SGT et au-dessus.");return;}
+  if(!recUrl(kind)){fail("Le webhook de ce salon n'est pas configuré.");return;}
+
+  const d=recLire(kind);
+  /* toutes les questions des formulaires d'origine sont obligatoires */
+  const manque=[];
+  s.infos.forEach(f=>{ if(!d.infos[f.id])manque.push(f.label); });
+  s.notes.forEach(n=>{
+    const v=parseFloat(d.notes[n.id]);
+    if(d.notes[n.id]===""||isNaN(v)){manque.push(n.label);return;}
+    if(v<0||v>n.max)manque.push(`${n.label} (entre 0 et ${n.max})`);
+  });
+  if(!d.commentaire)manque.push("Commentaire");
+  if(s.essais&&!d.essais)manque.push("Combientième d'essais");
+  if(manque.length){fail("À compléter : "+manque.join(", "));return;}
+
+  const total=recTotal(), max=recMax(s);
+  const payload=discordRecrutPayload(kind,d,total,max,session?.user);
+  const envoye=await discordConfirmSend(s.cle,payload);
+  if(!envoye)return;
+  closeModal("recModal");
+  await logActivity(`${session?.user} a déposé un compte rendu de recrutement ${kind==="trooper"?"ARC Trooper":"ARC Alpha"} pour ${d.infos.eleve} (${total}/${max})`);
+}
+
+function discordRecrutPayload(kind,d,total,max,author){
+  const s=REC_FORMS[kind];
+  const pct=max?Math.round(total/max*100):0;
+  let dateTxt=d.infos.date||"-";
+  try{ if(d.infos.date)dateTxt=fmtDate(d.infos.date); }catch(e){}
+  const fields=[
+    {name:"Formé",value:String(d.infos.eleve||"-").slice(0,1024),inline:true},
+    {name:"Alpha formateur",value:String(d.infos.formateur||"-").slice(0,1024),inline:true},
+    {name:"Date",value:dateTxt,inline:true},
+    {name:"ARC Alpha présents",value:String(d.infos.presents||"-").slice(0,1024),inline:false}
+  ];
+  s.notes.forEach(n=>{ fields.push({name:n.label,value:`${d.notes[n.id]} / ${n.max}`,inline:true}); });
+  fields.push({name:"TOTAL",value:`**${total} / ${max}**  (${pct} %)`,inline:false});
+  if(s.essais)fields.push({name:"Essai",value:d.essais||"-",inline:true});
+  fields.push({name:"Commentaire",value:String(d.commentaire||"-").slice(0,1024),inline:false});
+  return {
+    embeds:[{
+      title:kind==="trooper"?"📝 RECRUTEMENT ARC TROOPER":"📝 RECRUTEMENT ARC ALPHA",
+      description:`**${d.infos.eleve||"?"}** évalué par **${d.infos.formateur||"?"}**.`,
+      color:recColorInt(pct),
+      fields:fields,
+      footer:{text:`Déposé par ${author||"?"} · Centre de Commandement`},
+      timestamp:new Date().toISOString()
+    }]};
+}
+
+/* Jeu de valeurs pour le bouton « Tester » du panneau Discord. */
+function recDemo(kind){
+  const s=REC_FORMS[kind];
+  const d={infos:{},notes:{},commentaire:"Test de liaison : si tu lis ceci, le webhook fonctionne.",
+           essais:s.essais?"1er":""};
+  s.infos.forEach(f=>{
+    d.infos[f.id]=f.id==="date"?new Date().toISOString().slice(0,10)
+                 :f.id==="formateur"?"A-00"
+                 :f.id==="presents"?"A-00, A-01"
+                 :"0000 Test";
+  });
+  s.notes.forEach(n=>{ d.notes[n.id]=String(Math.round(n.max*0.8*2)/2); });
+  return d;
+}
+
+/* Charge de démonstration pour le bouton « Tester » du panneau Discord. */
+function recTestPayload(kind){
+  const s=REC_FORMS[kind], d=recDemo(kind);
+  let t=0; s.notes.forEach(n=>{ t+=parseFloat(d.notes[n.id])||0; });
+  return discordRecrutPayload(kind,d,Math.round(t*2)/2,recMax(s),session?.user);
+}
+
 function discordPreview(payload){
   if(payload.content) return payload.content.replace(/\*\*/g,"");
   const e=(payload.embeds||[])[0]||{};
@@ -9962,11 +10282,15 @@ function discordPreview(payload){
 }
 
 async function discordConfirmSend(kind,payload){
-  const url = kind==="annonces"   ? state.discord.annonces
-            : kind==="formation" ? state.discord.formations
+  const url = kind==="annonces"      ? state.discord.annonces
+            : kind==="formation"     ? state.discord.formations
+            : kind==="recrutTrooper" ? state.discord.recrutTrooper
+            : kind==="recrutAlpha"   ? state.discord.recrutAlpha
             : state.discord.promo;
-  const salon = kind==="annonces"   ? "le salon des annonces"
-              : kind==="formation" ? "le salon des rapports"
+  const salon = kind==="annonces"      ? "le salon des annonces"
+              : kind==="formation"     ? "le salon des rapports"
+              : kind==="recrutTrooper" ? "le salon des recrutements ARC Trooper"
+              : kind==="recrutAlpha"   ? "le salon des recrutements ARC Alpha"
               : "le salon de l'unité";
   if(!url) return false;
   const useIdentity = kind!=="formation";
@@ -9993,6 +10317,9 @@ function renderDiscordPanel(){
   if(b) b.value=state.discord.promo||"";
   const fo=document.getElementById("dscFormations");
   if(fo) fo.value=state.discord.formations||"";
+  const rt=document.getElementById("dscRecrutTrooper"), ra=document.getElementById("dscRecrutAlpha");
+  if(rt) rt.value=state.discord.recrutTrooper||"";
+  if(ra) ra.value=state.discord.recrutAlpha||"";
   if(st) st.value=state.discord.style||"detaille";
   const bn=document.getElementById("dscBotName"),
         ba=document.getElementById("dscBotAvatar");
@@ -10005,18 +10332,22 @@ async function saveDiscordConfig(){
   const a=(document.getElementById("dscAnnonces").value||"").trim();
   const b=(document.getElementById("dscPromo").value||"").trim();
   const fo=(document.getElementById("dscFormations").value||"").trim();
+  const rt=(document.getElementById("dscRecrutTrooper").value||"").trim();
+  const ra=(document.getElementById("dscRecrutAlpha").value||"").trim();
   const st=document.getElementById("dscStyle").value||"detaille";
   const bn=(document.getElementById("dscBotName").value||"").trim();
   const ba=(document.getElementById("dscBotAvatar").value||"").trim();
-  const bad=[a,b,fo].filter(u=>u&&!/^https:\/\/discord(app)?\.com\/api\/webhooks\//.test(u));
+  const bad=[a,b,fo,rt,ra].filter(u=>u&&!/^https:\/\/discord(app)?\.com\/api\/webhooks\//.test(u));
   if(bad.length){toast("Ce n'est pas une URL de webhook Discord","error");return;}
   if(ba&&!/^https:\/\//.test(ba)){toast("L'avatar doit être une URL en https","error");return;}
-  state.discord.annonces=a; state.discord.promo=b; state.discord.formations=fo;
+  state.discord.annonces=a; state.discord.promo=b; state.discord.formations=fo; state.discord.recrutTrooper=rt; state.discord.recrutAlpha=ra;
   state.discord.style=st; state.discord.botName=bn; state.discord.botAvatar=ba;
   if(supaOK){
     await setConfig("discordAnnonces",a);
     await setConfig("discordPromo",b);
     await setConfig("discordFormations",fo);
+    await setConfig("discordRecrutTrooper",rt);
+    await setConfig("discordRecrutAlpha",ra);
     await setConfig("discordStyle",st);
     await setConfig("discordBotName",bn);
     await setConfig("discordBotAvatar",ba);
@@ -10026,8 +10357,10 @@ async function saveDiscordConfig(){
 }
 
 async function testDiscord(kind){
-  const url = kind==="annonces"   ? state.discord.annonces
-            : kind==="formation" ? state.discord.formations
+  const url = kind==="annonces"      ? state.discord.annonces
+            : kind==="formation"     ? state.discord.formations
+            : kind==="recrutTrooper" ? state.discord.recrutTrooper
+            : kind==="recrutAlpha"   ? state.discord.recrutAlpha
             : state.discord.promo;
   if(!url){toast("Colle d'abord l'URL du webhook","error");return;}
   const demo={matricule:"A-00",nom:"Test",grade:"CPT",regiment_rct:"501st"};
@@ -10035,6 +10368,8 @@ async function testDiscord(kind){
                 : kind==="mouvements"? discordMouvementPayload(demo,"reserve","Test de liaison",session?.user)
                 : kind==="cmd"       ? discordCmdPayload({member_name:"A-00 Test",points:1,role:"Chef",mission_name:"Test de liaison"},demo,session?.user)
                 : kind==="formation" ? discordFormationPayload({formateur:"A-93 Karma",eleve:"4477 Thire",formation:"CMD de mission",statut:"Validé",date:new Date().toISOString().slice(0,10)},session?.user,false)
+                : kind==="recrutTrooper" ? recTestPayload("trooper")
+                : kind==="recrutAlpha"   ? recTestPayload("alpha")
                 : discordAnnoncePayload("Test de liaison","Si tu lis ceci, le webhook fonctionne.",false,session?.user);
   const sent=await discordSend(url,payload,kind!=="formation");
   toast(sent?"Message de test envoyé ✓":"Échec - vérifie l'URL",sent?"success":"error");
