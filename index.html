@@ -2959,8 +2959,6 @@ const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const T={config:"arc_config",members:"arc_members",users:"arc_users",blames:"arc_blames",
   missions:"arc_missions",announce:"arc_annonces",activity:"arc_activity",
   absences:"arc_absences",reports:"arc_reports",cmdmissions:"arc_cmd_missions",documents:"arc_documents",tasks:"arc_tasks",polls:"arc_polls",pollvotes:"arc_poll_votes",formations:"arc_formations",activites:"arc_activites",tickets:"arc_tickets",messages:"arc_messages"};
-const BOOT_USER_HASH="610be245a9683";
-const BOOT_PASS_HASH="16ddc42021724a";
 
 const GRADE_ORDER=["CMDM","CMD","VCMD","MAJ","CPT","LT","SGT","ARC"];
 const GRADE_COLORS={CMDM:"#fff",CMD:"#cfd6e2",VCMD:"#ffd23d",MAJ:"#ff8a3d",CPT:"#ff3b5c",LT:"#6f9bff",SGT:"#22d97a",ARC:"#00e5ff"};
@@ -2982,7 +2980,7 @@ function getMemberMedals(m){
   try{const a=typeof m.medals==="string"?JSON.parse(m.medals):m.medals;return Array.isArray(a)?a:[];}catch{return[];}
 }
 function canAwardMedals(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin"||session.role==="amiraute")return true;
   if(session.role==="brs")return false;
   return gradeLevel(getSessionGrade())>=4;
@@ -3089,7 +3087,7 @@ async function syncUserNameCopies(user){
 const GRADE_LEVEL = {CMDM:7,CMD:6,VCMD:5,MAJ:4,CPT:3,LT:2,SGT:1,ARC:0};
 
 function sessionMember(){
-  if(!session)return null;
+  if(!Auth.ok())return null;
   if(session.memberId!==null&&session.memberId!==undefined&&session.memberId!==""){
     const m=memberById(session.memberId);
     if(m)return m;
@@ -3097,25 +3095,15 @@ function sessionMember(){
   return (state.members||[]).find(m=>(m.user_hash&&m.user_hash===session.userHash)||(m.linked_user&&m.linked_user===session.userHash))||null;
 }
 function getSessionGrade(){
-  if(!session) return null;
+  if(!Auth.ok()) return null;
   if(session.role==="admin") return "ADMIN";
   const m=sessionMember();
   if(m&&m.grade) return m.grade;
   return session.grade||null;
 }
 function syncSessionGrade(){
-  if(!session)return false;
-  const m=sessionMember();
-  const g=m&&m.grade?m.grade:null;
-  if(!g||g===session.grade)return false;
-  session.grade=g;
-  try{localStorage.setItem("arcSession",JSON.stringify(session));}catch(e){}
-  updateNavUI();
-  if(session.role!=="admin"){
-    try{renderNav();}catch(e){}
-    try{applyPermissionsUI();}catch(e){}
-  }
-  return true;
+  if(!Auth.ok())return false;
+  return Auth.syncGrade();
 }
 
 function gradeLevel(g){
@@ -3124,7 +3112,7 @@ function gradeLevel(g){
 }
 
 function canEdit(tab){
-  if(!session) return false;
+  if(!Auth.ok()) return false;
   if(session.role==="admin") return true;
   if(session.role==="brs") return false;
   if(session.role==="amiraute") return true;
@@ -3282,7 +3270,7 @@ function reportDue(m,weekKey){
   return !!m&&reportWeekStatus(m,weekKey).due;
 }
 function canExemptReport(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="brs")return false;
   if(session.role==="admin"||session.role==="amiraute")return true;
   return gradeLevel(getSessionGrade())>=4;
@@ -3362,6 +3350,7 @@ async function supaGet(table,filter=""){
   }
 }
 async function supaPost(table,body){
+  if(!writeAllowed(table))return null;
   try{
     const r=await fetch(`${SUPA_URL}/rest/v1/${table}`,{method:"POST",headers:sh(),body:JSON.stringify(body)});
     if(!r.ok){
@@ -3375,6 +3364,7 @@ async function supaPost(table,body){
   }catch(e){console.warn("supaPost exception",e);return null;}
 }
 async function supaPatch(table,filter,body){
+  if(!writeAllowed(table))return null;
   try{
     const r=await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`,{method:"PATCH",headers:sh(),body:JSON.stringify(body)});
     if(!r.ok){
@@ -3388,6 +3378,7 @@ async function supaPatch(table,filter,body){
   }catch(e){console.warn("supaPatch exception",table,e);return null;}
 }
 async function supaDelete(table,filter){
+  if(!writeAllowed(table))return false;
   try{const r=await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`,{method:"DELETE",headers:sh()});return r.ok;}catch{return false;}
 }
 function cfgStr(v){
@@ -3406,6 +3397,225 @@ function clearLegacyAssistant(){
   try{["arcClaudeVault","arcClaudeKey","arcClaudeLock","arcClaudeChats"].forEach(k=>localStorage.removeItem(k));}catch(e){}
 }
 
+/* ============================================================
+   AUTHENTIFICATION VÉRIFIÉE CÔTÉ BASE
+   ------------------------------------------------------------
+   Le localStorage n'est plus une source d'autorité. Il ne garde que
+   deux empreintes (identifiant + mot de passe) qui servent de jeton :
+   le rôle, le grade et le nom affiché sont TOUJOURS relus dans
+   arc_users, au démarrage puis pendant la synchronisation.
+
+   Une session fabriquée à la main dans la console n'est donc jamais
+   « bénie » : Auth.ok() compare l'objet session courant à une
+   référence privée validée par la base, et toutes les fonctions de
+   permission comme toutes les écritures exigent Auth.ok().
+   ============================================================ */
+
+/* Appel d'une fonction SQL. Renvoie {missing:true} si la fonction n'est
+   pas encore installée en base, ce qui laisse le site fonctionner avant
+   l'exécution du script SQL. */
+async function supaRpc(fn,args){
+  try{
+    const r=await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`,{method:"POST",headers:sh(),body:JSON.stringify(args||{})});
+    const txt=await r.text();
+    if(r.status===404||/PGRST202|Could not find the function/i.test(txt))return{missing:true};
+    if(!r.ok){console.warn("rpc "+fn,r.status,txt);return{failed:true,status:r.status};}
+    let d=null;try{d=txt?JSON.parse(txt):null;}catch(e){}
+    return{ok:true,data:d};
+  }catch(e){console.warn("rpc "+fn,e);return{failed:true};}
+}
+
+/* Tables qu'un visiteur non connecté a le droit d'alimenter :
+   la demande de récupération de mot de passe et sa trace. */
+const PUBLIC_WRITE=[T.tickets,T.activity];
+function writeAllowed(table){
+  if(Auth.ok())return true;
+  if(PUBLIC_WRITE.indexOf(table)!==-1)return true;
+  console.warn("écriture refusée : session non vérifiée",table);
+  return false;
+}
+
+let _loginFails=0,_loginWait=0;
+
+const Auth=(function(){
+  const LS="arcSession";
+  let blessed=null;   // objet session validé par la base (référence privée)
+  let cred=null;      // {uh,ph} : empreintes servant de jeton
+  let row=null;      // dernière ligne arc_users connue
+  let verified=false; // vrai seulement après un contrôle réussi des identifiants
+
+  function readStored(){
+    try{
+      const s=JSON.parse(localStorage.getItem(LS)||"null");
+      if(s&&typeof s==="object"&&s.userHash&&s.passHash)
+        return{uh:String(s.userHash),ph:String(s.passHash)};
+    }catch(e){}
+    return null;
+  }
+  function writeStored(){
+    try{
+      if(cred)localStorage.setItem(LS,JSON.stringify({userHash:cred.uh,passHash:cred.ph}));
+      else localStorage.removeItem(LS);
+    }catch(e){}
+  }
+
+  /* Lecture du compte, avec trois issues bien distinctes :
+       une ligne  : identifiants valides
+       null       : identifiants refusés
+       undefined  : impossible de trancher (réseau), on ne déconnecte pas */
+  async function lookup(ident,uh,ph){
+    const r=await supaRpc("arc_login",{p_ident:ident||null,p_user_hash:uh||null,p_pass_hash:String(ph)});
+    if(r.ok){
+      const d=Array.isArray(r.data)?(r.data[0]||null):(r.data||null);
+      return d||null;
+    }
+    if(r.failed)return undefined;
+    /* Repli tant que la fonction SQL n'est pas installée : comparaison
+       côté client, qui suppose pass_hash lisible par la clé anon. */
+    const filter=(ident&&uh)
+      ?`or=(user_hash.eq.${encodeURIComponent(uh)},display.eq.${encodeURIComponent(ident)})`
+      :`user_hash=eq.${encodeURIComponent(uh)}`;
+    const rows=await supaGet(T.users,filter);
+    if(rows===null)return undefined;
+    return rows.find(x=>String(x.pass_hash)===String(ph))||null;
+  }
+
+  function gradeOf(r){
+    const list=state.members||[];
+    const mid=(r.member_id===undefined||r.member_id===null)?"":String(r.member_id);
+    let m=mid?list.find(x=>String(x.id)===mid):null;
+    if(!m)m=list.find(x=>(x.user_hash&&x.user_hash===r.user_hash)||(x.linked_user&&x.linked_user===r.user_hash));
+    return (m&&m.grade)?m.grade:(r.grade||"");
+  }
+
+  /* Construit la session à partir de la ligne de base, puis la verrouille :
+     « session.role = "admin" » dans la console n'a plus d'effet. */
+  function bless(r){
+    row=r;
+    const s={
+      user:r.display||"",
+      role:r.role||"member",
+      userId:(r.id===undefined||r.id===null)?null:r.id,
+      userHash:r.user_hash||(cred?cred.uh:""),
+      memberId:(r.member_id===undefined||r.member_id===null)?null:r.member_id,
+      grade:gradeOf(r)
+    };
+    ["user","role","userId","userHash","memberId","grade"].forEach(k=>{
+      try{Object.defineProperty(s,k,{value:s[k],writable:false,configurable:false,enumerable:true});}catch(e){}
+    });
+    try{Object.freeze(s);}catch(e){}
+    blessed=s;session=s;
+    return s;
+  }
+  function stamp(){ return blessed?(blessed.role+"|"+blessed.grade+"|"+blessed.user+"|"+blessed.memberId):""; }
+  function reseal(){ const b=stamp(); if(!row)return false; bless(row); return stamp()!==b; }
+
+  function destroy(){ blessed=null;cred=null;row=null;verified=false;session=null;writeStored(); }
+  function ok(){ return blessed!==null&&session===blessed; }
+
+  /* Contrôle synchrone, sans requête : remet la session bénie en place si
+     quelque chose l'a remplacée, et efface toute session inventée alors
+     qu'aucun identifiant n'a été présenté. */
+  function integrity(){
+    if(!cred||!verified){
+      if(session!==null){
+        session=null;blessed=null;
+        console.warn("session non authentifiée écartée");
+        try{updateNavUI();nav("home");}catch(e){}
+      }
+      return;
+    }
+    if(!ok()){
+      console.warn("session altérée, rétablissement");
+      reseal();
+      try{updateNavUI();renderNav();applyPermissionsUI();}catch(e){}
+    }
+  }
+
+  async function restore(){
+    cred=readStored();
+    if(!cred){destroy();return false;}
+    const r=await lookup(null,cred.uh,cred.ph);
+    if(r===undefined){blessed=null;session=null;return false;} // le chien de garde réessaiera
+    if(!r){destroy();try{updateNavUI();}catch(e){}return false;}
+    cred.uh=r.user_hash||cred.uh;writeStored();verified=true;
+    bless(r);try{updateNavUI();}catch(e){}
+    return true;
+  }
+
+  async function login(ident,uh,ph){
+    const r=await lookup(ident,uh,ph);
+    if(r===undefined)return{err:"net"};
+    if(!r)return{err:"bad"};
+    cred={uh:r.user_hash||uh,ph:String(ph)};writeStored();verified=true;
+    bless(r);
+    return{ok:true,row:r};
+  }
+
+  /* Chien de garde, en deux niveaux.
+     1. contrôle immédiat sur arc_users déjà synchronisé : compte supprimé,
+        rôle changé, grade changé, session remplacée dans la console ;
+     2. revérification complète des identifiants contre la base, au plus
+        une fois toutes les cinq minutes, pour détecter un mot de passe
+        changé ou réinitialisé ailleurs. */
+  let lastDeep=0;
+  async function watch(){
+    if(!cred)return;
+    const list=verified?(state.users||[]):[];
+    if(list.length){
+      const r=list.find(x=>x.user_hash===cred.uh)||null;
+      if(!r){
+        destroy();
+        try{updateNavUI();renderDashboard();nav("home");toast("Ton compte n'existe plus, session fermée","error");}catch(e){}
+        return;
+      }
+      row=Object.assign({},r);
+      if(reseal()){try{updateNavUI();renderNav();applyPermissionsUI();}catch(e){}}
+    }
+    if(verified&&Date.now()-lastDeep<300000)return;
+    lastDeep=Date.now();
+    const deep=await lookup(null,cred.uh,cred.ph);
+    if(deep===undefined)return;
+    if(!deep){
+      destroy();
+      try{updateNavUI();renderDashboard();nav("home");toast("Session expirée, reconnecte-toi","error");}catch(e){}
+      return;
+    }
+    row=deep;verified=true;
+    if(reseal()){try{updateNavUI();renderNav();applyPermissionsUI();}catch(e){}}
+  }
+
+  function syncGrade(){
+    if(!row)return false;
+    const changed=reseal();
+    if(changed){try{updateNavUI();renderNav();applyPermissionsUI();}catch(e){}}
+    return changed;
+  }
+
+  function setPass(ph){ if(cred){cred.ph=String(ph);writeStored();} }
+  function setRow(patch){ if(row){Object.assign(row,patch||{});if(reseal()){try{updateNavUI();}catch(e){}}} }
+  /* La preuve (les deux empreintes) sert aux fonctions SQL qui vérifient
+     en base le droit de l'appelant, par exemple le changement de rôle. */
+  function proof(){ return cred?{uh:cred.uh,ph:cred.ph}:null; }
+  function account(){ return row?{id:row.id,user_hash:row.user_hash,display:row.display,role:row.role,member_id:row.member_id,grade:row.grade}:null; }
+
+  /* gelé : on ne remplace pas une fonction de ce module depuis la console. */
+  return Object.freeze({restore,login,watch,integrity,ok,destroy,syncGrade,setPass,setRow,account,proof});
+})();
+
+/* Pose le rôle d'un compte par la fonction SQL arc_set_role, qui vérifie en
+   base que l'appelant détient bien un compte administrateur. La colonne role
+   n'est pas modifiable directement par la clé publique une fois le script SQL
+   appliqué. Renvoie "ok", "absent" (fonction pas encore installée) ou "refus". */
+async function setRoleServerSide(id,role){
+  const pr=Auth.proof();
+  if(!pr)return "refus";
+  const r=await supaRpc("arc_set_role",{p_auth_hash:pr.uh,p_auth_pass:pr.ph,
+                                        p_target_id:String(id),p_role:String(role)});
+  if(r.missing)return "absent";
+  return (r.ok&&r.data)?"ok":"refus";
+}
+
 window.addEventListener("DOMContentLoaded",async()=>{
   clearLegacyAssistant();
   initTooltips();
@@ -3413,11 +3623,10 @@ window.addEventListener("DOMContentLoaded",async()=>{
   initFicheCdm();
   const paintOvDate=()=>{const el=document.getElementById("ovDate");if(el)el.textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});};
   paintOvDate();setInterval(paintOvDate,60000);setInterval(function(){try{ovRenderDeadline();}catch(e){}},60000);
-  try{const s=JSON.parse(localStorage.getItem("arcSession")||"null");if(s&&s.user){session=s;updateNavUI();}}catch{}
   supaOK=true;
   showSkeletons();
   await loadAll();
-  hydrateSession();
+  await Auth.restore();
   applyMaintenance();applyRec();renderContent();renderDashboard();nav("home");
   schedulePoll();
 });
@@ -3445,8 +3654,11 @@ async function fetchSyncTables(){
   const res=await Promise.all(SYNC_TABLES.map(d=>supaGet(d.table,d.filter||"")));
   const changed=new Set();
   SYNC_TABLES.forEach((d,i)=>{
-    const rows=res[i];
+    let rows=res[i];
     if(rows===null)return;
+    /* Les empreintes de mot de passe ne sont jamais conservées en mémoire
+       côté navigateur : il n'y a rien à lire dans la console. */
+    if(d.key==="users")rows=rows.map(u=>{const c=Object.assign({},u);delete c.pass_hash;return c;});
     const sig=tableSig(rows);
     if(_sig[d.key]!==sig){_sig[d.key]=sig;changed.add(d.key);}
     state[d.into]=rows;
@@ -3492,31 +3704,6 @@ async function loadAll(){
     }
   }catch(e){console.warn("config: clé illisible",row.key,e);};});
   renderContent();
-  await ensureBootUser();
-}
-
-function hydrateSession(){
-  if(!session)return;
-  const u=(state.users||[]).find(x=>
-    (session.userId!=null&&String(x.id)===String(session.userId))||
-    (session.userHash&&x.user_hash===session.userHash));
-  if(!u)return;
-  session.userId=(u.id!==undefined&&u.id!==null)?u.id:session.userId;
-  session.userHash=u.user_hash||session.userHash;
-  if(u.display)session.user=u.display;
-  if(u.role)session.role=u.role;
-  session.memberId=u.member_id||null;
-  const m=sessionMember();
-  if(m&&m.grade)session.grade=m.grade;
-  try{localStorage.setItem("arcSession",JSON.stringify(session));}catch(e){}
-  updateNavUI();
-}
-
-async function ensureBootUser(){
-  if(!supaOK)return;
-  const existing=await supaGet(T.users,`user_hash=eq.${BOOT_USER_HASH}`);
-  if(Array.isArray(existing)&&existing.length===0)
-    await supaPost(T.users,{user_hash:BOOT_USER_HASH,pass_hash:BOOT_PASS_HASH,role:"admin",display:"nepko"});
 }
 
 function saveLS(){
@@ -3815,7 +4002,7 @@ function loadNavGroups(){
 }
 
 function canEditNav(){
-  if(!session) return false;
+  if(!Auth.ok()) return false;
   if(session.role==="admin") return true;
   if(session.role==="brs"||session.role==="amiraute") return false;
   const lvl = gradeLevel(getSessionGrade());
@@ -3823,7 +4010,7 @@ function canEditNav(){
 }
 
 function canManageUsers(){
-  if(!session) return false;
+  if(!Auth.ok()) return false;
   if(session.role==="admin") return true;
   if(session.role==="amiraute") return true;
   if(session.role==="brs") return false;
@@ -3831,7 +4018,7 @@ function canManageUsers(){
 }
 
 function canViewTab(tab){
-  if(!session) return false;
+  if(!Auth.ok()) return false;
   if(session.role==="admin") return true;
   if(tab==="admin"){
     return canManageUsers() || canEditNav();
@@ -3929,30 +4116,19 @@ async function doLogin(){
   const u=document.getElementById("loginUser").value.trim();
   const p=document.getElementById("loginPass").value.trim();
   const err=document.getElementById("loginErr");
+  const fail=(m)=>{err.textContent=m;err.classList.add("show");};
   err.classList.remove("show");
-  if(!u||!p){err.textContent="Remplis tous les champs";err.classList.add("show");return;}
-  const uh=cyrb53(u),ph=cyrb53(p);
-  let found=null;
-  const matches=(x)=>(x.display===u||x.user_hash===uh)&&x.pass_hash===ph;
-  found=(state.users||[]).find(matches)||null;
-  if(!found&&supaOK){
-    const rows=await supaGet(T.users,`user_hash=eq.${uh}`);
-    if(rows&&rows.length)found=rows.find(x=>x.pass_hash===ph)||null;
+  if(!u||!p){fail("Remplis tous les champs");return;}
+  if(Date.now()<_loginWait){fail("Trop de tentatives, patiente un instant");return;}
+  const res=await Auth.login(u,cyrb53(u),cyrb53(p));
+  if(res.err==="net"){fail("Base injoignable, réessaie");return;}
+  if(res.err){
+    _loginFails++;
+    if(_loginFails>=3)_loginWait=Date.now()+Math.min(30000,2000*(_loginFails-2));
+    fail("Identifiants incorrects");
+    return;
   }
-  if(!found&&uh===BOOT_USER_HASH&&ph===BOOT_PASS_HASH)
-    found={user_hash:BOOT_USER_HASH,pass_hash:BOOT_PASS_HASH,role:"admin",display:"nepko"};
-  if(!found){err.textContent="Identifiants incorrects";err.classList.add("show");return;}
-  let memberGradeFromRoster = "";
-  if(found.member_id){
-    const linked = state.members.find(m=>m.id==found.member_id);
-    if(linked) memberGradeFromRoster = linked.grade;
-  }
-  session={user:found.display||u,role:found.role,
-    userId:(found.id!==undefined&&found.id!==null)?found.id:null,
-    userHash:found.user_hash||uh,
-    memberId:found.member_id||null,
-    grade:memberGradeFromRoster||found.grade||""};
-  localStorage.setItem("arcSession",JSON.stringify(session));
+  _loginFails=0;_loginWait=0;
   closeModal("loginModal");
   document.getElementById("loginUser").value="";document.getElementById("loginPass").value="";
   updateNavUI();applyPermissionsUI();checkMyReportStatus();toast("Bienvenue "+session.user+" !","success");maybeShowTour();
@@ -3961,7 +4137,7 @@ async function doLogin(){
 }
 
 function doLogout(){
-  session=null;localStorage.removeItem("arcSession");
+  Auth.destroy();
   stopChat();
   closeModal("accountModal");updateNavUI();nav("home");toast("Déconnecté","info");
 }
@@ -4004,7 +4180,7 @@ function updateNavUI(){
 
 function applyMaintenance(){
   const ms=document.getElementById("maint-screen"),mb=document.getElementById("maintBar");
-  const isAdmin=session&&session.role==="admin";
+  const isAdmin=Auth.ok()&&session.role==="admin";
   const shouldShow=state.maintenance&&!isAdmin;
   const wasShown=ms.classList.contains("show");
   if(shouldShow){
@@ -4029,7 +4205,7 @@ function applyMaintenance(){
 }
 
 async function toggleMaint(force){
-  if(!session||session.role!=="admin"){toast("Accès admin requis","error");return;}
+  if(!Auth.ok()||session.role!=="admin"){toast("Accès admin requis","error");return;}
   state.maintenance=typeof force==="boolean"?force:!state.maintenance;
   if(supaOK)await setConfig("maintenance",state.maintenance);
   applyMaintenance();
@@ -4052,7 +4228,7 @@ function applyRec(){
 }
 
 async function toggleRec(){
-  if(!session||session.role!=="admin"){toast("Accès admin requis","error");return;}
+  if(!Auth.ok()||session.role!=="admin"){toast("Accès admin requis","error");return;}
   state.recOpen=!state.recOpen;
   if(supaOK)await setConfig("recOpen",state.recOpen);
   applyRec();toast(state.recOpen?"Recrutement ouvert":"Recrutement fermé",state.recOpen?"success":"info");
@@ -4076,7 +4252,7 @@ function renderDashboard(){
   reconcileAbsenceStatus().then(ch=>{if(ch){renderRoster();renderOverview();refreshMemberViews();}});
   runWeeklyReportJobs();
   const cmdb=document.getElementById("cmdModeBtn");
-  if(cmdb)cmdb.style.display=(session&&(session.role==="admin"||session.role==="brs"||session.role==="amiraute"||gradeLevel(getSessionGrade())>=4))?"":"none";
+  if(cmdb)cmdb.style.display=(Auth.ok()&&(session.role==="admin"||session.role==="brs"||session.role==="amiraute"||gradeLevel(getSessionGrade())>=4))?"":"none";
 }
 
 function activeMembers(){
@@ -4170,7 +4346,7 @@ function renderOverview(){
 
 function canAssignTask(){ return canEdit("tasks"); }
 function canCompleteTask(t){
-  if(!session||!t)return false;
+  if(!Auth.ok()||!t)return false;
   const me=sessionMember();
   if(me&&t.assignee_member_id!=null&&String(t.assignee_member_id)===String(me.id))return true;
   return canEdit("tasks");
@@ -4205,7 +4381,7 @@ function todoDue(t){
 
 function buildTodo(){
   const me=sessionMember();
-  if(!session)return[];
+  if(!Auth.ok())return[];
   if(session.role==="brs")return[];
   const lvl=(session.role==="admin"||session.role==="amiraute")?99:gradeLevel(getSessionGrade());
   const items=[];
@@ -4779,7 +4955,7 @@ function manualTestsReport(){
   return L.join("\n");
 }
 
-function canDebug(){return !!session&&session.role==="admin";}
+function canDebug(){return Auth.ok()&&session.role==="admin";}
 async function openDebug(){
   if(!canDebug()){toast("Réservé à l'administrateur","error");return;}
   renderDebug();
@@ -5029,13 +5205,13 @@ function resolveMemberFromText(txt){
 const FORMATION_TYPES=["ARC Alpha","ARC Trooper","CMD de mission"];
 const SGT_FORMATION_TYPES=["ARC Trooper","CMD de mission"];
 function allowedFormationTypes(){
-  if(!session)return[];
+  if(!Auth.ok())return[];
   if(session.role==="brs")return[];
   if(session.role==="admin"||session.role==="amiraute")return FORMATION_TYPES.slice();
   return gradeLevel(getSessionGrade())<=1?SGT_FORMATION_TYPES.slice():FORMATION_TYPES.slice();
 }
 function canEditFormationType(type){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="brs")return false;
   if(session.role==="admin"||session.role==="amiraute")return true;
   if(gradeLevel(getSessionGrade())>1)return true;
@@ -6094,7 +6270,7 @@ function renderReglement(){
   const btn=document.getElementById("reglementEditBtn");
   if(!el)return;
   const lvl=gradeLevel(getSessionGrade());
-  const ok=session&&(session.role==="admin"||session.role==="amiraute"||(session.role!=="brs"&&lvl>=6));
+  const ok=Auth.ok()&&(session.role==="admin"||session.role==="amiraute"||(session.role!=="brs"&&lvl>=6));
   if(btn)btn.style.display=ok?"":"none";
   const html=state.reglement||"";
   if(!html.trim()){el.innerHTML='<div class="empty"><p>Aucun règlement défini.</p></div>';return;}
@@ -6108,7 +6284,7 @@ function openReglementEditor(){
 }
 async function saveReglement(){
   const lvl=gradeLevel(getSessionGrade());
-  const ok=session&&(session.role==="admin"||session.role==="amiraute"||(session.role!=="brs"&&lvl>=6));
+  const ok=Auth.ok()&&(session.role==="admin"||session.role==="amiraute"||(session.role!=="brs"&&lvl>=6));
   if(!ok){toast("Accès réservé aux CMD+","error");return;}
   const html=document.getElementById("reglementEditor").innerHTML;
   state.reglement=html;
@@ -6377,7 +6553,7 @@ async function updateField(id,field,value){
 }
 
 function openUserModal(type="member"){
-  const isAdmin=session&&session.role==="admin";
+  const isAdmin=Auth.ok()&&session.role==="admin";
   const adminRoleBtn=document.getElementById("roleBtn-admin");
   if(adminRoleBtn)adminRoleBtn.style.display=isAdmin?"":"none";
   if(type==="admin"&&!isAdmin)type="member";
@@ -6449,7 +6625,7 @@ function renderUsers(){
 function renderAdmin(){
   renderDiscordPanel();
   if(!session)return;
-  const isAdmin=session.role==="admin";
+  const isAdmin=Auth.ok()&&session.role==="admin";
   const canNav=canEditNav();
   const canRecruit=canEditNav();
   const strictAdminPanels=["vitrinePanel","guidePanel","maintPanel","debugPanel"];
@@ -6496,7 +6672,21 @@ async function saveUser(){
   const linkedMember = state.members.find(m=>m.id==memberLinkId);
   const memberGrade = linkedMember?.grade||"";
   const obj={user_hash:uh,pass_hash:ph,role,display:user,member_id:memberLinkId||null,grade:memberGrade};
-  if(supaOK){const r=await supaPost(T.users,obj);if(r&&r.length>0)state.users.push(r[0]);else{toast("Erreur création","error");return;}}
+  if(supaOK){
+    let r=await supaPost(T.users,obj);
+    if(r===null&&obj.role){
+      /* colonne role verrouillée en base : on crée un compte membre puis on
+         pose le rôle par la fonction SQL */
+      const base=Object.assign({},obj);delete base.role;
+      r=await supaPost(T.users,base);
+      if(r&&r.length>0&&role!=="member"){
+        const rr=await setRoleServerSide(r[0].id,role);
+        if(rr==="ok")r[0].role=role;
+        else{toast("Compte créé en « membre » : le rôle doit être posé depuis Supabase","error");}
+      }
+    }
+    if(r&&r.length>0)state.users.push(r[0]);else{toast("Erreur création","error");return;}
+  }
   else{obj.id=Date.now().toString();state.users.push(obj);saveLS();}
   closeModal("userModal");renderUsers();
   toast(`Compte ${({admin:"admin",brs:"BRS",amiraute:"Amirauté"}[role])||"membre"} "${user}" créé`,"success");
@@ -6523,7 +6713,7 @@ async function saveProfileEdit(){
   const showErr=(msg)=>{err.textContent=msg;err.style.display="block";};
   err.style.display="none";
 
-  if(!session){showErr("Aucune session active.");return;}
+  if(!Auth.ok()){showErr("Session non vérifiée, reconnecte-toi.");return;}
 
   const newUser=document.getElementById("peUser").value.trim();
   const newPass=document.getElementById("pePass").value.trim();
@@ -6535,24 +6725,27 @@ async function saveProfileEdit(){
   if(!newUser && !newPass){showErr("Indique un nouvel identifiant ou un nouveau mot de passe.");return;}
 
   const oldHash=cyrb53(oldPass);
-  let currentUser=null;
-  if(supaOK){
-    const rows=await supaGet(T.users,`user_hash=eq.${session.userHash}`);
-    if(rows&&rows.length>0)currentUser=rows[0];
-    else if(session.userHash===BOOT_USER_HASH)currentUser={user_hash:BOOT_USER_HASH,pass_hash:BOOT_PASS_HASH,role:"admin",display:"nepko"};
-  }else{
-    currentUser=state.users.find(u=>u.user_hash===session.userHash);
-    if(!currentUser&&session.userHash===BOOT_USER_HASH)currentUser={user_hash:BOOT_USER_HASH,pass_hash:BOOT_PASS_HASH,role:"admin",display:"nepko"};
-  }
-  if(!currentUser){showErr("Compte introuvable.");return;}
-  if(currentUser.pass_hash!==oldHash){showErr("Mot de passe actuel incorrect.");return;}
+  const acc=Auth.account();
+  if(!acc){showErr("Compte introuvable.");return;}
+  /* Le mot de passe actuel est vérifié par la base, pas par comparaison
+     d'une empreinte lue côté navigateur. */
+  const chk=await supaRpc("arc_login",{p_ident:null,p_user_hash:session.userHash,p_pass_hash:oldHash});
+  if(chk.ok){
+    const d=Array.isArray(chk.data)?(chk.data[0]||null):(chk.data||null);
+    if(!d){showErr("Mot de passe actuel incorrect.");return;}
+  }else if(chk.missing){
+    const rows=await supaGet(T.users,`user_hash=eq.${encodeURIComponent(session.userHash)}`);
+    const cu=(rows&&rows[0])||null;
+    if(!cu){showErr("Compte introuvable.");return;}
+    if(String(cu.pass_hash)!==String(oldHash)){showErr("Mot de passe actuel incorrect.");return;}
+  }else{showErr("Vérification impossible, réessaie.");return;}
 
   if(newPass){
     if(newPass.length<3){showErr("Le nouveau mot de passe est trop court (3 caractères min).");return;}
     if(newPass!==newPassConf){showErr("Les nouveaux mots de passe ne correspondent pas.");return;}
   }
 
-  if(newUser&&newUser!==currentUser.display){
+  if(newUser&&newUser!==acc.display){
     const exists=state.users.find(u=>u.display===newUser&&u.user_hash!==session.userHash);
     if(exists){showErr(`L'identifiant "${newUser}" est déjà pris.`);return;}
   }
@@ -6570,8 +6763,8 @@ async function saveProfileEdit(){
 
   if(newUser&&localU)await syncUserNameCopies(localU);
 
-  if(newUser)session.user=newUser;
-  localStorage.setItem("arcSession",JSON.stringify(session));
+  if(newUser)Auth.setRow({display:newUser});
+  if(newPass)Auth.setPass(cyrb53(newPass));
   if(!supaOK)saveLS();
 
   updateNavUI();
@@ -6587,7 +6780,7 @@ async function saveProfileEdit(){
 function openEditUser(id){
   const u=state.users.find(x=>x.id==id);
   if(!u){toast("Compte introuvable","error");return;}
-  const isAdmin=session&&session.role==="admin";
+  const isAdmin=Auth.ok()&&session.role==="admin";
 
   if(u.role==="admin"&&!isAdmin){toast("Seul un administrateur peut modifier un compte admin","error");return;}
 
@@ -6631,7 +6824,7 @@ async function saveEditUser(){
   const u=state.users.find(x=>x.id==id);
   if(!u){showErr("Compte introuvable.");return;}
 
-  const isAdmin=session&&session.role==="admin";
+  const isAdmin=Auth.ok()&&session.role==="admin";
   if(u.role==="admin"&&!isAdmin){showErr("Seul un administrateur peut modifier un compte admin.");return;}
 
   const newUser=document.getElementById("euUser").value.trim();
@@ -6671,7 +6864,14 @@ async function saveEditUser(){
     (session.userId!=null&&String(u.id)===String(session.userId))||
     u.user_hash===session.userHash));
   if(supaOK){
-    const r=await supaPatch(T.users,`id=eq.${id}`,updates);
+    let r=await supaPatch(T.users,`id=eq.${id}`,updates);
+    if(r===null&&updates.role){
+      /* colonne role verrouillée en base : le rôle passe par la fonction SQL */
+      const rr=await setRoleServerSide(id,updates.role);
+      if(rr!=="ok"){showErr("Changement de rôle refusé par la base.");return;}
+      const sans=Object.assign({},updates);delete sans.role;
+      r=Object.keys(sans).length?await supaPatch(T.users,`id=eq.${id}`,sans):true;
+    }
     if(!r){showErr("Erreur lors de la sauvegarde.");return;}
   }
   Object.assign(u,updates);
@@ -6680,10 +6880,8 @@ async function saveEditUser(){
   if(newUser!==_oldDisplay)await syncUserNameCopies(u);
 
   if(_isSelf){
-    session.user=newUser;
-    if(updates.role)session.role=updates.role;
-    if("member_id" in updates)session.memberId=updates.member_id||null;
-    localStorage.setItem("arcSession",JSON.stringify(session));
+    Auth.setRow(updates);
+    if(updates.pass_hash)Auth.setPass(updates.pass_hash);
     updateNavUI();
   }
 
@@ -6767,7 +6965,7 @@ function renderTickets(){
 }
 
 function openResetTicket(ticketId){
-  if(!session||session.role!=="admin"){toast("Réservé aux administrateurs","error");return;}
+  if(!Auth.ok()||session.role!=="admin"){toast("Réservé aux administrateurs","error");return;}
   const t=(state.tickets||[]).find(x=>x.id==ticketId);
   if(!t)return;
   document.getElementById("rtTicketId").value=ticketId;
@@ -6785,7 +6983,7 @@ function generateTempPassword(){
 }
 
 async function confirmResetTicket(){
-  if(!session||session.role!=="admin"){toast("Réservé aux administrateurs","error");return;}
+  if(!Auth.ok()||session.role!=="admin"){toast("Réservé aux administrateurs","error");return;}
   const err=document.getElementById("rtErr");
   const ticketId=document.getElementById("rtTicketId").value;
   const t=(state.tickets||[]).find(x=>x.id==ticketId);
@@ -6815,7 +7013,7 @@ async function confirmResetTicket(){
 }
 
 async function dismissTicket(ticketId){
-  if(!session||session.role!=="admin")return;
+  if(!Auth.ok()||session.role!=="admin")return;
   const t=(state.tickets||[]).find(x=>x.id==ticketId);if(!t)return;
   if(supaOK)await supaPatch(T.tickets,`id=eq.${ticketId}`,{status:"resolved"});
   t.status="resolved";if(!supaOK)saveLS();
@@ -6823,7 +7021,7 @@ async function dismissTicket(ticketId){
 }
 
 async function deleteTicket(ticketId){
-  if(!session||session.role!=="admin")return;
+  if(!Auth.ok()||session.role!=="admin")return;
   if(!await uiConfirm({title:"Supprimer la demande",message:"Supprimer cette demande ?",okText:"Supprimer",danger:true}))return;
   if(supaOK)await supaDelete(T.tickets,`id=eq.${ticketId}`);
   state.tickets=(state.tickets||[]).filter(x=>x.id!=ticketId);if(!supaOK)saveLS();
@@ -6849,7 +7047,7 @@ function toggleEditMode(){
 }
 
 async function resetVitrineTexts(){
-  if(!session||session.role!=="admin"){toast("Réservé à l'administrateur","error");return;}
+  if(!Auth.ok()||session.role!=="admin"){toast("Réservé à l'administrateur","error");return;}
   const rx=/^(mission_|equip_|mem_rp|mem_bat|mem_catlabel)/;
   const keys=Object.keys(state.content||{}).filter(k=>rx.test(k));
   if(!keys.length){toast("Aucun texte personnalisé sur ces sections","info");return;}
@@ -6867,7 +7065,7 @@ async function resetVitrineTexts(){
 }
 
 async function saveEdits(){
-  if(!session||session.role!=="admin"){toast("Réservé à l'administrateur","error");return;}
+  if(!Auth.ok()||session.role!=="admin"){toast("Réservé à l'administrateur","error");return;}
   const st=document.getElementById("editSt");if(st)st.textContent="Sauvegarde…";
   const _wasIndian = (typeof indianIsOn==="function") && indianIsOn();
   if(_wasIndian) indianTextOff();
@@ -6946,6 +7144,7 @@ function syncBadge(mode){
 async function pollRealtime(){
   if(_pollBusy) return schedulePoll();
   _pollBusy=true;
+  try{Auth.integrity();}catch(e){}
   let failed=false;
   try{
     if(supaOK && !document.hidden){
@@ -7003,7 +7202,7 @@ async function pollRealtime(){
         }
 
         if(session && (changed.has("members")||changed.has("users"))){
-          try{ if(changed.has("users")) hydrateSession(); _midxRef=null;_midxLen=-1; syncSessionGrade(); }catch(e){}
+          try{ _midxRef=null;_midxLen=-1; syncSessionGrade(); }catch(e){}
         }
         if(session && changed.size && !uiBusy()){
           const meta=TAB_RENDER[_activeTab];
@@ -7016,6 +7215,7 @@ async function pollRealtime(){
         }
       }
       if(!failed){ _lastSync=Date.now(); syncBadge(""); }
+      try{ await Auth.watch(); }catch(e){}
     }
   }catch(e){ failed=true; console.warn("sync: cycle interrompu",e); }
   finally{
@@ -7180,7 +7380,7 @@ async function saveDoc(){
   await logActivity((session?.user||"?")+" a ajouté le document '"+title+"'");
 }
 function canSeeDoc(doc){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin")return true;
   if(session.role==="brs"||session.role==="amiraute")return true;
   const g=getSessionGrade();
@@ -7474,7 +7674,7 @@ function stopMaintAnimation(){
 }
 
 function canCreatePoll(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin")return true;
   if(session.role==="brs")return false;
   if(session.role==="amiraute")return true;
@@ -7516,7 +7716,7 @@ function getPollVotes(pollId){
 }
 
 function getMyVote(pollId){
-  if(!session)return null;
+  if(!Auth.ok())return null;
   const v=state.pollVotes.find(v=>v.poll_id==pollId&&v.voter_hash===session.userHash);
   return v?v.option_index:null;
 }
@@ -7741,7 +7941,7 @@ function checkMyReportStatus(){
 }
 
 function canManageAutoReport(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin"||session.role==="amiraute")return true;
   if(session.role==="brs")return false;
   return gradeLevel(getSessionGrade())>=5;
@@ -8020,7 +8220,7 @@ function userMetaByHash(hash){
   return{hash,name:u.display||"?",role:u.role,grade:m?.grade||u.grade||"",mat:m?.matricule||""};
 }
 function chatOtherUsers(){
-  if(!session)return[];
+  if(!Auth.ok())return[];
   return state.users.filter(u=>u.user_hash!==session.userHash)
     .map(u=>userMetaByHash(u.user_hash))
     .sort((a,b)=>a.name.localeCompare(b.name));
@@ -8381,7 +8581,7 @@ function renderMonEspace(){
 let _mpCurrentId=null,_mpEditMode=false;
 
 function canEditMemberProfile(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin")return true;
   if(session.role==="brs")return false;
   if(session.role==="amiraute")return true;
@@ -8390,12 +8590,12 @@ function canEditMemberProfile(){
 }
 
 function canSeeRemarque(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin"||session.role==="amiraute"||session.role==="brs")return true;
   return gradeLevel(getSessionGrade())>=3;
 }
 function canWriteRemarque(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin"||session.role==="amiraute")return true;
   if(session.role==="brs")return false;
   return gradeLevel(getSessionGrade())>=3;
@@ -8405,14 +8605,14 @@ function canSeeInfo(){
   return !!session;
 }
 function canWriteInfo(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin"||session.role==="amiraute")return true;
   if(session.role==="brs")return false;
   return gradeLevel(getSessionGrade())>=3;
 }
 
 function canMoveCategorie(){
-  if(!session)return false;
+  if(!Auth.ok())return false;
   if(session.role==="admin"||session.role==="amiraute")return true;
   if(session.role==="brs")return false;
   const lvl=gradeLevel(getSessionGrade());
@@ -9544,7 +9744,7 @@ function gradeColorInt(g){
   return isNaN(v)?0x00e5ff:v;
 }
 function canConfigDiscord(){
-  if(!session) return false;
+  if(!Auth.ok()) return false;
   if(session.role==="admin"||session.role==="amiraute") return true;
   if(session.role==="brs") return false;
   return gradeLevel(getSessionGrade())>=6;
