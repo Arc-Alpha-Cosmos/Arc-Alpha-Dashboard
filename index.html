@@ -2994,6 +2994,63 @@ function escTrunc(s,n){
   const t=String(s??"");
   return esc(t.length>n?t.slice(0,n)+"…":t);
 }
+/* Valeur destinée à une chaîne JS placée dans un attribut HTML, par exemple
+   onclick="f('...')". Le navigateur décode les entités AVANT de lire le JS,
+   donc esc() seul ne suffit pas : une apostrophe devenue &#39; redevient une
+   apostrophe et referme la chaîne. On échappe donc d'abord pour JS, puis pour
+   le HTML, dans cet ordre. Les deux séparateurs de ligne Unicode sont visés
+   par leur code, pour ne pas les écrire en clair dans ce fichier. */
+function escJs(s){
+  if(s==null)return"";
+  return esc(String(s)
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'")
+    .replace(/"/g,'\\"')
+    .replace(/\r/g,"\\r")
+    .replace(/\n/g,"\\n")
+    .replace(new RegExp(String.fromCharCode(8232),"g"),"\\u2028")
+    .replace(new RegExp(String.fromCharCode(8233),"g"),"\\u2029"));
+}
+
+/* Nettoie du HTML riche. Le règlement est rédigé dans un éditeur
+   contenteditable, il doit donc garder sa mise en forme : on ne peut pas
+   l'échapper, on filtre. Seules les balises que la feuille de style connaît
+   sont gardées, tout attribut d'événement est retiré, et les liens doivent
+   être http, https ou mailto. L'analyse se fait dans un document détaché,
+   qui n'exécute rien et ne charge aucune image. */
+const SANI_TAGS=["P","BR","DIV","SPAN","B","STRONG","I","EM","U","S","STRIKE","SUB","SUP",
+  "H1","H2","H3","H4","H5","H6","UL","OL","LI","A","BLOCKQUOTE","CODE","PRE","HR",
+  "TABLE","THEAD","TBODY","TFOOT","TR","TH","TD","FONT","SMALL","MARK"];
+const SANI_ATTRS=["href","title","colspan","rowspan","align","color","face","size","style","class"];
+function sanitizeHtml(html){
+  const src=String(html==null?"":html);
+  if(!src)return"";
+  try{
+    const doc=new DOMParser().parseFromString("<body>"+src+"</body>","text/html");
+    const walk=(node)=>{
+      Array.from(node.children||[]).forEach(el=>{
+        if(SANI_TAGS.indexOf(el.tagName)===-1){
+          /* balise inconnue : on garde son texte, on jette la balise */
+          el.parentNode.replaceChild(doc.createTextNode(el.textContent||""),el);
+          return;
+        }
+        Array.from(el.attributes).forEach(at=>{
+          const n=at.name.toLowerCase();
+          if(SANI_ATTRS.indexOf(n)===-1){el.removeAttribute(at.name);return;}
+          if(n==="href"){
+            let ok=false;
+            try{ok=["http:","https:","mailto:"].indexOf(new URL(at.value,location.href).protocol)!==-1;}catch(e){}
+            if(!ok)el.removeAttribute("href");
+          }
+          if(n==="style"&&/expression|javascript:|url\s*\(/i.test(at.value))el.removeAttribute("style");
+        });
+        walk(el);
+      });
+    };
+    walk(doc.body);
+    return doc.body.innerHTML;
+  }catch(e){console.warn("sanitizeHtml",e);return esc(src);}
+}
 let _midxRef=null,_midxLen=-1,_midx=new Map();
 function memberIndex(){
   const arr=state.members||[];
@@ -3763,9 +3820,9 @@ function renderNavEditor(){
   el.innerHTML = _navEditDraft.map((g,gi)=>`
     <div style="border:1px solid var(--ln);background:var(--s2);padding:.9rem;min-width:0">
       <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap">
-        <input type="text" class="inline-inp" value="${g.icon}" style="width:42px;text-align:center;font-size:1rem"
+        <input type="text" class="inline-inp" value="${esc(g.icon)}" style="width:42px;text-align:center;font-size:1rem"
           onchange="updateNavGroupField(${gi},'icon',this.value)" title="Icône">
-        <input type="text" class="inline-inp" value="${g.label}" style="flex:1;min-width:0;font-weight:600"
+        <input type="text" class="inline-inp" value="${esc(g.label)}" style="flex:1;min-width:0;font-weight:600"
           onchange="updateNavGroupField(${gi},'label',this.value)" title="Nom du groupe">
         ${_navEditDraft.length>1?`<button class="sbtn danger" style="padding:.25rem .5rem;font-size:.62rem" onclick="removeNavGroup(${gi})">Supprimer</button>`:""}
       </div>
@@ -4047,9 +4104,9 @@ function renderNav(){
   }
 
   groupsEl.innerHTML = visibleGroups.map(g=>`
-    <button class="nav-group ${g.id===_activeGroup?"on":""}" onclick="selectGroup('${g.id}')"
+    <button class="nav-group ${g.id===_activeGroup?"on":""}" onclick="selectGroup('${escJs(g.id)}')"
       style="height:auto;padding:.7rem 1.1rem;display:flex;align-items:center;gap:.45rem;background:none;border:none;border-bottom:2px solid ${g.id===_activeGroup?"var(--ac)":"transparent"};color:${g.id===_activeGroup?"var(--ac)":"var(--dm)"};font-family:var(--fs);font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;white-space:nowrap;transition:all .15s">
-      <span style="font-size:.95rem">${g.icon}</span>${g.label}
+      <span style="font-size:.95rem">${esc(g.icon)}</span>${esc(g.label)}
     </button>`).join("");
 
   const activeG = visibleGroups.find(g=>g.id===_activeGroup);
@@ -4073,7 +4130,7 @@ function renderNav(){
     const badge = meta.badge
       ? `<span id="${meta.badge}" style="display:none;position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--rd);animation:pulseBadge 1.6s ease-in-out infinite"></span>`
       : "";
-    return `<button class="nav-tab ${t===_activeTab?"on":""}" onclick="dashTab('${t}')"
+    return `<button class="nav-tab ${t===_activeTab?"on":""}" onclick="dashTab('${escJs(t)}')"
       style="height:auto;padding:.55rem .9rem;position:relative;display:inline-flex;align-items:center;gap:.4rem">
       ${meta.icon?`<span>${meta.icon}</span>`:""}${meta.label}${lockIcon}${badge}
     </button>`;
@@ -4443,7 +4500,7 @@ function buildTodo(){
 function todoRow(it){
   const me=sessionMember();
   if(it.kind==="manage"){
-    return `<div class="ov-task go u-info" role="button" tabindex="0" onclick="dashTab('${it.goto}')">
+    return `<div class="ov-task go u-info" role="button" tabindex="0" onclick="dashTab('${escJs(it.goto)}')">
       <span class="ov-mat n">${it.count!=null?it.count:"!"}</span>
       <span class="ov-what" style="color:var(--tx)">${esc(it.what)}</span>
       <span class="ov-chip ac">Ouvrir</span>
@@ -4465,7 +4522,7 @@ function todoRow(it){
     const t=it.task,d=it.due;
     const prio=t.priority==="haute"?'<span class="ov-chip cr">Haute</span>':"";
     const due=d?`<span class="ov-chip ${d.late?"cr":(d.soon?"wn":"ac")}">${d.late?"En retard":fmtDate(d.date)}</span>`:"";
-    const ok=canCompleteTask(t)?`<button class="ov-done" onclick="completeMyTask('${t.id}')">Terminé</button>`:"";
+    const ok=canCompleteTask(t)?`<button class="ov-done" onclick="completeMyTask('${escJs(t.id)}')">Terminé</button>`:"";
     return `<div class="ov-task u-info">
       <span class="ov-mat">${esc(mat)}</span>
       <span class="ov-name">${esc(nom)}</span>
@@ -4709,7 +4766,7 @@ function renderQuickActions(){
   }
   el.style.display="grid";
   el.innerHTML=cards.map(c=>`
-    <div onclick="dashTab('${c.tab}')" style="cursor:pointer;background:var(--s2);border:1px solid var(--ln);border-left:3px solid ${c.color};padding:1rem;display:flex;align-items:center;gap:.9rem;transition:all .15s"
+    <div onclick="dashTab('${escJs(c.tab)}')" style="cursor:pointer;background:var(--s2);border:1px solid var(--ln);border-left:3px solid ${c.color};padding:1rem;display:flex;align-items:center;gap:.9rem;transition:all .15s"
       onmouseover="this.style.background='var(--s3)';this.style.transform='translateX(2px)'"
       onmouseout="this.style.background='var(--s2)';this.style.transform='translateX(0)'">
       <svg viewBox="0 0 24 24" fill="none" stroke="${c.color}" stroke-width="2" style="width:26px;height:26px;flex-shrink:0">${c.icon}</svg>
@@ -4890,7 +4947,7 @@ function renderManualTests(){
   const item=x=>{
     const d=x.def,st=MANUAL_STATUS[x.status],r=x.r;
     const btn=(s,label,cls)=>x.status===s?"":
-      `<button class="sbtn${cls?" "+cls:""}" style="${small}" onclick="setManualTest('${d.id}','${s}')">${label}</button>`;
+      `<button class="sbtn${cls?" "+cls:""}" style="${small}" onclick="setManualTest('${escJs(d.id)}','${s}')">${label}</button>`;
     const noteLine=r&&r.status==="ko"&&r.note
       ?`<div style="margin-top:.35rem;font-size:.7rem;color:${x.stale?"var(--dm)":"var(--rd)"};word-break:break-word">${x.stale?"Ancienne note":"Ta note"} : ${esc(r.note)}</div>`:"";
     const who=r&&r.at?` · ${esc(r.by||"?")}, ${fmtDate(r.at)}`:"";
@@ -4902,7 +4959,7 @@ function renderManualTests(){
         </div>
         <div style="display:flex;gap:.3rem;flex-wrap:wrap">
           ${btn("ok","Ça marche","green")}${x.status==="ko"
-            ?`<button class="sbtn danger" style="${small}" onclick="setManualTest('${d.id}','ko')">Modifier la note</button>`
+            ?`<button class="sbtn danger" style="${small}" onclick="setManualTest('${escJs(d.id)}','ko')">Modifier la note</button>`
             :btn("ko","Ça ne marche pas","danger")}${x.status!=="todo"?btn("todo","Pas encore fait",""):""}
         </div>
       </div>
@@ -5155,9 +5212,9 @@ function renderFormations(){
       <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${f.date?fmtDate(f.date):"-"}</span></td>
       <td><span style="font-family:var(--fm);font-size:.68rem;color:${sc};border:1px solid ${sc}44;background:${sc}11;padding:.15rem .5rem;border-radius:3px">${esc(f.statut)||"-"}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
-        ${canEditF&&canEditFormationType(f.formation)?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openFormationModal('${f.id}')">Modifier</button>
+        ${canEditF&&canEditFormationType(f.formation)?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openFormationModal('${escJs(f.id)}')">Modifier</button>
 `:""}
-        ${canDelF?`<button class="icon-btn del" onclick="deleteFormation('${f.id}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
+        ${canDelF?`<button class="icon-btn del" onclick="deleteFormation('${escJs(f.id)}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
       </div></td>
     </tr>`;
   }).join("");
@@ -5442,8 +5499,8 @@ function renderEntrainements(){
       <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${a.date?fmtDate(a.date):"-"}</span></td>
       <td><span style="font-size:.8rem;color:var(--tx)">${esc(memberLabel(a.officier_id,a.officier,"-"))}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
-        ${canEditA?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openEntrainementModal('${a.id}')">Modifier</button>`:""}
-        ${canDelA?`<button class="icon-btn del" onclick="deleteEntrainement('${a.id}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
+        ${canEditA?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openEntrainementModal('${escJs(a.id)}')">Modifier</button>`:""}
+        ${canDelA?`<button class="icon-btn del" onclick="deleteEntrainement('${escJs(a.id)}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
       </div></td>
     </tr>`;
   }).join("");
@@ -5587,14 +5644,14 @@ function renderCategorieTable(categorie,bodyId){
   tbody.innerHTML=list.map(m=>{
     const gc=GRADE_COLORS[m.grade||"ARC"]||"#e9eef7";
     return `<tr>
-      <td><span class="grade-pill" style="color:${gc}">${m.grade||"ARC"}</span></td>
+      <td><span class="grade-pill" style="color:${gc}">${esc(m.grade||"ARC")}</span></td>
       <td><span class="mat">${esc(m.matricule)||"-"}</span></td>
-      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
+      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${escJs(m.id)}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
       <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${m.cat_date?fmtDate(m.cat_date):"-"}</span></td>
       <td><span style="font-size:.78rem;color:var(--tx2)">${esc(m.cat_raison)||"-"}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
-        ${canManage?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="moveToCategorie('${m.id}','effectif')">↩ Réintégrer</button>
-        <button class="icon-btn del" onclick="deleteMember('${m.id}')" title="Supprimer définitivement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
+        ${canManage?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="moveToCategorie('${escJs(m.id)}','effectif')">↩ Réintégrer</button>
+        <button class="icon-btn del" onclick="deleteMember('${escJs(m.id)}')" title="Supprimer définitivement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
       </div></td>
     </tr>`;
   }).join("");
@@ -5688,16 +5745,16 @@ function renderRoster(){
     const gradeOpts=GRADE_ORDER.map(g=>`<option value="${g}" style="color:${GRADE_COLORS[g]};background:var(--s2)" ${m.grade===g?"selected":""}>${g}</option>`).join("");
 
     const gradeCell=editable
-      ? `<select class="inline-sel" data-grade="${m.grade}" style="color:${GRADE_COLORS[m.grade]||"#e9eef7"}"
-          onchange="updateField('${m.id}','grade',this.value);savePromoDate('${m.id}',new Date().toISOString().slice(0,10));colorGradeSelect(this)">${gradeOpts}</select>`
-      : `<span class="grade-pill gp-${(m.grade||"arc").toLowerCase()}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${m.grade||"ARC"}</span>`;
+      ? `<select class="inline-sel" data-grade="${esc(m.grade)}" style="color:${GRADE_COLORS[m.grade]||"#e9eef7"}"
+          onchange="updateField('${escJs(m.id)}','grade',this.value);savePromoDate('${escJs(m.id)}',new Date().toISOString().slice(0,10));colorGradeSelect(this)">${gradeOpts}</select>`
+      : `<span class="grade-pill gp-${esc((m.grade||"arc").toLowerCase())}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${esc(m.grade||"ARC")}</span>`;
 
     const regCell=editable
-      ? `<input class="inline-inp" value="${m.regiment||""}" placeholder="-" style="width:70px" onchange="updateField('${m.id}','regiment',this.value)">`
-      : `<span style="color:var(--tx2);font-size:.82rem">${m.regiment||"-"}</span>`;
+      ? `<input class="inline-inp" value="${esc(m.regiment||"")}" placeholder="-" style="width:70px" onchange="updateField('${escJs(m.id)}','regiment',this.value)">`
+      : `<span style="color:var(--tx2);font-size:.82rem">${esc(m.regiment||"-")}</span>`;
 
     const rctCol=m.regiment_rct?(REGIMENT_COLORS[m.regiment_rct]||"var(--ac)"):"var(--dm)";
-    const rctCell=`<span style="font-family:var(--fm);font-size:.72rem;font-weight:${m.regiment_rct?"700":"400"};color:${rctCol}">${m.regiment_rct||"-"}</span>`;
+    const rctCell=`<span style="font-family:var(--fm);font-size:.72rem;font-weight:${m.regiment_rct?"700":"400"};color:${rctCol}">${esc(m.regiment_rct||"-")}</span>`;
 
     const formBadge=(on,label,color)=>on?`<span style="display:inline-flex;align-items:center;padding:1px 6px;border-radius:9px;font-family:var(--fm);font-size:.52rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;background:${color}1f;color:${color};border:1px solid ${color}55">${label}</span>`:"";
     const _isCpt=(GRADE_LEVEL[m.grade]||0)>=3;
@@ -5709,25 +5766,25 @@ function renderRoster(){
       ? `<span class="st-badge st-absent" title="Absence enregistrée jusqu'au ${fmtDate(_absNow.end_date)} - retour automatique à Présent à son terme"><span class="d"></span>${stLabel("absent")} <span style="font-family:var(--fm);font-size:.58rem;color:var(--dm)">→ ${fmtDate(_absNow.end_date)}</span></span>`
       : editable
       ? `<select class="inline-sel" style="color:${stColors[m.status||"present"]}"
-          onchange="updateField('${m.id}','status',this.value);this.style.color=({present:'var(--gr)',absent:'var(--rd)',reserve:'var(--dm)'})[this.value]">
+          onchange="updateField('${escJs(m.id)}','status',this.value);this.style.color=({present:'var(--gr)',absent:'var(--rd)',reserve:'var(--dm)'})[this.value]">
           <option value="present" style="color:var(--gr)" ${m.status==="present"?"selected":""}>● Présent</option>
           <option value="absent" style="color:var(--rd)" ${m.status==="absent"?"selected":""}>● Absent</option>
           <option value="reserve" style="color:var(--dm)" ${m.status==="reserve"?"selected":""}>◌ Réserve</option>
         </select>`
-      : `<span class="st-badge st-${m.status||"present"}"><span class="d"></span>${stLabel(m.status)}</span>`;
+      : `<span class="st-badge st-${esc(m.status||"present")}"><span class="d"></span>${esc(stLabel(m.status))}</span>`;
 
     const promoCell=editable
-      ? `<input type="date" class="inline-inp" value="${m.date_promo||""}" style="width:105px;font-family:var(--fm);font-size:.7rem"
-          onchange="savePromoDate('${m.id}',this.value)" title="${daysSince!==null?daysSince+" j depuis la dernière promo":""}">`
+      ? `<input type="date" class="inline-inp" value="${esc(m.date_promo||"")}" style="width:105px;font-family:var(--fm);font-size:.7rem"
+          onchange="savePromoDate('${escJs(m.id)}',this.value)" title="${daysSince!==null?daysSince+" j depuis la dernière promo":""}">`
       : `<span style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${m.date_promo?fmtDate(m.date_promo):"-"}</span>`;
 
     const canMove=canMoveCategorie();
     const moveBtns=canMove
-      ? `<button class="sbtn" style="padding:.18rem .45rem;font-size:.6rem" onclick="openCatModal('${m.id}','reserve')" title="Passer en réserve">🛡 Réserve</button>
-         <button class="sbtn" style="padding:.18rem .45rem;font-size:.6rem;border-color:rgba(255,59,92,.4);color:var(--rd)" onclick="openCatModal('${m.id}','blacklist')" title="Passer en blacklist">⛔ BL</button>`
+      ? `<button class="sbtn" style="padding:.18rem .45rem;font-size:.6rem" onclick="openCatModal('${escJs(m.id)}','reserve')" title="Passer en réserve">🛡 Réserve</button>
+         <button class="sbtn" style="padding:.18rem .45rem;font-size:.6rem;border-color:rgba(255,59,92,.4);color:var(--rd)" onclick="openCatModal('${escJs(m.id)}','blacklist')" title="Passer en blacklist">⛔ BL</button>`
       : "";
     const delBtn=editable
-      ? `<button class="icon-btn del" onclick="deleteMember('${m.id}')" title="Supprimer">
+      ? `<button class="icon-btn del" onclick="deleteMember('${escJs(m.id)}')" title="Supprimer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`
       : "";
     const delCell=moveBtns+delBtn;
@@ -5738,7 +5795,7 @@ function renderRoster(){
         <span class="grade-avatar" style="--gc:${GRADE_COLORS[m.grade||'ARC']}">${(m.matricule||'?').replace(/[^A-Z0-9]/gi,'').slice(-2).toUpperCase()}</span>
         <span class="mat">${esc(m.matricule)||"-"}</span>
       </div></td>
-      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
+      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${escJs(m.id)}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
       <td>${regCell}</td>
       <td>${rctCell}</td>
       <td>${formCell}</td>
@@ -5812,7 +5869,7 @@ function renderCmd(){
     <td style="font-family:var(--fm);font-size:.82rem;color:var(--ac)">${c.points||"-"}</td>
     <td style="color:var(--tx2);font-size:.82rem">${esc(c.mission_name)||"-"}</td>
     <td style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${fmtDate(c.date||c.created_at)}</td>
-    <td style="text-align:right">${cmdEditable?`<button class="icon-btn del" onclick="deleteCmdMission('${c.id}')" title="Supprimer">
+    <td style="text-align:right">${cmdEditable?`<button class="icon-btn del" onclick="deleteCmdMission('${escJs(c.id)}')" title="Supprimer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}</td>
   </tr>`).join("");
 }
@@ -5877,8 +5934,8 @@ function renderBlames(){
         <div class="ann-d">${esc(b.reason)||"Aucun motif"}</div>
         ${b.resolved&&b.resolve_reason?`<div class="ann-d" style="color:var(--gr);font-size:.76rem;margin-top:.25rem">↳ Levé : ${esc(b.resolve_reason)}${b.resolved_by?` - par ${esc(userLabel(b.resolved_by_id,b.resolved_by))}`:""}${b.resolved_at?` le ${fmtDate(b.resolved_at)}`:""}</div>`:""}
         <div class="ann-meta">${fmtDate(b.created_at)}${b.resolved?" · Levé":""}
-          ${canManageBlames&&!b.resolved?`<button class="sbtn green" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="resolveBlame('${b.id}')">Résoudre</button>`:""}
-          ${canManageBlames?`<button class="sbtn danger" style="margin-left:.5rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteBlame('${b.id}')">Supprimer</button>`:""}
+          ${canManageBlames&&!b.resolved?`<button class="sbtn green" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="resolveBlame('${escJs(b.id)}')">Résoudre</button>`:""}
+          ${canManageBlames?`<button class="sbtn danger" style="margin-left:.5rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteBlame('${escJs(b.id)}')">Supprimer</button>`:""}
         </div>
       </div>
     </div>`).join("");
@@ -6041,7 +6098,7 @@ function renderAbsences(){
         <div class="ann-ico" style="color:var(--or)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="ann-c"><div class="ann-t">${esc(memberLabel(a.member_id,a.member_name))}</div><div class="ann-d">${esc(a.reason)||"-"}</div>
           <div class="ann-meta">Du <strong>${fmtDate(a.start_date)}</strong> au <strong>${fmtDate(a.end_date)}</strong> - <span style="color:var(--or)">${dl} j restant(s)</span>
-          ${absEditable?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteAbsence('${a.id}')">Supprimer</button>`:""}</div>
+          ${absEditable?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteAbsence('${escJs(a.id)}')">Supprimer</button>`:""}</div>
         </div></div>`;
     }).join("");
   }
@@ -6052,8 +6109,8 @@ function renderAbsences(){
     <td style="font-family:var(--fm);font-size:.72rem">${fmtDate(a.start_date)}</td>
     <td style="font-family:var(--fm);font-size:.72rem">${fmtDate(a.end_date)}</td>
     <td style="color:var(--tx2);font-size:.82rem">${esc(a.reason)||"-"}</td>
-    <td style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${a.duration_days||"?"} j</td>
-    <td style="text-align:right">${absEditable?`<button class="icon-btn del" onclick="deleteAbsence('${a.id}')" title="Supprimer">
+    <td style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${esc(a.duration_days||"?")} j</td>
+    <td style="text-align:right">${absEditable?`<button class="icon-btn del" onclick="deleteAbsence('${escJs(a.id)}')" title="Supprimer">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}</td>
   </tr>`).join("");
 }
@@ -6243,19 +6300,19 @@ function renderReports(){
         <span class="grade-avatar" style="--gc:${GRADE_COLORS[m.grade||'ARC']}">${(m.matricule||'?').replace(/[^A-Z0-9]/gi,'').slice(-2).toUpperCase()}</span>
         <span class="mat">${esc(m.matricule)||"-"}</span>
       </div></td>
-      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${m.id}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
-      <td><span class="grade-pill gp-${(m.grade||"arc").toLowerCase()}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${m.grade||"ARC"}</span></td>
+      <td class="nm" style="cursor:pointer;text-decoration:underline;text-decoration-color:transparent;transition:text-decoration-color .2s" onmouseover="this.style.textDecorationColor='var(--ac)'" onmouseout="this.style.textDecorationColor='transparent'" onclick="openMemberProfile('${escJs(m.id)}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
+      <td><span class="grade-pill gp-${esc((m.grade||"arc").toLowerCase())}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${esc(m.grade||"ARC")}</span></td>
       <td><div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">${isEx?
         `<span style="font-family:var(--fm);font-size:.68rem;color:${exColor}"${exTitle?` title="${esc(exTitle)}"`:""}>${exLabel}</span>
-         ${manEx&&canEx?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="liftReportExempt('${m.id}')">Rétablir</button>`:""}`:
+         ${manEx&&canEx?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="liftReportExempt('${escJs(m.id)}')">Rétablir</button>`:""}`:
         creditOnly?`<span style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid var(--gr);background:rgba(34,217,122,.12);color:var(--gr);font-family:var(--fm);font-size:.72rem" title="Compté automatiquement : ${CREDIT_LONG[s.credit]||"activité"} pendant cette semaine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>${creditLbl}</span>`:
-        `<button onclick="toggleReport('${m.id}','${wk}')"
+        `<button onclick="toggleReport('${escJs(m.id)}','${wk}')"
           style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid ${hasDone?"var(--gr)":"var(--ln)"};
           background:${hasDone?"rgba(34,217,122,.12)":"transparent"};color:${hasDone?"var(--gr)":"var(--dm)"};
           font-family:var(--fm);font-size:.72rem;cursor:pointer;transition:all .2s">
           ${hasDone?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>Validé':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>À valider'}
         </button>
-        ${canEx?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="exemptReport('${m.id}')" title="Dispenser durablement de rapport hebdomadaire">Dispenser</button>`:""}`}</div></td>
+        ${canEx?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="exemptReport('${escJs(m.id)}')" title="Dispenser durablement de rapport hebdomadaire">Dispenser</button>`:""}`}</div></td>
       <td style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${hist}</td>
     </tr>`;
   }).join("");
@@ -6274,11 +6331,11 @@ function renderReglement(){
   if(btn)btn.style.display=ok?"":"none";
   const html=state.reglement||"";
   if(!html.trim()){el.innerHTML='<div class="empty"><p>Aucun règlement défini.</p></div>';return;}
-  el.innerHTML=html;
+  el.innerHTML=sanitizeHtml(html);
 }
 function openReglementEditor(){
   const ed=document.getElementById("reglementEditor");
-  if(ed)ed.innerHTML=state.reglement||"";
+  if(ed)ed.innerHTML=sanitizeHtml(state.reglement||"");
   document.getElementById("reglementModal").classList.add("show");
   setTimeout(()=>{if(ed){ed.focus();try{document.execCommand("defaultParagraphSeparator",false,"p");}catch{}}},120);
 }
@@ -6286,7 +6343,7 @@ async function saveReglement(){
   const lvl=gradeLevel(getSessionGrade());
   const ok=Auth.ok()&&(session.role==="admin"||session.role==="amiraute"||(session.role!=="brs"&&lvl>=6));
   if(!ok){toast("Accès réservé aux CMD+","error");return;}
-  const html=document.getElementById("reglementEditor").innerHTML;
+  const html=sanitizeHtml(document.getElementById("reglementEditor").innerHTML);
   state.reglement=html;
   if(supaOK)await setConfig("reglement",html);
   closeModal("reglementModal");
@@ -6333,7 +6390,7 @@ function renderAnnounces(){
         <div class="ann-t">${esc(a.title)||"Sans titre"}${a.pinned?'<span class="ann-pinbadge">ÉPINGLÉ</span>':""}</div>
         <div class="ann-d">${esc(a.content)||""}</div>
         <div class="ann-meta">${fmtDate(a.created_at)}
-          ${canDel?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteAnnounce('${a.id}')">Supprimer</button>`:""}
+          ${canDel?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteAnnounce('${escJs(a.id)}')">Supprimer</button>`:""}
         </div>
       </div>
     </div>`).join("");
@@ -6562,7 +6619,7 @@ function openUserModal(type="member"){
   const nuML=document.getElementById("nuMemberLink");
   if(nuML){
     nuML.innerHTML='<option value="">Aucun lien</option>'+
-      sortMembers(state.members).map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
+      sortMembers(state.members).map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"} (${esc(m.grade)})</option>`).join("");
   }
   const err=document.getElementById("userModalErr");if(err)err.classList.remove("show");
   document.getElementById("userModal").classList.add("show");
@@ -6613,8 +6670,8 @@ function renderUsers(){
         return `<span style="font-size:.72rem;color:var(--dm);font-style:italic">Non lié</span>`;
       })()}</td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
-        <button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openEditUser('${u.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;margin-right:.3rem"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Modifier</button>
-        ${!isMe?`<button class="icon-btn del" onclick="deleteUser('${u.id}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:"<span style='width:30px;display:inline-block'></span>"}
+        <button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="openEditUser('${escJs(u.id)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px;margin-right:.3rem"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Modifier</button>
+        ${!isMe?`<button class="icon-btn del" onclick="deleteUser('${escJs(u.id)}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:"<span style='width:30px;display:inline-block'></span>"}
       </div></td>
     </tr>`;
   }).join("");
@@ -6804,7 +6861,7 @@ function openEditUser(id){
   const ml=document.getElementById("euMemberLink");
   if(ml){
     ml.innerHTML='<option value="">Aucun lien</option>'+
-      sortMembers(state.members).map(m=>`<option value="${m.id}" ${u.member_id==m.id?"selected":""}>${esc(m.matricule)} - ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
+      sortMembers(state.members).map(m=>`<option value="${m.id}" ${u.member_id==m.id?"selected":""}>${esc(m.matricule)} - ${esc(m.nom)||"?"} (${esc(m.grade)})</option>`).join("");
   }
   document.getElementById("euMemberLinkField").style.display=(u.role==="member")?"block":"none";
   document.getElementById("euRole").onchange=function(){
@@ -6952,13 +7009,13 @@ function renderTickets(){
     const isOpen=t.status==="open";
     const notFound=t.account_exists===false;
     return `<tr style="${isOpen?"":"opacity:.5"}">
-      <td><span style="font-family:var(--fm);font-size:.8rem;color:var(--tx)">${t.user_ident||"?"}</span>${notFound?'<span style="color:var(--rd);font-size:.6rem;margin-left:.4rem">compte introuvable</span>':''}</td>
-      <td><span style="font-size:.78rem;color:var(--tx2)">${t.message||"-"}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.8rem;color:var(--tx)">${esc(t.user_ident)||"?"}</span>${notFound?'<span style="color:var(--rd);font-size:.6rem;margin-left:.4rem">compte introuvable</span>':''}</td>
+      <td><span style="font-size:.78rem;color:var(--tx2)">${esc(t.message)||"-"}</span></td>
       <td><span style="font-family:var(--fm);font-size:.68rem;color:${isOpen?"var(--ye)":"var(--gr)"}">${isOpen?"⏳ En attente":"✓ Traité"}</span><br><span style="font-family:var(--fm);font-size:.6rem;color:var(--dm)">${fmtDT(t.created_at)}</span></td>
       <td style="text-align:right"><div style="display:flex;justify-content:flex-end;gap:.4rem">
-        ${isOpen&&!notFound?`<button class="sbtn green" style="padding:.2rem .6rem;font-size:.64rem" onclick="openResetTicket('${t.id}')">Réinitialiser</button>`:""}
-        ${isOpen?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="dismissTicket('${t.id}')">Ignorer</button>`:""}
-        <button class="icon-btn del" onclick="deleteTicket('${t.id}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+        ${isOpen&&!notFound?`<button class="sbtn green" style="padding:.2rem .6rem;font-size:.64rem" onclick="openResetTicket('${escJs(t.id)}')">Réinitialiser</button>`:""}
+        ${isOpen?`<button class="sbtn" style="padding:.2rem .6rem;font-size:.64rem" onclick="dismissTicket('${escJs(t.id)}')">Ignorer</button>`:""}
+        <button class="icon-btn del" onclick="deleteTicket('${escJs(t.id)}')" title="Supprimer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
       </div></td>
     </tr>`;
   }).join("");
@@ -7241,7 +7298,7 @@ document.addEventListener("visibilitychange",()=>{
 window.addEventListener("online",()=>{ _pollDelay=POLL_BASE; schedulePoll(); });
 window.addEventListener("offline",()=>syncBadge("off"));
 function stLabel(s){return{present:"Présent",absent:"Absent",reserve:"Réserve"}[s]||s||"Présent";}
-function fmtDate(d){if(!d)return"-";try{return new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"});}catch{return d;}}
+function fmtDate(d){if(!d)return"-";try{return new Date(d).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"});}catch{return esc(d);}}
 
 let toastTimer;
 let _confirmResolver=null,_confirmMode="confirm";
@@ -7458,13 +7515,13 @@ function renderDocuments(){
     <div style="margin-bottom:1.5rem">
       <div class="sec-head" style="margin-top:0"><h2>${ci[cat]||"📁"} ${esc(cat)}</h2><span class="line"></span></div>
       <div class="grid g3">
-        ${docs.map(d=>`<div class="card" style="cursor:pointer" onclick="openDocUrl('${esc(d.id)}')">
+        ${docs.map(d=>`<div class="card" style="cursor:pointer" onclick="openDocUrl('${escJs(d.id)}')">
           <div class="card-k">${d.min_grade==="ARC"?"Tous les membres":esc(d.min_grade)+"+"}</div>
           <div class="card-t" style="font-size:.82rem">${esc(d.title)}</div>
           ${d.description?`<div class="card-b" style="font-size:.8rem;margin-top:.3rem">${esc(d.description)}</div>`:""}
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--ln)">
             <span style="font-family:var(--fm);font-size:.62rem;color:var(--ac)">↗ Ouvrir</span>
-            ${canEdit("documents")?`<button class="icon-btn del" onclick="event.stopPropagation();deleteDoc('${d.id}')" title="Supprimer" style="width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
+            ${canEdit("documents")?`<button class="icon-btn del" onclick="event.stopPropagation();deleteDoc('${escJs(d.id)}')" title="Supprimer" style="width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>`:""}
           </div>
         </div>`).join("")}
       </div>
@@ -7493,7 +7550,7 @@ function openTaskModal(){
   const sel=document.getElementById("taskAssignee");
   const officers=sortMembers(activeMembers()).filter(m=>(GRADE_LEVEL[m.grade]||0)>=3);
   sel.innerHTML='<option value="">Sélectionner…</option>'+
-    officers.map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"} (${m.grade})</option>`).join("");
+    officers.map(m=>`<option value="${m.id}">${esc(m.matricule)} - ${esc(m.nom)||"?"} (${esc(m.grade)})</option>`).join("");
   document.getElementById("taskModal").classList.add("show");
 }
 async function saveTask(){
@@ -7559,8 +7616,8 @@ function renderTasks(){
               <div class="ann-t">${esc(t.title)} ${!t.active?"<span style='color:var(--dm);font-size:.75rem'>(terminée)</span>":""}</div>
               <div class="ann-d">${esc(t.description)}</div>
               <div class="ann-meta">${fmtDate(t.created_at)}
-                ${t.active?`<button class="sbtn" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="completeTask('${t.id}')">Terminer</button>`:""}
-                <button class="sbtn danger" style="margin-left:.4rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteTask('${t.id}')">Supprimer</button>
+                ${t.active?`<button class="sbtn" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="completeTask('${escJs(t.id)}')">Terminer</button>`:""}
+                <button class="sbtn danger" style="margin-left:.4rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteTask('${escJs(t.id)}')">Supprimer</button>
               </div>
             </div></div>`).join("")}
         </div>`).join("");
@@ -7800,7 +7857,7 @@ function renderPolls(){
           const barPct=maxCount>0?(cnt/maxCount*100):0;
           const isMine=myVote===i;
           return `<div style="margin-bottom:.7rem">
-            <div onclick="${closed?"":"votePoll(\'"+poll.id+"\',"+i+")"}"
+            <div onclick="${closed?"":"votePoll(\'"+escJs(poll.id)+"\',"+i+")"}"
               style="cursor:${closed?"default":"pointer"};padding:.6rem .8rem;border:1px solid ${isMine?"var(--ac)":"var(--ln)"};
               background:${isMine?"rgba(0,229,255,.06)":"var(--s2)"};position:relative;overflow:hidden;transition:all .2s">
               <div style="position:absolute;left:0;top:0;bottom:0;width:${barPct}%;background:rgba(0,229,255,.08);transition:width .4s"></div>
@@ -7818,8 +7875,8 @@ function renderPolls(){
             ${total} vote${total>1?"s":""} · Par ${esc(userLabel(poll.created_by_id,poll.created_by))}${poll.expires_at?" · Expire le "+fmtDate(poll.expires_at):""}
           </span>
           ${canManage?`<div style="display:flex;gap:.4rem">
-            ${!closed?`<button class="sbtn" style="padding:.2rem .5rem;font-size:.6rem" onclick="closePoll('${poll.id}')">Clore</button>`:""}
-            <button class="sbtn danger" style="padding:.2rem .5rem;font-size:.6rem" onclick="deletePoll('${poll.id}')">Supprimer</button>
+            ${!closed?`<button class="sbtn" style="padding:.2rem .5rem;font-size:.6rem" onclick="closePoll('${escJs(poll.id)}')">Clore</button>`:""}
+            <button class="sbtn danger" style="padding:.2rem .5rem;font-size:.6rem" onclick="deletePoll('${escJs(poll.id)}')">Supprimer</button>
           </div>`:""}
         </div>
       </div>
@@ -8145,8 +8202,8 @@ function renderCmdK(q){
     tools.forEach(t=>{const i=_cmdkItems.length;_cmdkItems.push({type:t.type});
       html+=`<div class="cmdk-item" data-i="${i}" onclick="cmdkActivate(${i})">
         <div class="cmdk-item-ic">${t.icon}</div>
-        <div class="cmdk-item-txt"><div class="cmdk-item-t">${t.label}</div></div>
-        <span class="cmdk-item-k">${t.hint}</span></div>`;});
+        <div class="cmdk-item-txt"><div class="cmdk-item-t">${esc(t.label)}</div></div>
+        <span class="cmdk-item-k">${esc(t.hint)}</span></div>`;});
   }
   if(!_cmdkItems.length)html='<div class="cmdk-empty">Aucun résultat pour « '+esc(q||"")+' »</div>';
   box.innerHTML=html;_cmdkSel=0;updateCmdkSel();
@@ -8267,7 +8324,7 @@ async function chatShowList(){
     const u=userMetaByHash(c.hash);
     const t=c.time?new Date(c.time).toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit"})+" "+new Date(c.time).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}):"";
     const preview=(c.fromMe?"Toi : ":"")+(c.last||"");
-    return`<div class="chat-user" onclick="openConversation('${c.hash}')">
+    return`<div class="chat-user" onclick="openConversation('${escJs(c.hash)}')">
       <div class="chat-user-av" style="background:${roleAvatarColor(u.role,u.grade)}">${esc((u.name[0]||"?").toUpperCase())}</div>
       <div class="chat-user-info">
         <div class="chat-user-name">${esc(u.name)}${c.unread?`<span class="chat-unread-pill">${c.unread>9?"9+":c.unread}</span>`:""}</div>
@@ -8275,7 +8332,7 @@ async function chatShowList(){
       </div>
       <div class="chat-user-time">${t}</div>
       <button class="chat-user-del" title="Supprimer la conversation"
-        onclick="event.stopPropagation();deleteConversation('${esc(c.hash)}')">🗑</button>
+        onclick="event.stopPropagation();deleteConversation('${escJs(c.hash)}')">🗑</button>
     </div>`;
   }).join("");
 }
@@ -8299,7 +8356,7 @@ function renderChatPicker(q){
   </div>`;
   if(!others.length){body.innerHTML=searchBar+'<div class="chat-empty">Aucun membre trouvé.</div>';return;}
   body.innerHTML=searchBar+others.map(u=>`
-    <div class="chat-user" onclick="openConversation('${u.hash}')">
+    <div class="chat-user" onclick="openConversation('${escJs(u.hash)}')">
       <div class="chat-user-av" style="background:${roleAvatarColor(u.role,u.grade)}">${esc((u.name[0]||"?").toUpperCase())}</div>
       <div class="chat-user-info">
         <div class="chat-user-name">${esc(u.name)}</div>
@@ -8444,7 +8501,7 @@ async function loadModConvList(){
       const na=userMetaByHash(p.a),nb=userMetaByHash(p.b);
       const t=chatSmartTime(p.time);
       const prev=(p.last||"").length>32?(p.last.slice(0,32)+"…"):(p.last||"");
-      return`<tr style="cursor:pointer" onclick="openModThread('${p.a}','${p.b}')">
+      return`<tr style="cursor:pointer" onclick="openModThread('${escJs(p.a)}','${p.b}')">
         <td style="font-weight:600">${esc(na.name)} <span style="color:var(--dm)">↔</span> ${esc(nb.name)}</td>
         <td style="color:var(--tx2);font-size:.82rem">${esc(prev)}<div style="font-family:var(--fm);font-size:.6rem;color:var(--dm);margin-top:.15rem">${t}</div></td>
         <td style="text-align:right;font-family:var(--fm);color:var(--dm)">${p.count}</td>
@@ -8756,7 +8813,7 @@ function renderMpMedals(m,el){
     html+='<p class="card-b" style="margin-bottom:.8rem;font-size:.78rem">Clique sur une médaille pour l\'attribuer ou la retirer. <span style="color:var(--dm)">Réservé MAJ+.</span></p>';
     html+='<div class="medal-grid">'+MEDALS.map(md=>{
       const has=owned.includes(md.id);
-      return`<div class="medal-card ${has?"owned":""}" style="--mc:${md.color}" onclick="toggleMedal('${md.id}')" title="${esc(md.desc)}">
+      return`<div class="medal-card ${has?"owned":""}" style="--mc:${md.color}" onclick="toggleMedal('${escJs(md.id)}')" title="${esc(md.desc)}">
         <div class="medal-ic">${md.icon}</div>
         <div class="medal-meta"><div class="medal-nm">${esc(md.name)}</div><div class="medal-scope">${esc(md.scope)}</div></div>
         <div class="medal-check">${has?"✓":""}</div>
