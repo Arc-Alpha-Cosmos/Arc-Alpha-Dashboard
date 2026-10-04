@@ -410,6 +410,8 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .fr2{grid-template-columns:1fr 1fr}
 .rec-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;align-items:stretch}
 .rec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(146px,1fr));gap:.7rem}
+.rec-erow{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-bottom:.45rem}
+.rec-erow .sbtn[disabled]{opacity:.3;cursor:default}
 .rec-sec{font-family:var(--fm);font-size:.62rem;color:var(--ac);letter-spacing:.12em;text-transform:uppercase;
   margin:.1rem 0 .8rem;padding-bottom:.35rem;border-bottom:1px solid var(--ln)}
 .rec-sec:not(:first-child){margin-top:1.2rem}
@@ -1741,8 +1743,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         </div>
         <div class="rec-cards">
           <div class="rec-card">
-            <h4>Résultat ARC Trooper</h4>
-            <p>Compte rendu d'un recrutement ARC Trooper : informations des personnels,
+            <h4 id="recTrooperTitle">Résultat ARC Trooper</h4>
+            <p id="recTrooperDesc">Compte rendu d'un recrutement ARC Trooper : informations des personnels,
                sept épreuves notées sur 10, commentaire et numéro d'essai.</p>
             <div id="recTrooperWarn" style="display:none;font-family:var(--fm);font-size:.64rem;color:var(--or)">
               ⚠ Webhook non configuré - Administration, Webhooks Discord
@@ -1750,8 +1752,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
             <button class="btn btn-primary" id="recTrooperBtn" onclick="openRecModal('trooper')">Remplir le compte rendu</button>
           </div>
           <div class="rec-card">
-            <h4>Résultat ARC Alpha</h4>
-            <p>Compte rendu d'un recrutement ARC Alpha : informations des personnels,
+            <h4 id="recAlphaTitle">Résultat ARC Alpha</h4>
+            <p id="recAlphaDesc">Compte rendu d'un recrutement ARC Alpha : informations des personnels,
                onze épreuves dont la théorie sur 35, et commentaire.</p>
             <div id="recAlphaWarn" style="display:none;font-family:var(--fm);font-size:.64rem;color:var(--or)">
               ⚠ Webhook non configuré - Administration, Webhooks Discord
@@ -1766,9 +1768,28 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
             confirmer. Le total des notes est calculé pour toi au fur et à mesure.
           </p>
           <p id="recNoRight" style="display:none;font-size:.8rem;color:var(--dm);margin-top:.6rem">
-            Seuls les SGT et au-dessus peuvent déposer un compte rendu.
+            Seuls les lieutenants et au-dessus peuvent déposer un compte rendu.
           </p>
         </div></div>
+        <div class="panel" id="recEditorPanel" style="display:none;margin-top:1rem">
+          <div class="panel-head"><h3><span class="pk">//</span> Modifier les formulaires</h3>
+            <select id="recEditKind" onchange="recEditorPick(this.value)"
+              style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none">
+              <option value="trooper">ARC Trooper</option>
+              <option value="alpha">ARC Alpha</option>
+            </select>
+          </div>
+          <div class="panel-body">
+            <p class="card-b" style="margin-bottom:1rem">Réservé aux CMD, CMDM et à l'administration.
+              Les questions, leur ordre et leur barème sont libres. Les comptes rendus déjà envoyés
+              sur Discord ne changent pas.</p>
+            <div id="recEditorBox"></div>
+            <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
+              <button class="sbtn green" onclick="saveRecForms()">Enregistrer les formulaires</button>
+              <button class="sbtn" onclick="resetRecForms()">Réinitialiser ce formulaire</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ONGLET RÉSERVISTES -->
@@ -3256,7 +3277,7 @@ function canEdit(tab){
 
   if(tab==="formations") return lvl>=1;
   if(tab==="entrainements") return lvl>=1;
-  if(tab==="recrutements") return lvl>=1;
+  if(tab==="recrutements") return lvl>=2;
 
   if(lvl<2) return false;
 
@@ -10041,7 +10062,7 @@ function discordFormationPayload(f,author,maj){
    en base : le compte rendu part dans le salon Discord prévu pour lui,
    après confirmation, comme tout le reste du site.
    ============================================================ */
-const REC_FORMS={
+const REC_DEFAULTS={
   trooper:{
     cle:"recrutTrooper",
     titre:"Résultat Recrutement ARC Trooper",
@@ -10095,6 +10116,184 @@ const REC_FORMS={
     essais:false
   }
 };
+
+/* Les deux formulaires sont modifiables depuis le site : les questions, leur
+   ordre, leur barème et le titre vivent dans arc_config (clé « content »,
+   champ recForms), comme l'organisation des menus. La clé du webhook et
+   l'identifiant du formulaire ne sont jamais pris dans la configuration :
+   ils restent ceux du code, pour qu'un formulaire ne puisse pas être
+   détourné vers un autre salon. */
+let REC_FORMS=JSON.parse(JSON.stringify(REC_DEFAULTS));
+let _recDraft=null, _recEditKind="trooper";
+
+function recNettoieSpec(base,s){
+  if(!s||typeof s!=="object")return base;
+  if(typeof s.titre==="string"&&s.titre.trim())base.titre=s.titre.trim().slice(0,80);
+  if(Array.isArray(s.infos)){
+    const l=s.infos.filter(f=>f&&f.id&&f.label).map(f=>({
+      id:String(f.id).replace(/[^A-Za-z0-9_]/g,"").slice(0,24)||("f"+Math.random().toString(36).slice(2,7)),
+      label:String(f.label).slice(0,120),
+      type:f.type==="date"?"date":"text",
+      ph:f.ph?String(f.ph).slice(0,80):""
+    }));
+    if(l.length)base.infos=l;
+  }
+  if(Array.isArray(s.notes)){
+    const l=s.notes.filter(n=>n&&n.id&&n.label).map(n=>({
+      id:String(n.id).replace(/[^A-Za-z0-9_]/g,"").slice(0,24)||("n"+Math.random().toString(36).slice(2,7)),
+      label:String(n.label).slice(0,120),
+      max:Math.max(1,Math.min(1000,parseFloat(n.max)||10))
+    }));
+    if(l.length)base.notes=l;
+  }
+  if("essais" in s)base.essais=!!s.essais;
+  return base;
+}
+function recFormsLoad(){
+  const base=JSON.parse(JSON.stringify(REC_DEFAULTS));
+  try{
+    const raw=state.content&&state.content.recForms;
+    const saved=typeof raw==="string"?JSON.parse(raw):raw;
+    if(saved&&typeof saved==="object"){
+      ["trooper","alpha"].forEach(k=>{ base[k]=recNettoieSpec(base[k],saved[k]); });
+    }
+  }catch(e){console.warn("recFormsLoad",e);}
+  REC_FORMS=base;
+  return base;
+}
+function recFormsPourBase(){
+  const out={};
+  ["trooper","alpha"].forEach(k=>{
+    const s=_recDraft[k];
+    out[k]={titre:s.titre,essais:!!s.essais,
+      infos:s.infos.map(f=>({id:f.id,label:f.label,type:f.type,ph:f.ph||""})),
+      notes:s.notes.map(n=>({id:n.id,label:n.label,max:n.max}))};
+  });
+  return out;
+}
+
+function canEditRecForms(){
+  if(!Auth.ok()) return false;
+  if(session.role==="admin"||session.role==="amiraute") return true;
+  if(session.role==="brs") return false;
+  return gradeLevel(getSessionGrade())>=6;
+}
+
+function recEditorPick(kind){ if(REC_FORMS[kind]){_recEditKind=kind;renderRecEditor();} }
+function recDraftInit(){ _recDraft=JSON.parse(JSON.stringify(REC_FORMS)); }
+function recNouvelId(p){ return p+Math.random().toString(36).slice(2,7); }
+
+function recDraftSet(sec,i,prop,val){
+  const s=_recDraft[_recEditKind]; if(!s||!s[sec]||!s[sec][i])return;
+  if(prop==="max"){ const v=parseFloat(val); s[sec][i].max=isNaN(v)?1:Math.max(1,Math.min(1000,v)); }
+  else s[sec][i][prop]=String(val);
+  if(prop==="max")renderRecEditor();
+}
+function recDraftAdd(sec){
+  const s=_recDraft[_recEditKind]; if(!s)return;
+  if(sec==="infos")s.infos.push({id:recNouvelId("f"),label:"Nouvelle information",type:"text",ph:""});
+  else s.notes.push({id:recNouvelId("n"),label:"Nouvelle épreuve",max:10});
+  renderRecEditor();
+}
+function recDraftDel(sec,i){
+  const s=_recDraft[_recEditKind]; if(!s||!s[sec])return;
+  if(s[sec].length<=1){toast("Il faut garder au moins une ligne","error");return;}
+  s[sec].splice(i,1);renderRecEditor();
+}
+function recDraftMove(sec,i,dir){
+  const s=_recDraft[_recEditKind]; if(!s||!s[sec])return;
+  const j=i+dir; if(j<0||j>=s[sec].length)return;
+  const t=s[sec][i]; s[sec][i]=s[sec][j]; s[sec][j]=t; renderRecEditor();
+}
+function recDraftEssais(v){ const s=_recDraft[_recEditKind]; if(s){s.essais=!!v;renderRecEditor();} }
+function recDraftTitre(v){ const s=_recDraft[_recEditKind]; if(s)s.titre=String(v).slice(0,80); }
+
+function renderRecEditor(){
+  const p=document.getElementById("recEditorPanel");
+  if(!p)return;
+  if(!canEditRecForms()){p.style.display="none";return;}
+  p.style.display="";
+  if(!_recDraft)recDraftInit();
+  const sel=document.getElementById("recEditKind");
+  if(sel&&sel.value!==_recEditKind)sel.value=_recEditKind;
+  const box=document.getElementById("recEditorBox");
+  if(!box)return;
+  const s=_recDraft[_recEditKind];
+  const fleches=(sec,i,n)=>`
+    <button class="sbtn" style="padding:.15rem .4rem" title="Monter" ${i===0?"disabled":""} onclick="recDraftMove('${esc(sec)}',${i},-1)">↑</button>
+    <button class="sbtn" style="padding:.15rem .4rem" title="Descendre" ${i===n-1?"disabled":""} onclick="recDraftMove('${esc(sec)}',${i},1)">↓</button>
+    <button class="sbtn danger" style="padding:.15rem .4rem" title="Retirer" onclick="recDraftDel('${esc(sec)}',${i})">✕</button>`;
+  let h=`<div class="field"><label>Titre du formulaire</label>
+    <input type="text" value="${esc(s.titre)}" maxlength="80" oninput="recDraftTitre(this.value)"></div>`;
+  h+=`<div class="rec-sec">Informations des personnels</div>`;
+  h+=s.infos.map((f,i)=>`<div class="rec-erow">
+      <input type="text" class="inline-inp" value="${esc(f.label)}" maxlength="120" style="flex:1 1 190px;min-width:0"
+        oninput="recDraftSet('infos',${i},'label',this.value)" title="Libellé de la question">
+      <select class="inline-sel" style="flex:0 0 90px" onchange="recDraftSet('infos',${i},'type',this.value)" title="Type de réponse">
+        <option value="text"${f.type!=="date"?" selected":""}>Texte</option>
+        <option value="date"${f.type==="date"?" selected":""}>Date</option>
+      </select>
+      <input type="text" class="inline-inp" value="${esc(f.ph||"")}" maxlength="80" style="flex:1 1 150px;min-width:0"
+        oninput="recDraftSet('infos',${i},'ph',this.value)" placeholder="Exemple affiché en gris" title="Aide de saisie">
+      ${fleches("infos",i,s.infos.length)}
+    </div>`).join("");
+  h+=`<button class="sbtn" style="margin-top:.3rem" onclick="recDraftAdd('infos')">+ Information</button>`;
+  const tot=s.notes.reduce((t,n)=>t+(parseFloat(n.max)||0),0);
+  h+=`<div class="rec-sec">Épreuves notées <span style="color:var(--dm)">· total sur ${tot}</span></div>`;
+  h+=s.notes.map((n,i)=>`<div class="rec-erow">
+      <input type="text" class="inline-inp" value="${esc(n.label)}" maxlength="120" style="flex:1 1 190px;min-width:0"
+        oninput="recDraftSet('notes',${i},'label',this.value)" title="Libellé de l'épreuve">
+      <input type="number" class="inline-inp" value="${n.max}" min="1" max="1000" step="1" style="flex:0 0 80px"
+        onchange="recDraftSet('notes',${i},'max',this.value)" title="Barème">
+      ${fleches("notes",i,s.notes.length)}
+    </div>`).join("");
+  h+=`<button class="sbtn" style="margin-top:.3rem" onclick="recDraftAdd('notes')">+ Épreuve</button>`;
+  h+=`<div class="rec-sec">Conclusion</div>
+    <label class="act-mrow" style="display:inline-flex">
+      <input type="checkbox"${s.essais?" checked":""} onchange="recDraftEssais(this.checked)">
+      <span>Demander le numéro d'essai</span></label>
+    <p style="font-size:.76rem;color:var(--dm);margin-top:.5rem">
+      Le commentaire est toujours présent et toujours obligatoire.</p>`;
+  box.innerHTML=h;
+}
+
+async function saveRecForms(){
+  if(!canEditRecForms()){toast("Réservé aux CMD+","error");return;}
+  if(!_recDraft){toast("Rien à enregistrer","info");return;}
+  const souci=[];
+  ["trooper","alpha"].forEach(k=>{
+    const s=_recDraft[k];
+    if(!s.titre||!s.titre.trim())souci.push("un titre est vide");
+    if(!s.infos.length)souci.push("un formulaire n'a plus d'information");
+    if(!s.notes.length)souci.push("un formulaire n'a plus d'épreuve");
+    s.infos.concat(s.notes).forEach(x=>{ if(!String(x.label||"").trim())souci.push("un libellé est vide"); });
+    s.notes.forEach(n=>{ if(!(n.max>=1))souci.push("un barème est invalide"); });
+  });
+  if(souci.length){toast(souci[0],"error");return;}
+  state.content=state.content||{};
+  state.content.recForms=JSON.stringify(recFormsPourBase());
+  if(supaOK) await setConfig("content",state.content);
+  else saveLS();
+  recFormsLoad();
+  recDraftInit();
+  renderRecEditor();
+  renderRecrutements();
+  toast("✓ Formulaires enregistrés","success");
+  await logActivity(`${session?.user} a modifié les formulaires de recrutement`);
+}
+
+async function resetRecForms(){
+  if(!canEditRecForms()){toast("Réservé aux CMD+","error");return;}
+  const nom=REC_DEFAULTS[_recEditKind].titre;
+  const ok=await uiConfirm({title:"Réinitialiser ce formulaire",
+    message:`Les questions de « ${nom} » reviennent à leur version d'origine. L'autre formulaire n'est pas touché.`,
+    okText:"Réinitialiser",danger:true});
+  if(!ok)return;
+  if(!_recDraft)recDraftInit();
+  _recDraft[_recEditKind]=JSON.parse(JSON.stringify(REC_DEFAULTS[_recEditKind]));
+  renderRecEditor();
+  toast("Formulaire remis par défaut - pense à enregistrer","info");
+}
 const REC_ESSAIS=["1er","2ème","3ème","4ème","5ème","6ème","7ème","8ème","9ème","10ème"];
 
 function recMax(spec){ return spec.notes.reduce((t,n)=>t+n.max,0); }
@@ -10103,11 +10302,19 @@ function recColorCss(pct){ return pct>=70?"var(--gr)":(pct>=50?"var(--or)":"var(
 function recColorInt(pct){ return pct>=70?0x22d97a:(pct>=50?0xff8a3d:0xff3b5c); }
 
 function renderRecrutements(){
+  recFormsLoad();
   const droit=canEdit("recrutements");
-  [["trooper","recTrooperBtn","recTrooperWarn"],["alpha","recAlphaBtn","recAlphaWarn"]].forEach(([k,bid,wid])=>{
-    const b=document.getElementById(bid), w=document.getElementById(wid);
+  [["trooper","recTrooperBtn","recTrooperWarn","recTrooperTitle","recTrooperDesc"],
+   ["alpha","recAlphaBtn","recAlphaWarn","recAlphaTitle","recAlphaDesc"]].forEach(([k,bid,wid,tid,did])=>{
+    const s=REC_FORMS[k];
+    const b=document.getElementById(bid), w=document.getElementById(wid),
+          t=document.getElementById(tid), p=document.getElementById(did);
     if(b)b.style.display=droit?"":"none";
     if(w)w.style.display=(droit&&!recUrl(k))?"":"none";
+    if(t)t.textContent=s.titre;
+    if(p)p.textContent=`${s.infos.length} information${s.infos.length>1?"s":""} · `
+      +`${s.notes.length} épreuve${s.notes.length>1?"s":""} · total sur ${recMax(s)}`
+      +(s.essais?" · numéro d'essai":"")+" · commentaire";
   });
   const nr=document.getElementById("recNoRight");
   if(nr)nr.style.display=droit?"none":"";
@@ -10116,6 +10323,7 @@ function renderRecrutements(){
     const n=["trooper","alpha"].filter(k=>recUrl(k)).length;
     tag.textContent=n===2?"2 salons configurés":(n===1?"1 salon sur 2 configuré":"aucun salon configuré");
   }
+  renderRecEditor();
 }
 
 function recFieldHtml(f){
@@ -10228,24 +10436,25 @@ async function saveRecrutement(){
 function discordRecrutPayload(kind,d,total,max,author){
   const s=REC_FORMS[kind];
   const pct=max?Math.round(total/max*100):0;
-  let dateTxt=d.infos.date||"-";
-  try{ if(d.infos.date)dateTxt=fmtDate(d.infos.date); }catch(e){}
-  const fields=[
-    {name:"Formé",value:String(d.infos.eleve||"-").slice(0,1024),inline:true},
-    {name:"Alpha formateur",value:String(d.infos.formateur||"-").slice(0,1024),inline:true},
-    {name:"Date",value:dateTxt,inline:true},
-    {name:"ARC Alpha présents",value:String(d.infos.presents||"-").slice(0,1024),inline:false}
-  ];
-  s.notes.forEach(n=>{ fields.push({name:n.label,value:`${d.notes[n.id]} / ${n.max}`,inline:true}); });
+  const fields=[];
+  /* les champs du message suivent le formulaire : si une question est
+     ajoutée ou renommée, le message suit sans retouche */
+  s.infos.forEach(f=>{
+    let v=String(d.infos[f.id]||"-");
+    if(f.type==="date"&&d.infos[f.id]){ try{ v=fmtDate(d.infos[f.id]); }catch(e){} }
+    fields.push({name:f.label.slice(0,256),value:v.slice(0,1024),inline:v.length<=40});
+  });
+  s.notes.forEach(n=>{ fields.push({name:n.label.slice(0,256),value:`${d.notes[n.id]} / ${n.max}`,inline:true}); });
   fields.push({name:"TOTAL",value:`**${total} / ${max}**  (${pct} %)`,inline:false});
   if(s.essais)fields.push({name:"Essai",value:d.essais||"-",inline:true});
   fields.push({name:"Commentaire",value:String(d.commentaire||"-").slice(0,1024),inline:false});
+  const sujet=d.infos.eleve, par=d.infos.formateur;
   return {
     embeds:[{
-      title:kind==="trooper"?"📝 RECRUTEMENT ARC TROOPER":"📝 RECRUTEMENT ARC ALPHA",
-      description:`**${d.infos.eleve||"?"}** évalué par **${d.infos.formateur||"?"}**.`,
+      title:("📝 "+(s.titre||"Recrutement").toUpperCase()).slice(0,256),
+      description:(sujet&&par)?`**${sujet}** évalué par **${par}**.`:(sujet?`**${sujet}**`:""),
       color:recColorInt(pct),
-      fields:fields,
+      fields:fields.slice(0,25),
       footer:{text:`Déposé par ${author||"?"} · Centre de Commandement`},
       timestamp:new Date().toISOString()
     }]};
