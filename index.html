@@ -3504,8 +3504,46 @@ async function supaGet(table,filter=""){
     return null;
   }
 }
+/* ------------------------------------------------------------------
+   Portier d'écriture. Quand la base est verrouillée (securite.sql),
+   plus aucune écriture directe n'est acceptée : tout passe par la
+   fonction SQL arc_write, qui revérifie EN BASE qui écrit, dans quelle
+   table et quoi. Tant que la fonction n'existe pas, on écrit en direct
+   comme avant (le site marche identiquement avant et après).
+   Les messages privés ont leurs propres fonctions, ils ne passent
+   jamais par le portier. ------------------------------------------- */
+let _gwOn=null; // null inconnu, true installé, false absent
+function gwFilterToMatch(filter){
+  const out={};
+  const parts=String(filter||"").split("&").filter(Boolean);
+  for(const p of parts){
+    const m=p.match(/^([^=]+)=eq\.(.*)$/);
+    if(!m)return null;               // filtre non géré par le portier
+    try{out[decodeURIComponent(m[1])]=decodeURIComponent(m[2]);}catch(e){out[m[1]]=m[2];}
+  }
+  return out;
+}
+async function gwTry(op,table,data,match){
+  if(_gwOn===false)return{done:false};
+  if(table===T.messages)return{done:false};
+  const pr=(typeof Auth!=="undefined"&&Auth.proof)?Auth.proof():null;
+  if(!pr)return{done:false};         // visiteur non connecté : voie publique directe
+  if((op==="update"||op==="delete")&&match===null)return{done:false};
+  const r=await supaRpc("arc_write",{p_auth_hash:pr.uh,p_auth_pass:pr.ph,
+    p_table:table,p_op:op,p_data:data||{},p_match:match||{}});
+  if(r.missing){_gwOn=false;return{done:false};}
+  _gwOn=true;
+  if(r.ok)return{done:true,ok:true,data:r.data};
+  return{done:true,ok:false,data:null};
+}
 async function supaPost(table,body){
   if(!writeAllowed(table))return null;
+  const g=await gwTry("insert",table,body,null);
+  if(g.done){
+    if(!g.ok)return null;
+    const row=(g.data&&typeof g.data==="object"&&g.data.id!==undefined)?g.data:{...body,id:Date.now()};
+    return [row];
+  }
   try{
     const r=await fetch(`${SUPA_URL}/rest/v1/${table}`,{method:"POST",headers:sh(),body:JSON.stringify(body)});
     if(!r.ok){
@@ -3520,6 +3558,8 @@ async function supaPost(table,body){
 }
 async function supaPatch(table,filter,body){
   if(!writeAllowed(table))return null;
+  const g=await gwTry("update",table,body,gwFilterToMatch(filter));
+  if(g.done)return g.ok?true:null;
   try{
     const r=await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`,{method:"PATCH",headers:sh(),body:JSON.stringify(body)});
     if(!r.ok){
@@ -3534,6 +3574,8 @@ async function supaPatch(table,filter,body){
 }
 async function supaDelete(table,filter){
   if(!writeAllowed(table))return false;
+  const g=await gwTry("delete",table,null,gwFilterToMatch(filter));
+  if(g.done)return !!g.ok;
   try{const r=await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`,{method:"DELETE",headers:sh()});return r.ok;}catch{return false;}
 }
 function cfgStr(v){
@@ -6651,29 +6693,12 @@ async function savePromoDate(id, value){
   if(!m) return;
   m.date_promo = value;
   if(supaOK){
-    try{
-      const r = await fetch(`${SUPA_URL}/rest/v1/${T.members}?id=eq.${id}`,{
-        method:"PATCH",
-        headers:{...sh(), "Prefer":"return=representation"},
-        body:JSON.stringify({date_promo:value})
-      });
-      const txt = await r.text();
-      if(!r.ok){
-        console.error("Erreur sauvegarde date_promo:", r.status, txt);
-        if(txt.includes("column")&&txt.includes("does not exist")){
-          toast("Ajoute la colonne date_promo dans Supabase (type: text)","error");
-        } else {
-          toast("Erreur sauvegarde date","error");
-        }
-        return;
-      }
-      const fresh = await supaGet(T.members, `id=eq.${id}`);
-      if(fresh&&fresh.length>0) m.date_promo = fresh[0].date_promo||value;
-      toast("Date de promotion sauvegardée ✓","success");
-    }catch(e){
-      console.error("savePromoDate exception:",e);
-      m.date_promo = value;
-    }
+    /* passe par le portier comme updateField : plus d'écriture directe */
+    const r=await supaPatch(T.members,`id=eq.${id}`,{date_promo:value});
+    if(r===null){toast("Erreur sauvegarde date","error");return;}
+    const fresh=await supaGet(T.members,`id=eq.${id}`);
+    if(fresh&&fresh.length>0)m.date_promo=fresh[0].date_promo||value;
+    toast("Date de promotion sauvegardée ✓","success");
   } else {
     saveLS();
   }
@@ -6910,11 +6935,23 @@ async function saveProfileEdit(){
 
   const updates={};
   if(newUser){updates.display=newUser;}
-  if(newPass){updates.pass_hash=cyrb53(newPass);}
 
   if(supaOK){
-    const r=await supaPatch(T.users,`user_hash=eq.${session.userHash}`,updates);
-    if(!r){showErr("Erreur lors de la sauvegarde.");return;}
+    /* le mot de passe passe par sa propre fonction (l'ancien est déjà vérifié
+       plus haut) ; une fois la base verrouillée, pass_hash n'est plus modifiable
+       en écriture directe. */
+    if(newPass){
+      const pr=Auth.proof&&Auth.proof();
+      const rc=pr?await supaRpc("arc_change_password",{p_auth_hash:pr.uh,p_auth_pass:pr.ph,p_new_pass:newPass}):{missing:true};
+      if(rc.missing){ updates.pass_hash=cyrb53(newPass); }
+      else if(!rc.ok){ showErr("Changement de mot de passe refusé."); return; }
+    }
+    if(Object.keys(updates).length){
+      const r=await supaPatch(T.users,`user_hash=eq.${session.userHash}`,updates);
+      if(!r){showErr("Erreur lors de la sauvegarde.");return;}
+    }
+  }else{
+    if(newPass)updates.pass_hash=cyrb53(newPass);
   }
   const localU=state.users.find(u=>u.user_hash===session.userHash);
   if(localU)Object.assign(localU,updates);
@@ -7154,8 +7191,14 @@ async function confirmResetTicket(){
 
   const newHash=cyrb53(newPass);
   if(supaOK){
-    const r=await supaPatch(T.users,`id=eq.${acc.id}`,{pass_hash:newHash});
-    if(!r){err.textContent="Erreur lors de la réinitialisation.";err.style.display="block";return;}
+    const pr=Auth.proof&&Auth.proof();
+    const rr=pr?await supaRpc("arc_reset_password",{p_auth_hash:pr.uh,p_auth_pass:pr.ph,p_target_id:String(acc.id),p_new_pass:newPass}):{missing:true};
+    if(rr.missing){
+      const r=await supaPatch(T.users,`id=eq.${acc.id}`,{pass_hash:newHash});
+      if(!r){err.textContent="Erreur lors de la réinitialisation.";err.style.display="block";return;}
+    }else if(!rr.ok){
+      err.textContent="Réinitialisation refusée (réservée à un administrateur).";err.style.display="block";return;
+    }
   }
   acc.pass_hash=newHash;
 
@@ -8405,7 +8448,7 @@ async function chatShowList(){
   body.innerHTML=newBtn+'<div class="chat-empty">Chargement…</div>';
   let convs=[];
   if(supaOK){
-    const rows=await supaGet(T.messages,`or=(from_hash.eq.${session.userHash},to_hash.eq.${session.userHash})&order=created_at.desc&limit=400`);
+    const rows=await chatMine();
     if(rows){
       const seen=new Map();
       for(const m of rows){
@@ -8486,7 +8529,8 @@ async function loadConversation(scrollForce){
   const me=session.userHash,other=_chatWith;
   let msgs=null;
   if(supaOK){
-    msgs=await supaGet(T.messages,`or=(and(from_hash.eq.${me},to_hash.eq.${other}),and(from_hash.eq.${other},to_hash.eq.${me}))&order=created_at.asc&limit=100`);
+    const _all=await chatMine();
+    msgs=_all===null?null:_all.filter(m=>(m.from_hash===me&&m.to_hash===other)||(m.from_hash===other&&m.to_hash===me)).sort((a,b)=>(a.created_at||"").localeCompare(b.created_at||""));
   }
   if(msgs===null)return;
   const body=document.getElementById("chatBody");
@@ -8505,8 +8549,50 @@ async function loadConversation(scrollForce){
       if(wasAtBottom||scrollForce)body.scrollTop=body.scrollHeight;
     }
   }
-  if(supaOK)supaPatch(T.messages,`to_hash=eq.${me}&from_hash=eq.${other}&read=eq.false`,{read:true});
+  if(supaOK)chatMarkRead(other);
   refreshChatBadge();
+}
+/* ------------------------------------------------------------------
+   Messages privés. Une fois la base verrouillée, on ne peut plus lire
+   que ses propres conversations (arc_dms) et l'expéditeur est posé EN
+   BASE (arc_send_message) : impossible de lire les messages d'autrui
+   ni de se faire passer pour quelqu'un. Repli direct tant que les
+   fonctions ne sont pas installées. ------------------------------ */
+let _dmRpc=null; // null inconnu, true installé, false absent
+async function chatMine(){
+  if(_dmRpc!==false){
+    const pr=(typeof Auth!=="undefined"&&Auth.proof)?Auth.proof():null;
+    if(pr){
+      const r=await supaRpc("arc_dms",{p_auth_hash:pr.uh,p_auth_pass:pr.ph});
+      if(r.missing){_dmRpc=false;}
+      else{_dmRpc=true;return (r.ok&&Array.isArray(r.data))?r.data:(r.ok?[]:null);}
+    }
+  }
+  return await supaGet(T.messages,`or=(from_hash.eq.${session.userHash},to_hash.eq.${session.userHash})&order=created_at.desc&limit=400`);
+}
+async function chatSend(toHash,toName,content){
+  if(_dmRpc!==false){
+    const pr=(typeof Auth!=="undefined"&&Auth.proof)?Auth.proof():null;
+    if(pr){
+      const r=await supaRpc("arc_send_message",{p_auth_hash:pr.uh,p_auth_pass:pr.ph,
+        p_to_hash:toHash,p_to_name:toName,p_content:content});
+      if(!r.missing){_dmRpc=true;return !!r.ok;}
+      _dmRpc=false;
+    }
+  }
+  const obj={from_hash:session.userHash,from_name:session.user,to_hash:toHash,to_name:toName,content:content,read:false};
+  return (await supaPost(T.messages,obj))!==null;
+}
+async function chatMarkRead(other){
+  if(_dmRpc!==false){
+    const pr=(typeof Auth!=="undefined"&&Auth.proof)?Auth.proof():null;
+    if(pr){
+      const r=await supaRpc("arc_mark_read",{p_auth_hash:pr.uh,p_auth_pass:pr.ph,p_other:other});
+      if(!r.missing){_dmRpc=true;return;}
+      _dmRpc=false;
+    }
+  }
+  await supaPatch(T.messages,`to_hash=eq.${session.userHash}&from_hash=eq.${other}&read=eq.false`,{read:true});
 }
 async function sendChatMessage(){
   const inp=document.getElementById("chatInput");
@@ -8514,10 +8600,9 @@ async function sendChatMessage(){
   if(!txt||!session||!_chatWith)return;
   const u=chatOtherUsers().find(x=>x.hash===_chatWith);
   inp.value="";
-  const obj={from_hash:session.userHash,from_name:session.user,to_hash:_chatWith,to_name:u?.name||"?",content:txt,read:false};
   if(supaOK){
-    const r=await supaPost(T.messages,obj);
-    if(r===null){toast("Message non envoyé (réseau)","error");inp.value=txt;return;}
+    const sent=await chatSend(_chatWith,u?.name||"?",txt);
+    if(!sent){toast("Message non envoyé (réseau)","error");inp.value=txt;return;}
   }
   _chatLastCount=-1;
   await loadConversation(true);
@@ -8547,7 +8632,8 @@ async function deleteConversation(hash){
 
 async function refreshChatBadge(silent){
   if(!session||!supaOK)return;
-  const rows=await supaGet(T.messages,`to_hash=eq.${session.userHash}&read=eq.false&select=id,from_hash`);
+  const _mine=await chatMine();
+  const rows=_mine===null?null:_mine.filter(m=>m.to_hash===session.userHash&&!m.read);
   if(rows===null)return;
   const relevant=rows.filter(r=>r.from_hash!==_chatWith);
   const count=relevant.length;
@@ -8587,7 +8673,7 @@ async function loadModConvList(){
   box.innerHTML='<div class="empty"><p>Chargement…</p></div>';
   if(!supaOK){box.innerHTML='<div class="empty"><p>Supabase indisponible.</p></div>';return;}
   const rows=await supaGet(T.messages,"order=created_at.desc&limit=600");
-  if(rows===null){box.innerHTML='<div class="empty"><p>Erreur de chargement.</p></div>';return;}
+  if(rows===null){box.innerHTML='<div class="empty"><p>Messages privés non lisibles : le verrouillage de la base empêche leur lecture par le tableau de bord. La confidentialité est préservée.</p></div>';return;}
   const pairs=new Map();
   for(const m of rows){
     const key=[m.from_hash,m.to_hash].sort().join("|");
@@ -8618,7 +8704,7 @@ async function openModThread(a,b){
   thread.innerHTML='<div class="chat-empty">Chargement…</div>';
   document.getElementById("modChatModal").classList.add("show");
   const msgs=await supaGet(T.messages,`or=(and(from_hash.eq.${a},to_hash.eq.${b}),and(from_hash.eq.${b},to_hash.eq.${a}))&order=created_at.asc&limit=300`);
-  if(msgs===null){thread.innerHTML='<div class="chat-empty">Erreur de chargement.</div>';return;}
+  if(msgs===null){thread.innerHTML='<div class="chat-empty">Conversation non lisible : le verrouillage de la base protège les messages privés des membres.</div>';return;}
   if(!msgs.length){thread.innerHTML='<div class="chat-empty">Aucun message.</div>';return;}
   thread.innerHTML='<div class="chat-msgs">'+msgs.map(m=>{
     const fromA=m.from_hash===a;
