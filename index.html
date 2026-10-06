@@ -2030,6 +2030,10 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
                 <input type="password" id="dscRecrutAlpha" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
               </div>
               <div class="field">
+                <label>Rôles à mentionner (recrutements) <span style="color:var(--dm);font-weight:400">(identifiants de rôle, séparés par un espace ou une virgule)</span></label>
+                <input type="text" id="dscRecrutRoles" placeholder="ex : 123456789012345678 987654321098765432" autocomplete="off">
+              </div>
+              <div class="field">
                 <label>Nom affiché du bot <span style="color:var(--dm);font-weight:400">(annonces et unité, vide = celui de Discord)</span></label>
                 <input type="text" id="dscBotName" placeholder="ARC Alpha" autocomplete="off">
               </div>
@@ -3457,7 +3461,7 @@ let state={
   absences:[],reports:[],cmdmissions:[],documents:[],tasks:[],content:{},
   formations:[],activites:[],tickets:[],
   polls:[],pollVotes:[],
-  discord:{annonces:"",promo:"",formations:"",recrutTrooper:"",recrutAlpha:"",style:"detaille",botName:"",botAvatar:""},
+  discord:{annonces:"",promo:"",formations:"",recrutTrooper:"",recrutAlpha:"",recrutRoles:"",style:"detaille",botName:"",botAvatar:""},
   regiments:["501st","212th","327th","41st","104th","408th","65th"],
   reglement:"",
 };
@@ -3887,6 +3891,7 @@ async function loadAll(){
     if(row.key==="discordFormations")state.discord.formations=cfgStr(row.value);
     if(row.key==="discordRecrutTrooper")state.discord.recrutTrooper=cfgStr(row.value);
     if(row.key==="discordRecrutAlpha")  state.discord.recrutAlpha  =cfgStr(row.value);
+    if(row.key==="discordRecrutRoles")  state.discord.recrutRoles  =cfgStr(row.value);
     if(row.key==="discordStyle")    state.discord.style   =cfgStr(row.value)||"detaille";
     if(row.key==="discordBotName")  state.discord.botName =cfgStr(row.value);
     if(row.key==="discordBotAvatar")state.discord.botAvatar=cfgStr(row.value);
@@ -10519,6 +10524,13 @@ async function saveRecrutement(){
   await logActivity(`${session?.user} a déposé un compte rendu de recrutement ${kind==="trooper"?"ARC Trooper":"ARC Alpha"} pour ${d.infos.eleve} (${total}/${max})`);
 }
 
+/* Identifiants de roles a mentionner pour les recrutements (extraits
+   de la config : accepte des IDs bruts ou des mentions <@&...>). */
+function recMentionIds(){
+  const raw=String(state.discord.recrutRoles||"");
+  return [...new Set(raw.match(/[0-9]{15,25}/g)||[])];
+}
+
 function discordRecrutPayload(kind,d,total,max,author){
   const s=REC_FORMS[kind];
   const pct=max?Math.round(total/max*100):0;
@@ -10535,7 +10547,8 @@ function discordRecrutPayload(kind,d,total,max,author){
   if(s.essais)fields.push({name:"Essai",value:d.essais||"-",inline:true});
   fields.push({name:"Commentaire",value:String(d.commentaire||"-").slice(0,1024),inline:false});
   const sujet=d.infos.eleve, par=d.infos.formateur;
-  return {
+  const _m=recMentionIds();
+  const _out={
     embeds:[{
       title:("📝 "+(s.titre||"Recrutement").toUpperCase()).slice(0,256),
       description:(sujet&&par)?`**${sujet}** évalué par **${par}**.`:(sujet?`**${sujet}**`:""),
@@ -10544,6 +10557,8 @@ function discordRecrutPayload(kind,d,total,max,author){
       footer:{text:`Déposé par ${author||"?"} · Centre de Commandement`},
       timestamp:new Date().toISOString()
     }]};
+  if(_m.length){ _out.content=_m.map(id=>"<@&"+id+">").join(" "); _out.allowed_mentions={roles:_m}; }
+  return _out;
 }
 
 /* Jeu de valeurs pour le bouton « Tester » du panneau Discord. */
@@ -10569,10 +10584,12 @@ function recTestPayload(kind){
 }
 
 function discordPreview(payload){
-  if(payload.content) return payload.content.replace(/\*\*/g,"");
-  const e=(payload.embeds||[])[0]||{};
-  let out=(e.title||"")+"\n"+(e.description||"").replace(/\*\*/g,"");
-  (e.fields||[]).forEach(f=>{out+=`\n${f.name} : ${f.value}`;});
+  const e=(payload.embeds||[])[0];
+  const strip=s=>String(s||"").split("**").join("");
+  const head=payload.content?("Mention : "+payload.content.replace(/<@&[0-9]+>/g,"@role").trim()+"\n"):"";
+  if(!e) return strip(payload.content);
+  let out=head+(e.title||"")+"\n"+strip(e.description);
+  (e.fields||[]).forEach(f=>{out+="\n"+f.name+" : "+f.value;});
   return out.trim();
 }
 
@@ -10615,6 +10632,8 @@ function renderDiscordPanel(){
   const rt=document.getElementById("dscRecrutTrooper"), ra=document.getElementById("dscRecrutAlpha");
   if(rt) rt.value=state.discord.recrutTrooper||"";
   if(ra) ra.value=state.discord.recrutAlpha||"";
+  const rr=document.getElementById("dscRecrutRoles");
+  if(rr) rr.value=state.discord.recrutRoles||"";
   if(st) st.value=state.discord.style||"detaille";
   const bn=document.getElementById("dscBotName"),
         ba=document.getElementById("dscBotAvatar");
@@ -10629,13 +10648,14 @@ async function saveDiscordConfig(){
   const fo=(document.getElementById("dscFormations").value||"").trim();
   const rt=(document.getElementById("dscRecrutTrooper").value||"").trim();
   const ra=(document.getElementById("dscRecrutAlpha").value||"").trim();
+  const rr=(document.getElementById("dscRecrutRoles").value||"").trim();
   const st=document.getElementById("dscStyle").value||"detaille";
   const bn=(document.getElementById("dscBotName").value||"").trim();
   const ba=(document.getElementById("dscBotAvatar").value||"").trim();
   const bad=[a,b,fo,rt,ra].filter(u=>u&&!/^https:\/\/discord(app)?\.com\/api\/webhooks\//.test(u));
   if(bad.length){toast("Ce n'est pas une URL de webhook Discord","error");return;}
   if(ba&&!/^https:\/\//.test(ba)){toast("L'avatar doit être une URL en https","error");return;}
-  state.discord.annonces=a; state.discord.promo=b; state.discord.formations=fo; state.discord.recrutTrooper=rt; state.discord.recrutAlpha=ra;
+  state.discord.annonces=a; state.discord.promo=b; state.discord.formations=fo; state.discord.recrutTrooper=rt; state.discord.recrutAlpha=ra; state.discord.recrutRoles=rr;
   state.discord.style=st; state.discord.botName=bn; state.discord.botAvatar=ba;
   if(supaOK){
     await setConfig("discordAnnonces",a);
@@ -10643,6 +10663,7 @@ async function saveDiscordConfig(){
     await setConfig("discordFormations",fo);
     await setConfig("discordRecrutTrooper",rt);
     await setConfig("discordRecrutAlpha",ra);
+    await setConfig("discordRecrutRoles",rr);
     await setConfig("discordStyle",st);
     await setConfig("discordBotName",bn);
     await setConfig("discordBotAvatar",ba);
