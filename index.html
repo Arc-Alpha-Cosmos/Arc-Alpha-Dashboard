@@ -2911,6 +2911,18 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div class="stat-card"><div class="stat-v" id="mpEligStatus" style="font-size:1.3rem">-</div><div class="stat-l">Promo</div></div>
       </div>
 
+      <!-- Statut de formation Bleu : bascule reservee aux LT et plus -->
+      <div id="mpBleuBox" style="display:none;margin-bottom:1.3rem;padding:.9rem 1rem;background:var(--s2);border:1px solid var(--ln);border-left:3px solid #6f9bff">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap">
+          <div style="min-width:0">
+            <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:#6f9bff;text-transform:uppercase">// Formation Bleu</div>
+            <div id="mpBleuState" style="font-size:.95rem;font-weight:600;margin-top:.25rem">-</div>
+            <div id="mpBleuHint" style="font-size:.72rem;color:var(--dm);margin-top:.15rem"></div>
+          </div>
+          <button id="mpBleuBtn" class="sbtn" style="display:none" onclick="toggleBleu()">Marquer forme</button>
+        </div>
+      </div>
+
       <!-- Barre de progression promotion -->
       <div id="mpPromoProgress" style="margin-bottom:1.3rem"></div>
 
@@ -3064,7 +3076,7 @@ const T={config:"arc_config",members:"arc_members",users:"arc_users",blames:"arc
 const GRADE_ORDER=["CMDM","CMD","VCMD","MAJ","CPT","LT","SGT","ARC"];
 const GRADE_COLORS={CMDM:"#fff",CMD:"#cfd6e2",VCMD:"#ffd23d",MAJ:"#ff8a3d",CPT:"#ff3b5c",LT:"#6f9bff",SGT:"#22d97a",ARC:"#00e5ff"};
 const REGIMENT_COLORS={"501st":"#3399ff","212th":"#ff8800","327th":"#ffcc00","41st":"#22cc55","104th":"#aaaaaa","408th":"#9933ff","65th":"#ff4444"};
-const FORMATION_COLORS={alpha:"var(--ac)",trooper:"var(--gr)",cmd:"var(--or)",nego:"var(--ye)"};
+const FORMATION_COLORS={alpha:"var(--ac)",trooper:"var(--gr)",cmd:"var(--or)",bleu:"#6f9bff",nego:"var(--ye)"};
 const MEDALS=[
   {id:"croix_honneur",   name:"Croix d'Honneur de la B.O.S", icon:"✠", color:"#f5f0e1", scope:"B.O.S",       desc:"Plus haute distinction de la Brigade des Opérations Spéciales, décernée aux unités ayant prouvé être l'élite de l'élite (nécessite les trois autres médailles B.O.S)."},
   {id:"insigne_direction",name:"Insigne de la Direction B.O.S",icon:"★", color:"#e8b923", scope:"Direction", desc:"Attribuée à ceux ayant porté le titre honorifique de Direction B.O.S. Témoigne de leur leadership. (Direction B.O.S uniquement)"},
@@ -5511,6 +5523,19 @@ async function saveFormation(){
     }else{obj.id=Date.now().toString();state.formations.unshift(obj);saveLS();}
     if(supaOK){const fresh=await supaGet(T.formations);if(fresh)state.formations=fresh;}
   }
+  /* Une formation Bleu validée rend l'élève « formé ». */
+  if(formation==="Bleu"&&statut==="Validé"&&eRef.id){
+    const _mb=memberById(eRef.id);
+    if(_mb&&!_mb.f_bleu){
+      _mb.f_bleu=true;
+      if(supaOK){
+        const _rb=await supaPatch(T.members,`id=eq.${eRef.id}`,{f_bleu:true});
+        if(_rb===null)toast("Ajoute la colonne f_bleu dans Supabase (booléen)","error");
+      }else saveLS();
+      try{renderRoster();}catch(e){}
+      await logActivity(`${eRef.name} est désormais formé (formation Bleu validée)`);
+    }
+  }
   const formateur=obj.formateur,eleve=obj.eleve;
   const autoRep=await autoReportForActivity(fRef.id,obj.date);
   closeModal("formationModal");
@@ -5906,7 +5931,7 @@ function renderRoster(){
 
     const formBadge=(on,label,color)=>on?`<span style="display:inline-flex;align-items:center;padding:1px 6px;border-radius:9px;font-family:var(--fm);font-size:.52rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;background:${color}1f;color:${color};border:1px solid ${color}55">${label}</span>`:"";
     const _isCpt=(GRADE_LEVEL[m.grade]||0)>=3;
-    const _forms=`${formBadge(m.f_arc_alpha,"Alpha",FORMATION_COLORS.alpha)}${formBadge(m.f_arc_trooper,"Trooper",FORMATION_COLORS.trooper)}${formBadge(m.f_cmd_mission,"CMD",FORMATION_COLORS.cmd)}${_isCpt?formBadge(m.f_negociation,"Négo",FORMATION_COLORS.nego):""}`;
+    const _forms=`${formBadge(m.f_arc_alpha,"Alpha",FORMATION_COLORS.alpha)}${formBadge(m.f_arc_trooper,"Trooper",FORMATION_COLORS.trooper)}${formBadge(m.f_cmd_mission,"CMD",FORMATION_COLORS.cmd)}${formBadge(m.f_bleu,"Bleu",FORMATION_COLORS.bleu)}${_isCpt?formBadge(m.f_negociation,"Négo",FORMATION_COLORS.nego):""}`;
     const formCell=`<div style="display:flex;gap:3px;flex-wrap:wrap;align-items:center">${_forms||'<span style="color:var(--dm);font-size:.6rem">-</span>'}</div>`;
 
     const _absNow=absNowBy.get(String(m.id));
@@ -9045,6 +9070,47 @@ async function toggleMedal(medalId){
   await logActivity(`${session.user} a ${had?"retiré":"attribué"} la médaille « ${md.name} » ${had?"à":"à"} ${m.matricule} ${m.nom||""}`.trim());
 }
 
+/* Statut « forme » d'un CT. Pose automatiquement par une formation Bleu
+   validee, et basculable a la main depuis la fiche par un LT et plus. */
+function canSetForme(){
+  if(!Auth.ok())return false;
+  if(session.role==="brs")return false;
+  if(session.role==="admin"||session.role==="amiraute")return true;
+  return gradeLevel(getSessionGrade())>=2;
+}
+function mpRenderBleu(m){
+  const box=document.getElementById("mpBleuBox");
+  if(!box||!m)return;
+  box.style.display="";
+  const on=!!m.f_bleu;
+  const st=document.getElementById("mpBleuState");
+  const hint=document.getElementById("mpBleuHint");
+  const btn=document.getElementById("mpBleuBtn");
+  if(st){st.textContent=on?"✅ Formé":"⛔ Non formé";st.style.color=on?"var(--gr)":"var(--dm)";}
+  if(hint)hint.textContent=on?"Formation Bleu validée.":"Une formation Bleu validée le rendra formé.";
+  if(btn){
+    btn.style.display=canSetForme()?"":"none";
+    btn.textContent=on?"Marquer non formé":"Marquer formé";
+    btn.className=on?"sbtn danger":"sbtn green";
+  }
+}
+async function toggleBleu(){
+  if(!canSetForme()){toast("Réservé aux LT et plus","error");return;}
+  const m=state.members.find(x=>x.id==_mpCurrentId);
+  if(!m)return;
+  const next=!m.f_bleu;
+  if(supaOK){
+    const r=await supaPatch(T.members,`id=eq.${m.id}`,{f_bleu:next});
+    if(r===null){toast("Ajoute la colonne f_bleu dans Supabase (booléen)","error");return;}
+  }
+  m.f_bleu=next;
+  if(!supaOK)saveLS();
+  mpRenderBleu(m);
+  try{renderRoster();}catch(e){}
+  toast(next?"Marqué formé":"Marqué non formé","success");
+  await logActivity(`${session?.user} a marqué ${m.matricule||""} ${next?"formé":"non formé"} (formation Bleu)`);
+}
+
 function openMemberProfile(memberId){
   const m=state.members.find(x=>x.id==memberId);
   if(!m)return;
@@ -9067,6 +9133,7 @@ function openMemberProfile(memberId){
   document.getElementById("mpAbsCount").textContent=absCount;
   document.getElementById("mpEligStatus").textContent=elig.eligible===null?"-":elig.eligible?"✅":"⛔";
   renderPromoProgress(m, elig);
+  mpRenderBleu(m);
 
   document.getElementById("mpMat").value=m.matricule||"";
   document.getElementById("mpNom").value=m.nom||"";
