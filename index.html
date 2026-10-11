@@ -1900,6 +1900,57 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         </div>
       </div>
 
+      <!-- TAB: COMPTES RENDUS (rédaction, validation, publication) -->
+      <div class="dash-tab" data-dtc="rapports" style="display:none">
+        <div class="sec-head"><h2>Comptes rendus</h2><span class="line"></span><span class="tag" id="rapSalonTag"></span></div>
+        <p class="card-b" style="margin-bottom:1.2rem">Les grades CT à LTN rédigent leur compte rendu ici. Il part en attente de validation : un officier le lit, puis le valide ou le refuse avec un motif. Une fois validé, il est publié dans le salon Discord prévu pour lui et coche la semaine de son auteur dans les rapports hebdomadaires. Un compte rendu refusé n'est jamais publié.<span class="info-help" data-tip-title="Qui valide ?" data-tip="La validation n'est pas une question de grade seul : elle est réservée aux officiers CPT et plus à qui la tâche &quot;Gérer les rapports&quot; a été attribuée dans l'onglet Tâches.<br><br>Un MAJ et plus peut attribuer cette tâche.">?</span></p>
+
+        <div class="rec-cards" id="rapWriteCards" style="display:none;max-width:640px">
+          <div class="rec-card">
+            <h4>Rédiger un compte rendu</h4>
+            <p>Titre, type d'activité et déroulé. Il est relu par un officier avant toute publication, et tu vois son motif s'il est refusé.</p>
+            <button class="btn btn-primary" onclick="openRapportModal()">Rédiger un compte rendu</button>
+          </div>
+        </div>
+
+        <div id="rapHookWarn" style="display:none;margin-top:1rem;font-family:var(--fm);font-size:.64rem;color:var(--or)">
+          ⚠ Salon des comptes rendus non configuré - Administration, Webhooks Discord
+        </div>
+        <p id="rapNoRight" style="display:none;font-size:.8rem;color:var(--dm);margin-top:.6rem">
+          Ton compte ne rédige pas et ne valide pas de compte rendu.
+        </p>
+
+        <div class="grid g4" id="rapStats" style="display:none;margin:1.3rem 0">
+          <div class="stat-card"><div class="stat-v" id="rapStatPend" style="color:var(--ye)">0</div><div class="stat-l">En attente</div></div>
+          <div class="stat-card"><div class="stat-v" id="rapStatVal" style="color:var(--gr)">0</div><div class="stat-l">Validés</div></div>
+          <div class="stat-card"><div class="stat-v" id="rapStatRef" style="color:var(--rd)">0</div><div class="stat-l">Refusés</div></div>
+          <div class="stat-card"><div class="stat-v" id="rapStatPub" style="color:var(--or)">0</div><div class="stat-l">Validés non publiés</div></div>
+        </div>
+
+        <div id="rapQueueSection" style="display:none;margin-top:1.3rem">
+          <div class="sec-head"><h2>À valider</h2><span class="line"></span></div>
+          <div id="rapQueue" style="margin-bottom:1.5rem"></div>
+        </div>
+
+        <div id="rapMineSection" style="display:none;margin-top:1.3rem">
+          <div class="sec-head"><h2>Mes comptes rendus</h2><span class="line"></span></div>
+          <div id="rapMine" style="margin-bottom:1.5rem"></div>
+        </div>
+
+        <div id="rapHistSection" style="display:none;margin-top:1.3rem">
+          <div class="sec-head"><h2>Historique des décisions</h2><span class="line"></span></div>
+          <div id="rapHist"></div>
+        </div>
+
+        <div class="panel" id="rapTaskHint" style="display:none;margin-top:1rem"><div class="panel-body">
+          <p style="font-size:.8rem;color:var(--tx2);line-height:1.6">
+            La validation des comptes rendus dépend des tâches attribuées, pas du grade seul.
+            Pour valider ou refuser, il faut la tâche <strong>« Gérer les rapports »</strong> :
+            un MAJ et plus peut l'attribuer depuis l'onglet Tâches.
+          </p>
+        </div></div>
+      </div>
+
       <!-- ANNONCES -->
       <div class="dash-tab" data-dtc="announce" style="display:none">
         <div class="sec-head"><h2>Annonces</h2><span class="line"></span>
@@ -2022,6 +2073,10 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
                 <input type="password" id="dscFormations" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
               </div>
               <div class="field">
+                <label>Comptes rendus validés <span style="color:var(--dm);font-weight:400">(rapports écrits, publiés après validation)</span></label>
+                <input type="password" id="dscRapports" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
                 <label>Recrutement ARC Trooper <span style="color:var(--dm);font-weight:400">(comptes rendus d'épreuves)</span></label>
                 <input type="password" id="dscRecrutTrooper" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
               </div>
@@ -2058,6 +2113,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
                 <button class="sbtn" onclick="testDiscord('formation')">Tester une formation</button>
                 <button class="sbtn" onclick="testDiscord('recrutTrooper')">Tester un recrutement Trooper</button>
                 <button class="sbtn" onclick="testDiscord('recrutAlpha')">Tester un recrutement Alpha</button>
+                <button class="sbtn" onclick="testDiscord('rapports')">Tester un compte rendu</button>
               </div>
             </div>
           </div>
@@ -2613,6 +2669,44 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   </div>
 </div>
 
+<!-- COMPTE RENDU : rédaction -->
+<div class="modal-bg" id="rapportModal">
+  <div class="modal tall wide">
+    <div class="modal-h"><div><span class="k">// COMPTE RENDU</span><h3 id="rapModalTitle">Rédiger un compte rendu</h3></div>
+      <button class="modal-x" onclick="closeModal('rapportModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="rapFromId">
+      <div id="rapMotifBack" style="display:none;margin-bottom:.8rem;padding:.5rem .7rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25);font-size:.78rem;color:var(--tx2)"></div>
+      <div class="form-row fr2">
+        <div class="field"><label>Titre</label>
+          <input type="text" id="rapTitre" maxlength="90" autocomplete="off" placeholder="ex: Patrouille du secteur 7"></div>
+        <div class="field"><label>Type</label>
+          <select id="rapType" style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--fm);font-size:.8rem;outline:none"></select></div>
+      </div>
+      <div class="field"><label>Déroulé</label>
+        <textarea id="rapContenu" rows="11" maxlength="3500" oninput="rapCount()" placeholder="Ce qui s'est passé, qui était présent, le résultat, ce qui doit être signalé au commandement." style="width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.82rem;outline:none;resize:vertical;line-height:1.6"></textarea>
+        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">
+          <span>Relu par un officier avant publication</span><span id="rapCountLbl">0 / 3500</span>
+        </div>
+      </div>
+      <div id="rapErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:3px"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('rapportModal')">Annuler</button><button class="btn btn-primary" onclick="saveRapport()">Soumettre</button></div>
+  </div>
+</div>
+
+<!-- COMPTE RENDU : lecture et décision -->
+<div class="modal-bg" id="rapportViewModal">
+  <div class="modal tall wide">
+    <div class="modal-h"><div><span class="k">// COMPTE RENDU</span><h3>Lecture</h3></div>
+      <button class="modal-x" onclick="closeModal('rapportViewModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-b"><div id="rapViewBody"></div></div>
+    <div class="modal-f" id="rapViewFoot"></div>
+  </div>
+</div>
+
 <div class="modal-bg" id="assignModal">
   <div class="modal">
     <div class="modal-h"><div><span class="k">// ATTRIBUTION</span><h3>Attribuer une tâche</h3></div>
@@ -3071,7 +3165,7 @@ const SUPA_URL="https://vejxnhmrrckpczjsdclx.supabase.co";
 const SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlanhuaG1ycmNrcGN6anNkY2x4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NDI5NDcsImV4cCI6MjA5NzIxODk0N30.btczeuZJDL3o8Z8GEQ-t6DZG2BSMn0gsUFJAf34ech4";
 const T={config:"arc_config",members:"arc_members",users:"arc_users",blames:"arc_blames",
   missions:"arc_missions",announce:"arc_annonces",activity:"arc_activity",
-  absences:"arc_absences",reports:"arc_reports",cmdmissions:"arc_cmd_missions",documents:"arc_documents",tasks:"arc_tasks",polls:"arc_polls",pollvotes:"arc_poll_votes",formations:"arc_formations",activites:"arc_activites",tickets:"arc_tickets",messages:"arc_messages"};
+  absences:"arc_absences",reports:"arc_reports",cmdmissions:"arc_cmd_missions",documents:"arc_documents",tasks:"arc_tasks",polls:"arc_polls",pollvotes:"arc_poll_votes",formations:"arc_formations",activites:"arc_activites",tickets:"arc_tickets",messages:"arc_messages",rapports:"arc_rapports"};
 
 const GRADE_ORDER=["CMDM","CMD","VCMD","MAJ","CPT","LT","SGT","ARC"];
 const GRADE_COLORS={CMDM:"#fff",CMD:"#cfd6e2",VCMD:"#ffd23d",MAJ:"#ff8a3d",CPT:"#ff3b5c",LT:"#6f9bff",SGT:"#22d97a",ARC:"#00e5ff"};
@@ -3471,9 +3565,9 @@ let state={
   autoReport:true,autoReportSince:null,reportExempt:{},reportWeeks:{},manualTests:{},
   members:[],blames:[],missions:[],announces:[],users:[],activity:[],
   absences:[],reports:[],cmdmissions:[],documents:[],tasks:[],content:{},
-  formations:[],activites:[],tickets:[],
+  formations:[],activites:[],tickets:[],rapports:[],
   polls:[],pollVotes:[],
-  discord:{annonces:"",promo:"",formations:"",recrutTrooper:"",recrutAlpha:"",recrutRoles:"",style:"detaille",botName:"",botAvatar:""},
+  discord:{annonces:"",promo:"",formations:"",recrutTrooper:"",recrutAlpha:"",recrutRoles:"",rapports:"",style:"detaille",botName:"",botAvatar:""},
   regiments:["501st","212th","327th","41st","104th","408th","65th"],
   reglement:"",
 };
@@ -3541,7 +3635,7 @@ function gwFilterToMatch(filter){
 }
 async function gwTry(op,table,data,match){
   if(_gwOn===false)return{done:false};
-  if(table===T.messages)return{done:false};
+  if(table===T.messages||table===T.rapports)return{done:false};
   const pr=(typeof Auth!=="undefined"&&Auth.proof)?Auth.proof():null;
   if(!pr)return{done:false};         // visiteur non connecté : voie publique directe
   if((op==="update"||op==="delete")&&match===null)return{done:false};
@@ -3840,6 +3934,7 @@ window.addEventListener("DOMContentLoaded",async()=>{
   showSkeletons();
   await loadAll();
   await Auth.restore();
+  await discordConfigLoad();
   applyMaintenance();applyRec();renderContent();renderDashboard();nav("home");
   schedulePoll();
 });
@@ -3860,6 +3955,7 @@ const SYNC_TABLES=[
   {key:"formations",  table:T.formations,  into:"formations"},
   {key:"activites",   table:T.activites,   into:"activites"},
   {key:"tickets",     table:T.tickets,     into:"tickets"},
+  {key:"rapports",    table:T.rapports,    into:"rapports"},
   {key:"users",       table:T.users,       into:"users"},
 ];
 
@@ -3904,6 +4000,7 @@ async function loadAll(){
     if(row.key==="discordRecrutTrooper")state.discord.recrutTrooper=cfgStr(row.value);
     if(row.key==="discordRecrutAlpha")  state.discord.recrutAlpha  =cfgStr(row.value);
     if(row.key==="discordRecrutRoles")  state.discord.recrutRoles  =cfgStr(row.value);
+    if(row.key==="discordRapports")     state.discord.rapports     =cfgStr(row.value);
     if(row.key==="discordStyle")    state.discord.style   =cfgStr(row.value)||"detaille";
     if(row.key==="discordBotName")  state.discord.botName =cfgStr(row.value);
     if(row.key==="discordBotAvatar")state.discord.botAvatar=cfgStr(row.value);
@@ -4156,7 +4253,7 @@ function initTooltips(){
 
 const DEFAULT_NAV_GROUPS = [
   {id:"accueil", label:"Accueil", icon:"⌂", tabs:["overview","monespace"]},
-  {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","entrainements","recrutements","reserve","blacklist","absences","reports"]},
+  {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","entrainements","recrutements","reserve","blacklist","absences","reports","rapports"]},
   {id:"activite", label:"Activité", icon:"◈", tabs:["cmd","polls"]},
   {id:"discipline", label:"Discipline", icon:"⚑", tabs:["blames","announce","reglement"]},
   {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","personnages","tasks","journal"]},
@@ -4174,6 +4271,7 @@ const TAB_META = {
   blacklist:{label:"Blacklist", icon:"⛔"},
   absences:{label:"Absences", icon:""},
   reports:{label:"Rapports", icon:"", badge:"reportPulseBadge"},
+  rapports:{label:"Comptes rendus", icon:"📝", badge:"rapportPulseBadge"},
   cmd:{label:"CMD Mission", icon:""},
   polls:{label:"Sondages", icon:"🗳"},
   blames:{label:"Blâmes", icon:""},
@@ -4346,6 +4444,7 @@ async function doLogin(){
     return;
   }
   _loginFails=0;_loginWait=0;
+  await discordConfigLoad();
   closeModal("loginModal");
   document.getElementById("loginUser").value="";document.getElementById("loginPass").value="";
   updateNavUI();applyPermissionsUI();checkMyReportStatus();toast("Bienvenue "+session.user+" !","success");maybeShowTour();
@@ -6491,6 +6590,451 @@ function renderReports(){
   }).join("");
 }
 
+/* ============================================================
+   COMPTES RENDUS : rédaction, validation, publication
+   ------------------------------------------------------------
+   À ne pas confondre avec l'onglet « Rapports hebdomadaires »
+   juste au-dessus, qui ne fait que cocher qui a rendu le sien.
+   Ici le compte rendu est ÉCRIT dans le site, validé ou refusé
+   par un officier, puis publié sur Discord. Un compte rendu
+   validé coche la semaine de son auteur dans le suivi
+   hebdomadaire : les deux systèmes se parlent au lieu de faire
+   double emploi.
+
+   Qui fait quoi :
+   - rédaction : les grades qui doivent un rapport, donc CT (ARC)
+     à LTN (LT). C'est exactement REPORT_EXEMPT à l'envers, la
+     règle n'est donc écrite qu'une seule fois dans le fichier ;
+   - validation : un officier CPT et plus À QUI LA TÂCHE
+     « Gérer les rapports » a été attribuée (onglet Tâches). Le
+     grade seul ne suffit pas, c'est la règle demandée.
+
+   Tout est revérifié EN BASE par les fonctions arc_rapport_*
+   (rapports.sql) : l'interface ne fait que cacher des boutons.
+   Tant que le SQL n'est pas exécuté, on écrit en direct comme
+   partout ailleurs, avec le même garde-fou : le filtre porte sur
+   le statut, donc deux officiers ne peuvent pas trancher deux
+   fois, et un compte rendu ne peut pas partir deux fois.
+   ============================================================ */
+const RAP_TYPES=["Patrouille","Mission","Entraînement","Formation","Incident","Autre"];
+const RAP_ETATS={
+  en_attente:{label:"En attente",color:"var(--ye)"},
+  valide:{label:"Validé",color:"var(--gr)"},
+  refuse:{label:"Refusé",color:"var(--rd)"}
+};
+const RAP_TITRE_MAX=90, RAP_TEXTE_MAX=3500, RAP_TEXTE_MIN=20, RAP_MOTIF_MAX=400;
+
+function rapStatut(r){ return String((r&&r.statut)||"en_attente"); }
+function rapEtat(r){ return RAP_ETATS[rapStatut(r)]||RAP_ETATS.en_attente; }
+function rapList(){ return Array.isArray(state.rapports)?state.rapports:[]; }
+function rapById(id){ return rapList().find(r=>String(r.id)===String(id))||null; }
+function rapIsMine(r){
+  if(!r||!Auth.ok())return false;
+  if(r.author_hash&&session.userHash&&r.author_hash===session.userHash)return true;
+  return r.author_member_id!=null&&r.author_member_id!==""&&session.memberId!=null
+    &&String(r.author_member_id)===String(session.memberId);
+}
+function rapMine(){ return rapList().filter(rapIsMine); }
+function rapPending(){ return rapList().filter(r=>rapStatut(r)==="en_attente"); }
+
+/* Rédaction : réservée aux grades qui doivent un rapport hebdomadaire. */
+function canWriteRapport(){
+  if(!Auth.ok())return false;
+  if(session.role==="brs")return false;
+  if(session.role==="admin")return true;
+  const g=getSessionGrade();
+  return !!g&&REPORT_EXEMPT.indexOf(g)===-1;
+}
+/* Validation : officier CPT+ ET porteur de la tâche « Gérer les rapports ». */
+function canReviewRapport(){
+  if(!Auth.ok())return false;
+  if(session.role==="brs")return false;
+  if(session.role==="admin")return true;
+  if(gradeLevel(getSessionGrade())<3)return false;
+  return getMyTasks().indexOf("rapports")!==-1;
+}
+/* Officier assez gradé mais sans la tâche : on lui explique pourquoi. */
+function rapOfficerWithoutTask(){
+  if(!Auth.ok())return false;
+  if(session.role==="brs"||session.role==="admin")return false;
+  return gradeLevel(getSessionGrade())>=3&&getMyTasks().indexOf("rapports")===-1;
+}
+
+/* Les fonctions SQL dédiées quand elles existent, sinon écriture directe.
+   On retient par nom de fonction : « absente » ne vaut que pour elle. */
+const _rapRpcSeen={};
+async function rapRpc(fn,args){
+  if(_rapRpcSeen[fn]===false)return{missing:true};
+  const pr=(Auth.ok()&&Auth.proof)?Auth.proof():null;
+  if(!pr)return{failed:true};
+  const r=await supaRpc(fn,Object.assign({p_auth_hash:pr.uh,p_auth_pass:pr.ph},args||{}));
+  if(r.missing){_rapRpcSeen[fn]=false;return{missing:true};}
+  if(r.ok)_rapRpcSeen[fn]=true;
+  return r;
+}
+async function rapRefresh(){
+  if(!supaOK)return;
+  const rows=await supaGet(T.rapports);
+  if(rows!==null)state.rapports=rows;
+  renderRapports();checkMyReportStatus();
+}
+
+function rapCount(){
+  const co=document.getElementById("rapContenu"), el=document.getElementById("rapCountLbl");
+  if(!co||!el)return;
+  const n=(co.value||"").length;
+  el.textContent=n+" / "+RAP_TEXTE_MAX;
+  el.style.color=n>RAP_TEXTE_MAX?"var(--rd)":(n<RAP_TEXTE_MIN?"var(--dm)":"var(--gr)");
+}
+function openRapportModal(fromId){
+  if(!canWriteRapport()){toast("La rédaction est réservée aux grades CT à LTN","error");return;}
+  const src=fromId?rapById(fromId):null;
+  const sel=document.getElementById("rapType");
+  if(sel)sel.innerHTML=RAP_TYPES.map(t=>
+    `<option value="${esc(t)}"${src&&src.type===t?" selected":""}>${esc(t)}</option>`).join("");
+  const ti=document.getElementById("rapTitre"), co=document.getElementById("rapContenu"),
+        er=document.getElementById("rapErr"), fi=document.getElementById("rapFromId"),
+        tt=document.getElementById("rapModalTitle"), mb=document.getElementById("rapMotifBack");
+  if(ti)ti.value=src?String(src.titre||""):"";
+  if(co)co.value=src?String(src.contenu||""):"";
+  if(fi)fi.value=src?String(src.id):"";
+  if(er){er.style.display="none";er.textContent="";}
+  if(tt)tt.textContent=src?"Reprendre le compte rendu":"Rédiger un compte rendu";
+  if(mb){
+    if(src&&src.refus_motif){mb.style.display="";mb.textContent="Motif du refus : "+String(src.refus_motif);}
+    else{mb.style.display="none";mb.textContent="";}
+  }
+  rapCount();
+  document.getElementById("rapportModal").classList.add("show");
+}
+
+async function saveRapport(){
+  const er=document.getElementById("rapErr");
+  const fail=(m)=>{if(er){er.textContent=m;er.style.display="block";}};
+  if(er)er.style.display="none";
+  if(!canWriteRapport()){fail("La rédaction est réservée aux grades CT à LTN.");return;}
+  const titre=(document.getElementById("rapTitre").value||"").trim();
+  const type=document.getElementById("rapType").value||"Autre";
+  const contenu=(document.getElementById("rapContenu").value||"").trim();
+  if(!titre){fail("Donne un titre à ton compte rendu.");return;}
+  if(contenu.length<RAP_TEXTE_MIN){fail("Le compte rendu est trop court : "+contenu.length+" caractères sur "+RAP_TEXTE_MIN+" minimum.");return;}
+  if(contenu.length>RAP_TEXTE_MAX){fail("Le compte rendu est trop long : "+contenu.length+" caractères, maximum "+RAP_TEXTE_MAX+".");return;}
+  const wk=getWeekKey(0);
+  const res=await rapRpc("arc_rapport_submit",
+    {p_titre:titre.slice(0,RAP_TITRE_MAX),p_type:type,p_contenu:contenu,p_week:wk});
+  if(res.failed){fail("La base a refusé l'envoi : ton grade ne permet peut-être pas la rédaction.");return;}
+  let row=null;
+  if(res.ok){
+    if(!res.data||res.data.ok!==true){fail("La base a refusé l'envoi.");return;}
+    row=res.data.row||null;
+  }else{
+    /* Pas encore de fonction SQL : écriture directe. L'auteur vient de la
+       session vérifiée, jamais d'un champ du formulaire. */
+    const me=sessionMember();
+    const obj={author_hash:session.userHash||"",
+      author_name:me?(String(me.matricule||"?")+" "+String(me.nom||"")).trim():(session.user||"?"),
+      author_member_id:me?String(me.id):null,author_grade:me?String(me.grade||""):"",
+      titre:titre.slice(0,RAP_TITRE_MAX),type:type,contenu:contenu,
+      statut:"en_attente",week_key:wk,created_at:new Date().toISOString()};
+    if(supaOK){
+      const w=await supaPost(T.rapports,obj);
+      if(w===null){fail("Envoi impossible : exécute rapports.sql dans Supabase (table arc_rapports).");return;}
+      row=(w&&w[0])||obj;
+    }else{obj.id=Date.now().toString();row=obj;}
+  }
+  if(row){ if(!state.rapports)state.rapports=[]; state.rapports.unshift(row); }
+  if(!supaOK)saveLS();
+  closeModal("rapportModal");
+  renderRapports();checkMyReportStatus();
+  toast("Compte rendu soumis - en attente de validation","success");
+  await logActivity((session?.user||"?")+" a soumis un compte rendu : "+titre);
+}
+
+async function rapReview(id,decision){
+  if(!canReviewRapport()){toast("Réservé aux officiers ayant la tâche « Gérer les rapports »","error");return;}
+  if(decision!=="valide"&&decision!=="refuse")return;
+  const r=rapById(id);
+  if(!r){toast("Compte rendu introuvable","error");return;}
+  if(rapStatut(r)!=="en_attente"){toast("Ce compte rendu a déjà été traité","info");renderRapports();return;}
+
+  let motif="";
+  if(decision==="refuse"){
+    const saisie=await uiPrompt({kicker:"// REFUS",title:"Motif du refus",
+      message:"L'auteur verra ce motif dans son espace. Dis-lui ce qui doit être corrigé.",
+      okText:"Refuser",placeholder:"ex : il manque le déroulé et les pertes"});
+    if(saisie===null)return;
+    motif=String(saisie||"").trim();
+    if(motif.length<3){toast("Un refus doit être justifié","error");return;}
+    motif=motif.slice(0,RAP_MOTIF_MAX);
+  }else{
+    const apercu=state.discord.rapports
+      ? "Il part ensuite dans le salon Discord des comptes rendus :\n\n"
+        +discordPreview(discordRapportPayload(r,session?.user))
+      : "Aucun salon Discord n'est configuré : le compte rendu sera validé sans être publié.";
+    if(!await uiConfirm({kicker:"// VALIDATION",title:"Valider ce compte rendu ?",
+      message:apercu,okText:"Valider et publier"}))return;
+  }
+
+  const res=await rapRpc("arc_rapport_review",{p_id:String(id),p_decision:decision,p_motif:motif});
+  let row=null;
+  if(res.failed){toast("La base a refusé la décision","error");return;}
+  if(res.ok){
+    if(!res.data||res.data.ok!==true){
+      toast(res.data&&res.data.reason==="deja_traite"
+        ?"Trop tard : un autre officier a déjà tranché":"Décision refusée","info");
+      await rapRefresh();return;
+    }
+    row=res.data.row||null;
+  }else{
+    const patch={statut:decision,reviewer_hash:session.userHash||"",reviewer_name:session.user||"?",
+      reviewed_at:new Date().toISOString(),refus_motif:decision==="refuse"?motif:null};
+    if(supaOK){
+      /* le filtre contient le statut : un seul officier peut gagner */
+      const w=await supaPatch(T.rapports,"id=eq."+encodeURIComponent(id)+"&statut=eq.en_attente",patch);
+      if(w===null){toast("La base a refusé la décision","error");return;}
+      if(Array.isArray(w)&&w.length===0){
+        toast("Trop tard : un autre officier a déjà tranché","info");await rapRefresh();return;}
+      row=(Array.isArray(w)&&w[0])?w[0]:Object.assign({},r,patch);
+    }else{row=Object.assign({},r,patch);saveLS();}
+  }
+  Object.assign(r,row||{});
+  closeModal("rapportViewModal");
+  if(decision==="valide"){
+    await rapCreditWeek(r);
+    toast("Compte rendu validé ✓","success");
+    await rapPublish(r.id,true);
+  }else{
+    toast("Compte rendu refusé - l'auteur voit le motif","info");
+  }
+  renderRapports();checkMyReportStatus();
+  await logActivity((session?.user||"?")+" a "+(decision==="valide"?"validé":"refusé")
+    +" le compte rendu « "+String(r.titre||"?")+" » de "+String(r.author_name||"?"));
+}
+
+/* Réservation de la publication EN BASE : le premier qui l'obtient publie,
+   les autres repartent les mains vides. C'est ça qui empêche le doublon. */
+async function rapClaim(id){
+  const res=await rapRpc("arc_rapport_claim",{p_id:String(id)});
+  if(res.failed)return{won:false,err:true};
+  if(res.ok)return(res.data&&res.data.ok===true)?{won:true,row:res.data.row||null}:{won:false};
+  if(!supaOK){
+    const r=rapById(id);
+    if(r){r.published_at=new Date().toISOString();saveLS();}
+    return{won:true,row:null};
+  }
+  const w=await supaPatch(T.rapports,
+    "id=eq."+encodeURIComponent(id)+"&statut=eq.valide&published_at=is.null",
+    {published_at:new Date().toISOString(),publisher_hash:session?.userHash||""});
+  if(w===null)return{won:false,err:true};
+  if(Array.isArray(w)&&w.length===0)return{won:false};
+  return{won:true,row:(Array.isArray(w)&&w[0])?w[0]:null};
+}
+/* L'envoi Discord a échoué : on rend la réservation pour pouvoir réessayer. */
+async function rapRelease(id){
+  const res=await rapRpc("arc_rapport_release",{p_id:String(id)});
+  if(res.missing&&supaOK&&session&&session.userHash){
+    await supaPatch(T.rapports,
+      "id=eq."+encodeURIComponent(id)+"&publisher_hash=eq."+encodeURIComponent(session.userHash),
+      {published_at:null,publisher_hash:null});
+  }
+  const r=rapById(id);
+  if(r){r.published_at=null;r.publisher_hash=null;}
+  if(!supaOK)saveLS();
+}
+
+async function rapPublish(id,auto){
+  const r=rapById(id);
+  if(!r)return false;
+  if(!canReviewRapport()){
+    if(!auto)toast("Réservé aux officiers ayant la tâche « Gérer les rapports »","error");
+    return false;
+  }
+  if(rapStatut(r)!=="valide"){
+    if(!auto)toast("Seul un compte rendu validé peut être publié","error");
+    return false;
+  }
+  if(r.published_at){ if(!auto)toast("Ce compte rendu est déjà publié","info"); return false; }
+  const url=state.discord.rapports||"";
+  if(!url){toast("Le salon Discord des comptes rendus n'est pas configuré","error");return false;}
+  const claim=await rapClaim(r.id);
+  if(!claim.won){
+    toast(claim.err?"Publication impossible":"Déjà publié par quelqu'un d'autre","info");
+    await rapRefresh();return false;
+  }
+  if(claim.row)Object.assign(r,claim.row);
+  const sent=await discordSend(url,discordRapportPayload(r,r.reviewer_name||session?.user),false);
+  if(!sent){
+    await rapRelease(r.id);
+    toast("Validé, mais l'envoi Discord a échoué - le bouton « Publier » permet de réessayer","error");
+    renderRapports();return false;
+  }
+  toast("Publié dans le salon des comptes rendus ✓","success");
+  renderRapports();
+  await logActivity((session?.user||"?")+" a publié le compte rendu « "+String(r.titre||"?")+" » sur Discord");
+  return true;
+}
+
+/* Un compte rendu validé coche la semaine de son auteur dans le suivi
+   hebdomadaire : c'est le mécanisme qui existe déjà, on ne le double pas. */
+async function rapCreditWeek(r){
+  const mid=r&&r.author_member_id;
+  if(mid===null||mid===undefined||mid==="")return;
+  const m=memberById(mid);
+  if(!m)return;
+  const wk=String(r.week_key||"")||weekKeyOf(r.created_at||"");
+  if(!wk||frozenWeek(wk))return;
+  if((state.reports||[]).some(x=>String(x.member_id)===String(mid)&&x.week_key===wk))return;
+  const obj={member_id:mid,member_name:(String(m.matricule||"?")+" "+String(m.nom||"")).trim(),week_key:wk};
+  if(supaOK){const w=await supaPost(T.reports,obj);if(w&&w.length>0)state.reports.push(w[0]);}
+  else{obj.id=Date.now().toString();state.reports.push(obj);saveLS();}
+}
+
+function rapTypeColor(t){
+  const k=String(t||"").toLowerCase();
+  if(k.indexOf("mission")===0)return 0xff8a3d;
+  if(k.indexOf("incident")===0)return 0xff3b5c;
+  if(k.indexOf("entra")===0)return 0x22d97a;
+  if(k.indexOf("formation")===0)return 0x6f9bff;
+  return 0x00e5ff;
+}
+function discordRapportPayload(r,validateur){
+  const titre=String((r&&r.titre)||"Compte rendu");
+  const corps=String((r&&r.contenu)||"");
+  const auteur=String((r&&r.author_name)||"?")+((r&&r.author_grade)?" ("+String(r.author_grade)+")":"");
+  return {
+    embeds:[{
+      title:"📝 "+titre.slice(0,250),
+      description:corps.length>3900?corps.slice(0,3900)+"…":corps,
+      color:rapTypeColor(r&&r.type),
+      fields:[
+        {name:"Auteur",value:auteur.slice(0,250)||"?",inline:true},
+        {name:"Type",value:String((r&&r.type)||"Autre").slice(0,250),inline:true},
+        {name:"Validé par",value:String(validateur||"?").slice(0,250),inline:true}
+      ],
+      footer:{text:"Compte rendu validé · Centre de Commandement"},
+      timestamp:new Date().toISOString()
+    }]
+  };
+}
+
+const RAP_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+function rapPill(r){
+  const e=rapEtat(r);
+  return `<span style="font-family:var(--fm);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.12rem .45rem;border:1px solid ${e.color};color:${e.color}">${esc(e.label)}</span>`;
+}
+function rapCardHtml(r,opts){
+  const o=opts||{}, e=rapEtat(r), st=rapStatut(r);
+  const acts=[`<button class="sbtn" style="padding:.18rem .5rem;font-size:.6rem" onclick="openRapportView('${escJs(r.id)}')">Consulter</button>`];
+  if(o.review&&st==="en_attente"){
+    acts.push(`<button class="sbtn green" style="padding:.18rem .5rem;font-size:.6rem" onclick="rapReview('${escJs(r.id)}','valide')">Valider</button>`);
+    acts.push(`<button class="sbtn danger" style="padding:.18rem .5rem;font-size:.6rem" onclick="rapReview('${escJs(r.id)}','refuse')">Refuser</button>`);
+  }
+  if(o.review&&st==="valide"&&!r.published_at){
+    acts.push(`<button class="sbtn blue" style="padding:.18rem .5rem;font-size:.6rem" onclick="rapPublish('${escJs(r.id)}',false)">Publier</button>`);
+  }
+  if(o.mine&&st==="refuse"){
+    acts.push(`<button class="sbtn" style="padding:.18rem .5rem;font-size:.6rem" onclick="openRapportModal('${escJs(r.id)}')">Reprendre</button>`);
+  }
+  const meta=[esc(r.author_name||"?"),fmtDate(r.created_at)];
+  if(r.reviewed_at)meta.push((st==="valide"?"validé":"refusé")+" par "+esc(r.reviewer_name||"?")+" le "+fmtDate(r.reviewed_at));
+  if(r.published_at)meta.push("publié sur Discord");
+  else if(st==="valide")meta.push("pas encore publié");
+  return `<div class="ann" style="border-left-color:${e.color}">
+    <div class="ann-ico" style="color:${e.color}">${RAP_ICON}</div>
+    <div class="ann-c">
+      <div class="ann-t">${escTrunc(r.titre,RAP_TITRE_MAX)}${rapPill(r)}<span style="font-family:var(--fm);font-size:.58rem;color:var(--dm)">${esc(r.type||"")}</span></div>
+      <div class="ann-d">${escTrunc(r.contenu,220)}</div>
+      ${(st==="refuse"&&r.refus_motif)?`<div style="margin-top:.45rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25);font-size:.78rem;color:var(--tx2)"><b style="color:var(--rd)">Motif du refus :</b> ${escTrunc(r.refus_motif,RAP_MOTIF_MAX)}</div>`:""}
+      <div class="ann-meta">${meta.join(" · ")}<span style="display:inline-flex;gap:.35rem;margin-left:.8rem;flex-wrap:wrap">${acts.join("")}</span></div>
+    </div></div>`;
+}
+
+function openRapportView(id){
+  const r=rapById(id);
+  if(!r)return;
+  const st=rapStatut(r);
+  const b=document.getElementById("rapViewBody");
+  if(b){
+    b.innerHTML=`<div style="display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.7rem">
+        ${rapPill(r)}<span style="font-family:var(--fm);font-size:.62rem;color:var(--dm)">${esc(r.type||"Autre")}</span>
+        ${r.published_at?`<span style="font-family:var(--fm);font-size:.62rem;color:var(--gr)">publié sur Discord</span>`:""}
+      </div>
+      <div style="font-family:var(--fs);font-size:1rem;font-weight:700;margin-bottom:.25rem">${escTrunc(r.titre,RAP_TITRE_MAX)}</div>
+      <div style="font-family:var(--fm);font-size:.62rem;color:var(--dm);margin-bottom:.9rem">${esc(r.author_name||"?")}${r.author_grade?" · "+esc(r.author_grade):""} · ${fmtDate(r.created_at)}</div>
+      <div style="white-space:pre-wrap;font-size:.86rem;color:var(--tx);line-height:1.7;background:var(--s2);border:1px solid var(--ln);padding:.9rem 1rem">${esc(r.contenu||"")}</div>
+      ${(st==="refuse"&&r.refus_motif)?`<div style="margin-top:.8rem;padding:.6rem .8rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25);font-size:.82rem"><b style="color:var(--rd)">Motif du refus :</b> ${escTrunc(r.refus_motif,RAP_MOTIF_MAX)}</div>`:""}
+      ${r.reviewed_at?`<div style="margin-top:.6rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">${st==="valide"?"Validé":"Refusé"} par ${esc(r.reviewer_name||"?")} le ${fmtDate(r.reviewed_at)}</div>`:""}`;
+  }
+  const f=document.getElementById("rapViewFoot");
+  if(f){
+    const acts=[`<button class="btn btn-ghost" onclick="closeModal('rapportViewModal')">Fermer</button>`];
+    if(canReviewRapport()&&st==="en_attente"){
+      acts.push(`<button class="btn btn-danger" onclick="rapReview('${escJs(r.id)}','refuse')">Refuser</button>`);
+      acts.push(`<button class="btn btn-primary" onclick="rapReview('${escJs(r.id)}','valide')">Valider et publier</button>`);
+    }
+    if(canReviewRapport()&&st==="valide"&&!r.published_at){
+      acts.push(`<button class="btn btn-primary" onclick="rapPublish('${escJs(r.id)}',false)">Publier sur Discord</button>`);
+    }
+    if(rapIsMine(r)&&st==="refuse"){
+      acts.push(`<button class="btn btn-primary" onclick="closeModal('rapportViewModal');openRapportModal('${escJs(r.id)}')">Reprendre</button>`);
+    }
+    f.innerHTML=acts.join("");
+  }
+  document.getElementById("rapportViewModal").classList.add("show");
+}
+
+function renderRapports(){
+  const write=canWriteRapport(), review=canReviewRapport();
+  const show=(id,on)=>{const el=document.getElementById(id);if(el)el.style.display=on?"":"none";};
+  show("rapWriteCards",write);
+  show("rapMineSection",write);
+  show("rapQueueSection",review);
+  show("rapHistSection",review);
+  show("rapStats",review);
+  show("rapTaskHint",rapOfficerWithoutTask());
+  show("rapNoRight",!write&&!review);
+  show("rapHookWarn",review&&!state.discord.rapports);
+  const tag=document.getElementById("rapSalonTag");
+  if(tag)tag.textContent=state.discord.rapports?"salon configuré":"aucun salon configuré";
+
+  const all=rapList(), pend=rapPending();
+  const g=id=>document.getElementById(id);
+  if(g("rapStatPend"))g("rapStatPend").textContent=pend.length;
+  if(g("rapStatVal"))g("rapStatVal").textContent=all.filter(r=>rapStatut(r)==="valide").length;
+  if(g("rapStatRef"))g("rapStatRef").textContent=all.filter(r=>rapStatut(r)==="refuse").length;
+  if(g("rapStatPub"))g("rapStatPub").textContent=all.filter(r=>rapStatut(r)==="valide"&&!r.published_at).length;
+
+  const q=g("rapQueue");
+  if(q&&review)q.innerHTML=pend.length?pend.map(r=>rapCardHtml(r,{review:true})).join("")
+    :'<div class="empty"><p>Aucun compte rendu en attente</p></div>';
+  const h=g("rapHist");
+  if(h&&review){
+    const done=all.filter(r=>rapStatut(r)!=="en_attente").slice(0,40);
+    h.innerHTML=done.length?done.map(r=>rapCardHtml(r,{review:true})).join("")
+      :'<div class="empty"><p>Aucune décision pour le moment</p></div>';
+  }
+  const mn=g("rapMine");
+  if(mn&&write){
+    const m=rapMine();
+    mn.innerHTML=m.length?m.map(r=>rapCardHtml(r,{mine:true})).join("")
+      :'<div class="empty"><p>Aucun compte rendu soumis pour le moment</p></div>';
+  }
+}
+
+/* Pastille de l'onglet : ce qui attend la personne qui regarde. */
+function rapBadgeCount(){
+  if(!Auth.ok())return 0;
+  let n=0;
+  if(canReviewRapport())n+=rapPending().length;
+  if(canWriteRapport())n+=rapMine().filter(r=>rapStatut(r)==="refuse").length;
+  return n;
+}
+function rapBadge(){
+  const b=document.getElementById("rapportPulseBadge");
+  if(!b)return;
+  b.style.display=rapBadgeCount()>0?"block":"none";
+}
+
 function openAnnounceModal(){
   const _f=document.getElementById("anDiscordField");
   if(_f) _f.style.display=state.discord.annonces?"":"none";document.getElementById("announceModal").classList.add("show");}
@@ -7352,6 +7896,7 @@ const TAB_RENDER={
   blacklist :{fn:"renderBlacklist", on:["members"]},
   absences  :{fn:"renderAbsences",  on:["absences","members"]},
   reports   :{fn:"renderReports",   on:["reports","members"]},
+  rapports  :{fn:"renderRapports",  on:["rapports","config"]},
   cmd       :{fn:"renderCmd",       on:["cmdmissions","members"]},
   polls     :{fn:"renderPolls",     on:["polls","pollvotes"]},
   blames    :{fn:"renderBlames",    on:["blames"]},
@@ -8163,6 +8708,7 @@ function renderAbsCalendar(){
 }
 
 function checkMyReportStatus(){
+  try{rapBadge();}catch(e){}
   const badge=document.getElementById("reportPulseBadge");
   if(!badge)return;
   if(!session){badge.style.display="none";return;}
@@ -9695,6 +10241,7 @@ const IND_TABS = {
   blacklist:{label:"Blacklassi",       icon:"🥤"},
   absences :{label:"Ab-samosas",       icon:"🥟"},
   reports  :{label:"Rap-poppadums",    icon:"🫓", badge:"reportPulseBadge"},
+  rapports :{label:"Rendu-ravi",       icon:"📝", badge:"rapportPulseBadge"},
   cmd      :{label:"CMD New Delhi",    icon:"🛺"},
   polls    :{label:"Son-dahl",         icon:"🍲"},
   blames   :{label:"Blâ-masala",       icon:"🔥"},
@@ -10065,6 +10612,44 @@ function canConfigDiscord(){
   if(session.role==="admin"||session.role==="amiraute") return true;
   if(session.role==="brs") return false;
   return gradeLevel(getSessionGrade())>=6;
+}
+
+/* ------------------------------------------------------------------
+   Les webhooks Discord ne sont plus lisibles par tout le monde : une fois
+   securite.sql execute, arc_config ne rend plus les cles discord* a la cle
+   publique, et seule arc_discord_config les donne a un compte verifie
+   (SGT et plus). Tant que la fonction n'existe pas, ils arrivent avec le
+   reste de la configuration et rien ne change. ------------------------- */
+const DISCORD_KEYS={discordAnnonces:"annonces",discordPromo:"promo",
+  discordFormations:"formations",discordRecrutTrooper:"recrutTrooper",
+  discordRecrutAlpha:"recrutAlpha",discordRecrutRoles:"recrutRoles",
+  discordRapports:"rapports",discordStyle:"style",discordBotName:"botName",
+  discordBotAvatar:"botAvatar"};
+let _dscRpc=null;
+async function discordConfigLoad(){
+  if(_dscRpc===false)return false;
+  const pr=(Auth.ok()&&Auth.proof)?Auth.proof():null;
+  if(!pr)return false;
+  const r=await supaRpc("arc_discord_config",{p_auth_hash:pr.uh,p_auth_pass:pr.ph});
+  if(r.missing){_dscRpc=false;return false;}
+  if(!r.ok||!r.data||typeof r.data!=="object")return false;
+  _dscRpc=true;
+  Object.keys(DISCORD_KEYS).forEach(k=>{
+    if(!(k in r.data))return;
+    const v=cfgStr(r.data[k]), dest=DISCORD_KEYS[k];
+    state.discord[dest]=(dest==="style")?(v||"detaille"):v;
+  });
+  try{renderDiscordPanel();}catch(e){}
+  return true;
+}
+async function discordPersist(vals){
+  const pr=(Auth.ok()&&Auth.proof)?Auth.proof():null;
+  if(pr){
+    const r=await supaRpc("arc_discord_set",{p_auth_hash:pr.uh,p_auth_pass:pr.ph,p_values:vals});
+    if(!r.missing)return !!r.ok;
+  }
+  for(const k of Object.keys(vals))await setConfig(k,vals[k]);
+  return true;
 }
 
 async function discordSend(url,payload,applyIdentity){
@@ -10665,14 +11250,16 @@ async function discordConfirmSend(kind,payload){
             : kind==="formation"     ? state.discord.formations
             : kind==="recrutTrooper" ? state.discord.recrutTrooper
             : kind==="recrutAlpha"   ? state.discord.recrutAlpha
+            : kind==="rapports"      ? state.discord.rapports
             : state.discord.promo;
   const salon = kind==="annonces"      ? "le salon des annonces"
               : kind==="formation"     ? "le salon des rapports"
               : kind==="recrutTrooper" ? "le salon des recrutements ARC Trooper"
               : kind==="recrutAlpha"   ? "le salon des recrutements ARC Alpha"
+              : kind==="rapports"      ? "le salon des comptes rendus"
               : "le salon de l'unité";
   if(!url) return false;
-  const useIdentity = kind!=="formation";
+  const useIdentity = kind!=="formation"&&kind!=="rapports";
   const ok=await uiConfirm({
     kicker:"// DISCORD",
     title:`Envoyer dans ${salon} ?`,
@@ -10701,6 +11288,8 @@ function renderDiscordPanel(){
   if(ra) ra.value=state.discord.recrutAlpha||"";
   const rr=document.getElementById("dscRecrutRoles");
   if(rr) rr.value=state.discord.recrutRoles||"";
+  const rp=document.getElementById("dscRapports");
+  if(rp) rp.value=state.discord.rapports||"";
   if(st) st.value=state.discord.style||"detaille";
   const bn=document.getElementById("dscBotName"),
         ba=document.getElementById("dscBotAvatar");
@@ -10716,24 +11305,22 @@ async function saveDiscordConfig(){
   const rt=(document.getElementById("dscRecrutTrooper").value||"").trim();
   const ra=(document.getElementById("dscRecrutAlpha").value||"").trim();
   const rr=(document.getElementById("dscRecrutRoles").value||"").trim();
+  const rp=(document.getElementById("dscRapports").value||"").trim();
   const st=document.getElementById("dscStyle").value||"detaille";
   const bn=(document.getElementById("dscBotName").value||"").trim();
   const ba=(document.getElementById("dscBotAvatar").value||"").trim();
-  const bad=[a,b,fo,rt,ra].filter(u=>u&&!/^https:\/\/discord(app)?\.com\/api\/webhooks\//.test(u));
+  const bad=[a,b,fo,rt,ra,rp].filter(u=>u&&!/^https:\/\/discord(app)?\.com\/api\/webhooks\//.test(u));
   if(bad.length){toast("Ce n'est pas une URL de webhook Discord","error");return;}
   if(ba&&!/^https:\/\//.test(ba)){toast("L'avatar doit être une URL en https","error");return;}
-  state.discord.annonces=a; state.discord.promo=b; state.discord.formations=fo; state.discord.recrutTrooper=rt; state.discord.recrutAlpha=ra; state.discord.recrutRoles=rr;
+  state.discord.annonces=a; state.discord.promo=b; state.discord.formations=fo; state.discord.recrutTrooper=rt; state.discord.recrutAlpha=ra; state.discord.recrutRoles=rr; state.discord.rapports=rp;
   state.discord.style=st; state.discord.botName=bn; state.discord.botAvatar=ba;
   if(supaOK){
-    await setConfig("discordAnnonces",a);
-    await setConfig("discordPromo",b);
-    await setConfig("discordFormations",fo);
-    await setConfig("discordRecrutTrooper",rt);
-    await setConfig("discordRecrutAlpha",ra);
-    await setConfig("discordRecrutRoles",rr);
-    await setConfig("discordStyle",st);
-    await setConfig("discordBotName",bn);
-    await setConfig("discordBotAvatar",ba);
+    /* Les webhooks passent par arc_discord_set quand il existe : la cle
+       publique n'a plus le droit de les ecrire en direct. */
+    const ecrit=await discordPersist({discordAnnonces:a,discordPromo:b,discordFormations:fo,
+      discordRecrutTrooper:rt,discordRecrutAlpha:ra,discordRecrutRoles:rr,discordRapports:rp,
+      discordStyle:st,discordBotName:bn,discordBotAvatar:ba});
+    if(!ecrit){toast("La base a refusé la configuration Discord","error");return;}
   } else saveLS();
   toast("Configuration Discord enregistrée","success");
   await logActivity(`${session?.user} a modifié la configuration des webhooks Discord`);
@@ -10744,6 +11331,7 @@ async function testDiscord(kind){
             : kind==="formation"     ? state.discord.formations
             : kind==="recrutTrooper" ? state.discord.recrutTrooper
             : kind==="recrutAlpha"   ? state.discord.recrutAlpha
+            : kind==="rapports"      ? state.discord.rapports
             : state.discord.promo;
   if(!url){toast("Colle d'abord l'URL du webhook","error");return;}
   const demo={matricule:"A-00",nom:"Test",grade:"CPT",regiment_rct:"501st"};
@@ -10753,8 +11341,11 @@ async function testDiscord(kind){
                 : kind==="formation" ? discordFormationPayload({formateur:"A-93 Karma",eleve:"4477 Thire",formation:"CMD de mission",statut:"Validé",date:new Date().toISOString().slice(0,10)},session?.user,false)
                 : kind==="recrutTrooper" ? recTestPayload("trooper")
                 : kind==="recrutAlpha"   ? recTestPayload("alpha")
+                : kind==="rapports"  ? discordRapportPayload({titre:"Test de liaison",type:"Autre",
+                    author_name:"A-00 Test",author_grade:"ARC",
+                    contenu:"Si tu lis ceci, le salon des comptes rendus fonctionne."},session?.user)
                 : discordAnnoncePayload("Test de liaison","Si tu lis ceci, le webhook fonctionne.",false,session?.user);
-  const sent=await discordSend(url,payload,kind!=="formation");
+  const sent=await discordSend(url,payload,kind!=="formation"&&kind!=="rapports");
   toast(sent?"Message de test envoyé ✓":"Échec - vérifie l'URL",sent?"success":"error");
 }
 
