@@ -1903,7 +1903,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <!-- TAB: COMPTES RENDUS (rédaction, validation, publication) -->
       <div class="dash-tab" data-dtc="rapports" style="display:none">
         <div class="sec-head"><h2>Comptes rendus</h2><span class="line"></span><span class="tag" id="rapSalonTag"></span></div>
-        <p class="card-b" style="margin-bottom:1.2rem">Les grades CT à LTN rédigent leur compte rendu ici. Il part en attente de validation : un officier le lit, puis le valide ou le refuse avec un motif. Une fois validé, il est publié dans le salon Discord prévu pour lui et coche la semaine de son auteur dans les rapports hebdomadaires. Un compte rendu refusé n'est jamais publié.<span class="info-help" data-tip-title="Qui valide ?" data-tip="La validation n'est pas une question de grade seul : elle est réservée aux officiers CPT et plus à qui la tâche &quot;Gérer les rapports&quot; a été attribuée dans l'onglet Tâches.<br><br>Un MAJ et plus peut attribuer cette tâche.">?</span></p>
+        <p class="card-b" style="margin-bottom:1.2rem">Les grades CT à LTN rédigent leur compte rendu ici. Il part en attente de validation : un officier le lit, puis le valide ou le refuse avec un motif. Une fois validé, il est publié dans le salon Discord prévu pour lui et coche la semaine de son auteur dans les rapports hebdomadaires. Un compte rendu refusé n'est jamais publié.<span class="info-help" data-tip-title="Qui valide ?" data-tip="La validation n'est pas une question de grade seul : elle est réservée aux officiers CPT et plus à qui la tâche &quot;Gérer les rapports&quot; a été attribuée dans l'onglet Tâches.<br><br>Un MAJ et plus peut attribuer cette tâche.<br><br>Les CMD, les CMDM et l'administration voient tous les comptes rendus sans avoir la tâche, mais ne peuvent pas les valider pour autant.">?</span></p>
 
         <div class="rec-cards" id="rapWriteCards" style="display:none;max-width:640px">
           <div class="rec-card">
@@ -1928,7 +1928,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         </div>
 
         <div id="rapQueueSection" style="display:none;margin-top:1.3rem">
-          <div class="sec-head"><h2>À valider</h2><span class="line"></span></div>
+          <div class="sec-head"><h2>À valider</h2><span class="line"></span><span class="tag" id="rapReadOnly" style="display:none">lecture seule</span></div>
           <div id="rapQueue" style="margin-bottom:1.5rem"></div>
         </div>
 
@@ -1946,7 +1946,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <p style="font-size:.8rem;color:var(--tx2);line-height:1.6">
             La validation des comptes rendus dépend des tâches attribuées, pas du grade seul.
             Pour valider ou refuser, il faut la tâche <strong>« Gérer les rapports »</strong> :
-            un MAJ et plus peut l'attribuer depuis l'onglet Tâches.
+            un MAJ et plus peut l'attribuer depuis l'onglet Tâches. Les CMD, les CMDM et
+            l'administration gardent la vue complète sans cette tâche, mais en lecture seule.
           </p>
         </div></div>
       </div>
@@ -3402,6 +3403,9 @@ function canEdit(tab){
       return lvl>=3;
     case "reports":
       return lvl>=3;
+    case "rapports":
+      /* agir sur les comptes rendus tient à la tâche, pas au grade seul */
+      return lvl>=3 && myTasks.includes("rapports");
     case "cmd":
       return lvl>=3;
     case "blames":
@@ -6653,6 +6657,15 @@ function canReviewRapport(){
   if(gradeLevel(getSessionGrade())<3)return false;
   return getMyTasks().indexOf("rapports")!==-1;
 }
+/* Visibilité totale sur les comptes rendus : le haut commandement voit tout,
+   même sans la tâche. Voir n'est pas valider : les boutons de décision
+   restent réservés aux porteurs de la tâche. */
+function canSeeAllRapports(){
+  if(!Auth.ok())return false;
+  if(session.role==="brs")return false;
+  if(canReviewRapport())return true;
+  return gradeLevel(getSessionGrade())>=6;
+}
 /* Officier assez gradé mais sans la tâche : on lui explique pourquoi. */
 function rapOfficerWithoutTask(){
   if(!Auth.ok())return false;
@@ -6984,16 +6997,17 @@ function openRapportView(id){
 }
 
 function renderRapports(){
-  const write=canWriteRapport(), review=canReviewRapport();
+  const write=canWriteRapport(), review=canReviewRapport(), voit=canSeeAllRapports();
   const show=(id,on)=>{const el=document.getElementById(id);if(el)el.style.display=on?"":"none";};
   show("rapWriteCards",write);
   show("rapMineSection",write);
-  show("rapQueueSection",review);
-  show("rapHistSection",review);
-  show("rapStats",review);
+  show("rapQueueSection",voit);
+  show("rapHistSection",voit);
+  show("rapStats",voit);
   show("rapTaskHint",rapOfficerWithoutTask());
-  show("rapNoRight",!write&&!review);
+  show("rapNoRight",!write&&!voit);
   show("rapHookWarn",review&&!state.discord.rapports);
+  show("rapReadOnly",voit&&!review);
   const tag=document.getElementById("rapSalonTag");
   if(tag)tag.textContent=state.discord.rapports?"salon configuré":"aucun salon configuré";
 
@@ -7005,12 +7019,12 @@ function renderRapports(){
   if(g("rapStatPub"))g("rapStatPub").textContent=all.filter(r=>rapStatut(r)==="valide"&&!r.published_at).length;
 
   const q=g("rapQueue");
-  if(q&&review)q.innerHTML=pend.length?pend.map(r=>rapCardHtml(r,{review:true})).join("")
+  if(q&&voit)q.innerHTML=pend.length?pend.map(r=>rapCardHtml(r,{review:review})).join("")
     :'<div class="empty"><p>Aucun compte rendu en attente</p></div>';
   const h=g("rapHist");
-  if(h&&review){
+  if(h&&voit){
     const done=all.filter(r=>rapStatut(r)!=="en_attente").slice(0,40);
-    h.innerHTML=done.length?done.map(r=>rapCardHtml(r,{review:true})).join("")
+    h.innerHTML=done.length?done.map(r=>rapCardHtml(r,{review:review})).join("")
       :'<div class="empty"><p>Aucune décision pour le moment</p></div>';
   }
   const mn=g("rapMine");
