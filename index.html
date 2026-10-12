@@ -1838,7 +1838,21 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <!-- ONGLET FORMATIONS -->
       <div class="dash-tab" data-dtc="formations" style="display:none">
         <div class="sec-head"><h2>Formations</h2><span class="line"></span>
+          <div class="roster-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="fmSearchInput" placeholder="Rechercher (formateur, élève, type, statut…)"
+              oninput="fmSearchQ=this.value;renderFormations()">
+            <button id="fmSearchClear" style="display:none" title="Effacer"
+              onclick="fmSearchQ='';document.getElementById('fmSearchInput').value='';renderFormations()">✕</button>
+          </div>
+          <span class="tag" id="fmCount"></span>
           <button class="sbtn green" id="addFormationBtn" onclick="openFormationModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouvelle formation</button>
+        </div>
+        <div class="grid g4" style="margin-bottom:1.3rem">
+          <div class="stat-card"><div class="stat-v" id="fmStatTotal">0</div><div class="stat-l">Formations</div></div>
+          <div class="stat-card"><div class="stat-v" id="fmStatOk">0</div><div class="stat-l">Validées</div></div>
+          <div class="stat-card"><div class="stat-v" id="fmStatRun">0</div><div class="stat-l">En cours</div></div>
+          <div class="stat-card"><div class="stat-v" id="fmStatKo">0</div><div class="stat-l">Échouées</div></div>
         </div>
         <div class="panel"><div class="panel-body flush">
           <table class="tbl">
@@ -1859,6 +1873,12 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <select id="actFMember" onchange="actFilterMember=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none;max-width:200px"></select>
           <span class="tag" id="entrainementsCount"></span>
           <button class="sbtn green" id="addEntrainementBtn" style="display:none" onclick="openEntrainementModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouvelle entrée</button>
+        </div>
+        <div class="grid g4" style="margin-bottom:1.3rem">
+          <div class="stat-card"><div class="stat-v" id="actStatTot">0</div><div class="stat-l">Séances</div></div>
+          <div class="stat-card"><div class="stat-v" id="actStatMem">0</div><div class="stat-l">Membres concernés</div></div>
+          <div class="stat-card"><div class="stat-v" id="actStat30">0</div><div class="stat-l">Sur 30 jours</div></div>
+          <div class="stat-card"><div class="stat-v" id="actStatLast" style="font-size:1rem">-</div><div class="stat-l">Dernière séance</div></div>
         </div>
         <div class="panel"><div class="panel-body flush">
           <table class="tbl">
@@ -1953,6 +1973,12 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <button class="sbtn green" onclick="openCmdModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
         </div>
         <p class="card-b" style="margin-bottom:1.2rem">Chef de mission = <strong style="color:var(--ac)">+1 point</strong> &nbsp;|&nbsp; Second de mission = <strong style="color:var(--ac)">+0.5 point</strong></p>
+        <div class="grid g4" style="margin-bottom:1.3rem">
+          <div class="stat-card"><div class="stat-v" id="cmdStatMis">0</div><div class="stat-l">Missions</div></div>
+          <div class="stat-card"><div class="stat-v" id="cmdStatPts">0</div><div class="stat-l">Points distribués</div></div>
+          <div class="stat-card"><div class="stat-v" id="cmdStatMem">0</div><div class="stat-l">Membres classés</div></div>
+          <div class="stat-card"><div class="stat-v" id="cmdStatTop" style="font-size:1rem">-</div><div class="stat-l">En tête</div></div>
+        </div>
         <div class="sec-head"><h2>Classement</h2><span class="line"></span></div>
         <div class="panel" style="margin-bottom:1.5rem"><div class="panel-body flush" id="cmdRanking"></div></div>
         <div class="sec-head"><h2>Historique</h2><span class="line"></span></div>
@@ -1968,6 +1994,12 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <div class="dash-tab" data-dtc="blames" style="display:none">
         <div class="sec-head"><h2>Blâmes</h2><span class="line"></span>
           <button class="sbtn danger" onclick="openBlameModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouveau blâme</button>
+        </div>
+        <div class="grid g4" style="margin-bottom:1.3rem">
+          <div class="stat-card"><div class="stat-v" id="blStatAct">0</div><div class="stat-l">Blâmes actifs</div></div>
+          <div class="stat-card"><div class="stat-v" id="blStatRes">0</div><div class="stat-l">Levés</div></div>
+          <div class="stat-card"><div class="stat-v" id="blStatTot">0</div><div class="stat-l">Total</div></div>
+          <div class="stat-card"><div class="stat-v" id="blStatMem">0</div><div class="stat-l">Membres concernés</div></div>
         </div>
         <div id="blamesList"></div>
       </div>
@@ -5760,14 +5792,46 @@ function renderJournal(){
   </tr>`).join("");
 }
 
+let fmSearchQ="";
 function renderFormations(){
   const tbody=document.getElementById("formationsBody");if(!tbody)return;
   const canEditF=canEdit("formations");
   const canDelF=canEdit("roster");
   const addBtn=document.getElementById("addFormationBtn");
   if(addBtn)addBtn.style.display=canEditF?"":"none";
-  const list=(state.formations||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  if(!list.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty"><p>Aucune formation enregistrée</p></div></td></tr>';return;}
+  const toutes=(state.formations||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+
+  /* Les chiffres clés portent sur l'ensemble, pas sur le filtre en cours :
+     sinon chercher un nom ferait croire que l'unité n'a que deux formations. */
+  const nOk=toutes.filter(f=>f.statut==="Validé").length;
+  const nRun=toutes.filter(f=>f.statut==="En cours").length;
+  const nKo=toutes.filter(f=>f.statut==="Échoué").length;
+  const gf=id=>document.getElementById(id);
+  if(gf("fmStatTotal"))gf("fmStatTotal").textContent=toutes.length;
+  if(gf("fmStatOk"))gf("fmStatOk").textContent=nOk;
+  if(gf("fmStatRun"))gf("fmStatRun").textContent=nRun;
+  if(gf("fmStatKo"))gf("fmStatKo").textContent=nKo;
+  statTone("fmStatTotal",toutes.length?"ac":"mute","depuis le début");
+  statTone("fmStatOk",nOk?"ok":"mute",toutes.length?Math.round(nOk/toutes.length*100)+" % des formations":"");
+  statTone("fmStatRun",nRun?"warn":"ok",nRun?"à terminer":"rien en cours");
+  statTone("fmStatKo",nKo?"crit":"ok",nKo?"à repasser":"aucun échec");
+
+  const q=(fmSearchQ||"").trim().toLowerCase();
+  const clr=gf("fmSearchClear");
+  if(clr)clr.style.display=q?"":"none";
+  let list=toutes;
+  if(q)list=toutes.filter(f=>[
+      memberLabel(f.formateur_id,f.formateur,""),memberLabel(f.eleve_id,f.eleve,""),
+      f.formation||"",f.statut||"",f.date||""
+    ].join(" ").toLowerCase().includes(q));
+  const cf=gf("fmCount");
+  if(cf)cf.textContent=list.length+(list.length>1?" formations":" formation")+(q?" trouvées":"");
+  if(!list.length){
+    tbody.innerHTML='<tr><td colspan="6"><div class="empty"><p>'
+      +(q?("Aucune formation pour « "+esc(fmSearchQ)+" »"):"Aucune formation enregistrée")
+      +'</p></div></td></tr>';
+    return;
+  }
   const stColors={"Validé":"var(--gr)","En cours":"var(--ye)","Échoué":"var(--rd)"};
   tbody.innerHTML=list.map(f=>{
     const sc=stColors[f.statut]||"var(--dm)";
@@ -6060,6 +6124,23 @@ function renderEntrainements(){
   if(actFilterMember)list=list.filter(a=>actIds(a).includes(String(actFilterMember)));
   const cnt=document.getElementById("entrainementsCount");
   if(cnt)cnt.textContent=`${list.length} entrée${list.length>1?"s":""}`;
+
+  /* Chiffres clés sur toutes les séances, filtres non compris. */
+  const sea=(state.activites||[]);
+  const qui=new Set();
+  sea.forEach(a=>actIds(a).forEach(i=>qui.add(String(i))));
+  const ilYa30=addDaysYmd(ymdLocal(new Date()),-30);
+  const rec=sea.filter(a=>String(a.date||"")>=ilYa30).length;
+  const der=sea.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")))[0];
+  const ga=id=>document.getElementById(id);
+  if(ga("actStatTot"))ga("actStatTot").textContent=sea.length;
+  if(ga("actStatMem"))ga("actStatMem").textContent=qui.size;
+  if(ga("actStat30"))ga("actStat30").textContent=rec;
+  if(ga("actStatLast"))ga("actStatLast").textContent=der&&der.date?fmtDate(der.date):"-";
+  statTone("actStatTot",sea.length?"ac":"mute","depuis le début");
+  statTone("actStatMem",qui.size?"ok":"mute",qui.size?"ont participé":"");
+  statTone("actStat30",rec?"ok":"warn",rec?"séances récentes":"rien ce mois-ci");
+  statTone("actStatLast",der?"ac":"mute",der?(der.type||""):"");
   if(!list.length){
     const vide=(actFilterType||actFilterMember)?"Aucune entrée pour ce filtre":"Aucune entrée enregistrée";
     tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><p>${vide}</p></div></td></tr>`;return;
@@ -6429,6 +6510,20 @@ function renderCmd(){
     ranking.set(k,cur);
   });
   const sorted=[...ranking.values()].sort((a,b)=>b.pts-a.pts);
+
+  /* Chiffres clés du tableau de chasse. */
+  const totPts=state.cmdmissions.reduce((s,c)=>s+parseFloat(c.points||0),0);
+  const gc2=id=>document.getElementById(id);
+  if(gc2("cmdStatMis"))gc2("cmdStatMis").textContent=state.cmdmissions.length;
+  if(gc2("cmdStatPts"))gc2("cmdStatPts").textContent=Math.round(totPts*10)/10;
+  if(gc2("cmdStatMem"))gc2("cmdStatMem").textContent=sorted.length;
+  if(gc2("cmdStatTop"))gc2("cmdStatTop").textContent=sorted.length?memberLabel(sorted[0].id,sorted[0].stored):"-";
+  statTone("cmdStatMis",state.cmdmissions.length?"ac":"mute","enregistrées");
+  statTone("cmdStatPts",totPts?"ok":"mute",state.cmdmissions.length?"chefs et seconds":"");
+  statTone("cmdStatMem",sorted.length?"ac":"mute",sorted.length?"au classement":"");
+  statTone("cmdStatTop",sorted.length?"ok":"mute",
+    sorted.length?(Math.round(sorted[0].pts*10)/10+(sorted[0].pts>1?" points":" point")):"");
+
   const rc=document.getElementById("cmdRanking");
   if(rc){
     if(!sorted.length)rc.innerHTML='<div class="empty"><p>Aucun CMD enregistré</p></div>';
@@ -6501,6 +6596,21 @@ function openBlameModal(){
 function renderBlames(){
   const el=document.getElementById("blamesList");if(!el)return;
   const active=state.blames.filter(b=>!b.resolved),resolved=state.blames.filter(b=>b.resolved);
+
+  /* Chiffres clés : aucun blâme actif est une bonne nouvelle, elle se voit. */
+  const touches=new Set(state.blames.map(b=>memberKey(b.member_id,b.member_name)));
+  const gb=id=>document.getElementById(id);
+  if(gb("blStatAct"))gb("blStatAct").textContent=active.length;
+  if(gb("blStatRes"))gb("blStatRes").textContent=resolved.length;
+  if(gb("blStatTot"))gb("blStatTot").textContent=state.blames.length;
+  if(gb("blStatMem"))gb("blStatMem").textContent=state.blames.length?touches.size:0;
+  statTone("blStatAct",active.length?"crit":"ok",active.length?"à traiter":"aucun en cours");
+  statTone("blStatRes",resolved.length?"ok":"mute",resolved.length?"classés":"");
+  statTone("blStatTot","mute",state.blames.length?"depuis le début":"");
+  const effB=state.members.filter(m=>(m.categorie||"effectif")==="effectif").length;
+  statTone("blStatMem",touches.size?"warn":"ok",
+    state.blames.length?("sur "+effB+" membres"):"personne n'est concerné");
+
   if(!state.blames.length){el.innerHTML='<div class="empty"><p>Aucun blâme</p></div>';return;}
   const lc={1:"var(--or)",2:"var(--rd)",3:"var(--rd)"};
   const canManageBlames=canEdit("blames");
