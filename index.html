@@ -98,7 +98,8 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 
 .sec-head{display:flex;align-items:center;gap:.8rem;margin:2rem 0 1.1rem;flex-wrap:wrap}
 .sec-head:first-child{margin-top:0}
-.sec-head h2{font-family:var(--fs);font-weight:700;font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tx);white-space:nowrap}
+.sec-head h2{font-family:var(--fs);font-weight:700;font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;color:var(--tx);white-space:nowrap;display:flex;align-items:baseline;gap:.5rem}
+.sec-head h2::before{content:"//";color:var(--ac);opacity:.65;font-family:var(--fm);font-size:.8em;letter-spacing:0}
 .sec-head .line{flex:1;min-width:1.5rem;height:1px;background:linear-gradient(90deg,var(--ls),transparent)}
 .sec-head .tag{font-family:var(--fm);font-size:.62rem;color:var(--dm);letter-spacing:.15em;text-transform:uppercase}
 .sec-kicker{font-family:var(--fm);font-size:.64rem;color:var(--ac);letter-spacing:.22em;text-transform:uppercase;margin-bottom:.5rem;display:block}
@@ -356,7 +357,14 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .tbl thead th{font-family:var(--fm);font-size:.58rem;color:var(--dm);letter-spacing:.12em;text-transform:uppercase;
   text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--ln);font-weight:500;background:var(--s2)}
 .tbl tbody tr{border-bottom:1px solid rgba(0,229,255,.05);transition:background .2s;position:relative}
+.tbl tbody tr:nth-child(even){background:rgba(255,255,255,.015)}
 .tbl tbody tr:hover{background:var(--s2)}
+.tbl tbody td .sbtn,.tbl tbody td .icon-btn{opacity:.5;transition:opacity .18s,transform .18s}
+.tbl tbody tr:hover td .sbtn,.tbl tbody tr:hover td .icon-btn,
+.tbl tbody td .sbtn:focus-visible,.tbl tbody td .icon-btn:focus-visible{opacity:1}
+@media(hover:none){.tbl tbody td .sbtn,.tbl tbody td .icon-btn{opacity:1}}
+.tbl thead th{position:relative}
+.tbl td.num,.tbl th.num{text-align:right;font-variant-numeric:tabular-nums}
 .tbl tbody td{padding:.62rem .8rem;color:var(--tx2);vertical-align:middle}
 .tbl .mat{font-family:var(--fm);font-size:.78rem;color:var(--ac);font-weight:600}
 .tbl .nm{color:var(--tx);font-weight:600}
@@ -410,6 +418,10 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .field input,.field select,.field textarea{width:100%;background:var(--s2);border:1px solid var(--ln);color:var(--tx);
   padding:.6rem .8rem;font-family:var(--fr);font-size:.9rem;outline:none;transition:border-color .2s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ac)}
+.field input:hover:not(:focus),.field select:hover:not(:focus),.field textarea:hover:not(:focus){border-color:var(--ls)}
+.btn:active,.sbtn:active,.icon-btn:active,.nav-tab:active{transform:translateY(1px)}
+.btn,.sbtn,.icon-btn{-webkit-tap-highlight-color:transparent}
+.btn[disabled],.sbtn[disabled]{opacity:.4;cursor:not-allowed;transform:none}
 .field textarea{resize:vertical;min-height:70px;font-weight:300}
 .form-row{display:grid;gap:.8rem}
 .fr2{grid-template-columns:1fr 1fr}
@@ -431,6 +443,8 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(3,5,10,.8);backdrop-filter:blur(6px);
   z-index:600;align-items:center;justify-content:center;padding:1rem;animation:pageIn .3s}
 .modal-bg.show{display:flex}
+.modal-bg.show>.modal{animation:modalIn .26s cubic-bezier(.16,1,.3,1)}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 .modal{background:var(--s1);border:1px solid var(--ls);width:100%;max-width:380px;position:relative;
   clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px)}
 .modal.wide{max-width:560px}
@@ -571,6 +585,11 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .ann-meta{font-family:var(--fm);font-size:.6rem;color:var(--dm);letter-spacing:.08em;margin-top:.4rem}
 .ann-pinbadge{font-family:var(--fm);font-size:.54rem;color:var(--or);letter-spacing:.1em;text-transform:uppercase;
   padding:.1rem .4rem;border:1px solid rgba(255,138,61,.3)}
+
+/* Les cartes cliquables le disent au survol, sans crier. */
+.rec-card{transition:border-color .25s,transform .25s cubic-bezier(.16,1,.3,1)}
+.rec-card:hover{border-color:var(--ls);transform:translateY(-2px)}
+.panel{transition:border-color .25s}
 
 .log-item{display:flex;align-items:center;gap:.8rem;padding:.6rem .9rem;border-bottom:1px solid rgba(0,229,255,.05);font-size:.8rem}
 .log-item:last-child{border-bottom:none}
@@ -838,6 +857,13 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 @media(max-width:640px){.ib-ticker{display:none}.indian-banner{max-width:94vw}}
 @media(prefers-reduced-motion:reduce){.ib-flag,.ib-track{animation:none}.indian-banner{transition:none}}
 
+.cmdk-hint{display:none;align-items:center;gap:.4rem;padding:.3rem .55rem;background:var(--s2);
+  border:1px solid var(--ln);color:var(--dm);font-family:var(--fm);font-size:.6rem;letter-spacing:.08em;
+  cursor:pointer;transition:all .2s;white-space:nowrap}
+.cmdk-hint:hover{border-color:var(--ls);color:var(--ac)}
+.cmdk-hint kbd{font-family:var(--fm);font-size:.58rem;background:var(--bg2);border:1px solid var(--ln);
+  padding:.05rem .3rem;color:var(--tx2)}
+@media(max-width:900px){.cmdk-hint{display:none !important}}
 .sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--gr);
   box-shadow:0 0 7px rgba(34,217,122,.6);transition:background .3s,box-shadow .3s;margin-right:.15rem}
 .sync-dot.busy{background:var(--ac);box-shadow:0 0 7px var(--gw);animation:syncPulse 1s ease-in-out infinite}
@@ -1131,6 +1157,10 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
       <button class="nav-tab" data-v="dashboard" onclick="nav('dashboard')"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>Dashboard<span class="nav-lock" id="dashLock">🔒</span></button>
     </div>
     <div class="nav-right">
+      <button class="cmdk-hint" id="cmdkHint" onclick="openCmdK()" title="Rechercher un onglet ou un membre">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Rechercher <kbd>Ctrl</kbd><kbd>K</kbd>
+      </button>
       <span class="sync-dot" id="syncDot" title="À jour - les modifications apparaissent automatiquement" aria-hidden="true"></span>
       <button class="login-btn" id="loginBtn" onclick="openLogin()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Connexion</button>
       <div class="user-chip" id="userChip" style="display:none" onclick="openAccount()">
@@ -4496,6 +4526,7 @@ function updateNavUI(){
   const dl=document.getElementById("dashLock");
   if(session){
     lb.style.display="none";uc.style.display="flex";
+    const ck=document.getElementById("cmdkHint"); if(ck)ck.style.display="flex";
     document.getElementById("ucName").textContent=session.user;
     document.getElementById("ucAv").textContent=(session.user[0]||"?").toUpperCase();
     const liveGrade=(sessionMember()||{}).grade||session.grade||"";
@@ -4508,6 +4539,7 @@ function updateNavUI(){
     if(dl)dl.style.display="none";
   }else{
     lb.style.display="flex";uc.style.display="none";
+    const ck0=document.getElementById("cmdkHint"); if(ck0)ck0.style.display="none";
     if(dl)dl.textContent="🔒";
   }
 }
