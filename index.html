@@ -315,7 +315,29 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .g2{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
 .g3{grid-template-columns:repeat(auto-fill,minmax(225px,1fr))}
 .g4{grid-template-columns:repeat(auto-fill,minmax(175px,1fr))}
-#navEditorGroups{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:.7rem;align-items:start}
+#navEditorGroups{display:grid;grid-template-columns:repeat(auto-fill,minmax(222px,1fr));gap:.7rem;align-items:start}
+.nav-ed-grp{border:1px solid var(--ln);background:var(--s2);padding:.8rem;min-width:0;
+  display:flex;flex-direction:column;gap:.5rem}
+.nav-ed-head{display:flex;align-items:center;gap:.4rem;min-width:0}
+.nav-ed-ico{width:32px;text-align:center;font-size:1rem;flex-shrink:0}
+.nav-ed-name{flex:1;min-width:0;font-weight:600}
+.nav-ed-count{font-family:var(--fm);font-size:.58rem;color:var(--dm);border:1px solid var(--ln);
+  padding:.05rem .32rem;flex-shrink:0}
+.nav-ed-tools{display:flex;align-items:center;gap:.25rem}
+.nav-ed-tools .icon-btn{width:24px;height:22px;font-size:.72rem;border-radius:0}
+.nav-ed-sep{flex:1}
+.nav-ed-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.25rem}
+.nav-ed-tab{display:flex;align-items:center;gap:.25rem;padding:.22rem .25rem .22rem .4rem;
+  background:var(--s3);border:1px solid var(--ln);font-family:var(--fm);font-size:.68rem;min-width:0}
+.nav-ed-rank{font-size:.55rem;color:var(--dm);min-width:1.2em;text-align:right;flex-shrink:0}
+.nav-ed-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)}
+.nav-ed-tab .icon-btn{width:19px;height:18px;font-size:.64rem;border-color:transparent;
+  flex-shrink:0;border-radius:0}
+.nav-ed-tab .icon-btn:hover{border-color:var(--ls)}
+.nav-ed-grp .icon-btn[disabled]{opacity:.22;pointer-events:none}
+.nav-ed-empty{color:var(--dm);font-size:.68rem;font-style:italic;padding:.25rem 0}
+.nav-ed-add{width:100%;font-size:.7rem;margin-top:auto}
+#navEditorOrphans{font-family:var(--fm);font-size:.64rem;color:var(--or);margin-top:.8rem}
 .card{background:var(--s1);border:1px solid var(--ln);padding:1.3rem;position:relative;overflow:hidden;
   transition:transform .35s cubic-bezier(.16,1,.3,1),border-color .35s,box-shadow .35s;
   clip-path:polygon(11px 0,100% 0,100% calc(100% - 11px),calc(100% - 11px) 100%,0 100%,0 11px)}
@@ -2072,11 +2094,14 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <div class="panel" id="navEditorPanel" style="display:none;grid-column:1/-1">
             <div class="panel-head"><h3><span class="pk">//</span> Organisation des menus</h3></div>
             <div class="panel-body">
-              <p class="card-b" style="margin-bottom:1rem">Réservé aux CMDM, CMD et Admin. Glisse les onglets entre les groupes ou renomme les groupes. Les changements s'appliquent à tous les membres.</p>
+              <p class="card-b" style="margin-bottom:1rem">Réservé aux CMDM, CMD et Admin. Chaque carte est un groupe de la barre de navigation : renomme-le, change son rang avec <strong>←</strong> et <strong>→</strong>, et ordonne ses onglets avec <strong>↑</strong> et <strong>↓</strong>. Rien n'est appliqué tant que tu n'as pas enregistré.</p>
               <div id="navEditorGroups"></div>
-              <div style="display:flex;gap:.6rem;margin-top:1rem">
+              <div id="navEditorOrphans" style="display:none"></div>
+              <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
                 <button class="sbtn green" onclick="saveNavGroups()">Enregistrer l'organisation</button>
-                <button class="sbtn" onclick="resetNavGroups()">Réinitialiser par défaut</button>
+                <button class="sbtn" onclick="sortNavTabs()" title="Range les onglets de chaque groupe dans l'ordre conseillé, sans les changer de groupe">Trier les onglets</button>
+                <button class="sbtn" onclick="addNavGroup()">+ Nouveau groupe</button>
+                <button class="sbtn danger" onclick="resetNavGroups()">Réinitialiser par défaut</button>
               </div>
             </div>
           </div>
@@ -4110,6 +4135,16 @@ function initFicheCdm(){
 
 let _navEditDraft = null;
 
+/* Ordre conseillé des onglets, déduit de l'organisation par défaut. Sert au
+   bouton « Trier » : il range les onglets DANS chaque groupe sans jamais les
+   déplacer d'un groupe à l'autre, donc une organisation sur mesure survit. */
+function navCanonicalOrder(){
+  const out=[];
+  DEFAULT_NAV_GROUPS.forEach(g=>g.tabs.forEach(t=>{ if(out.indexOf(t)===-1)out.push(t); }));
+  Object.keys(TAB_META).forEach(t=>{ if(out.indexOf(t)===-1)out.push(t); });
+  return out;
+}
+
 function renderNavEditor(){
   const panel = document.getElementById("navEditorPanel");
   if(!panel) return;
@@ -4120,34 +4155,95 @@ function renderNavEditor(){
 
   const el = document.getElementById("navEditorGroups");
   const allTabs = Object.keys(TAB_META);
+  const nb = _navEditDraft.length;
 
   el.innerHTML = _navEditDraft.map((g,gi)=>`
-    <div style="border:1px solid var(--ln);background:var(--s2);padding:.9rem;min-width:0">
-      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.7rem;flex-wrap:wrap">
-        <input type="text" class="inline-inp" value="${esc(g.icon)}" style="width:42px;text-align:center;font-size:1rem"
-          onchange="updateNavGroupField(${gi},'icon',this.value)" title="Icône">
-        <input type="text" class="inline-inp" value="${esc(g.label)}" style="flex:1;min-width:0;font-weight:600"
-          onchange="updateNavGroupField(${gi},'label',this.value)" title="Nom du groupe">
-        ${_navEditDraft.length>1?`<button class="sbtn danger" style="padding:.25rem .5rem;font-size:.62rem" onclick="removeNavGroup(${gi})">Supprimer</button>`:""}
+    <div class="nav-ed-grp">
+      <div class="nav-ed-head">
+        <input type="text" class="inline-inp nav-ed-ico" value="${esc(g.icon)}"
+          onchange="updateNavGroupField(${gi},'icon',this.value)" title="Icône du groupe" aria-label="Icône du groupe">
+        <input type="text" class="inline-inp nav-ed-name" value="${esc(g.label)}"
+          onchange="updateNavGroupField(${gi},'label',this.value)" title="Nom du groupe" aria-label="Nom du groupe">
+        <span class="nav-ed-count" title="${g.tabs.length} onglet${g.tabs.length>1?"s":""}">${g.tabs.length}</span>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:.4rem">
-        ${g.tabs.map(t=>{
+      <div class="nav-ed-tools">
+        <button class="icon-btn" onclick="moveNavGroup(${gi},-1)"${gi===0?" disabled":""}
+          title="Déplacer ce groupe vers la gauche" aria-label="Déplacer ce groupe vers la gauche">←</button>
+        <button class="icon-btn" onclick="moveNavGroup(${gi},1)"${gi===nb-1?" disabled":""}
+          title="Déplacer ce groupe vers la droite" aria-label="Déplacer ce groupe vers la droite">→</button>
+        <span class="nav-ed-sep"></span>
+        ${nb>1?`<button class="icon-btn del" onclick="removeNavGroup(${gi})"
+          title="Supprimer le groupe" aria-label="Supprimer le groupe ${esc(g.label)}">✕</button>`:""}
+      </div>
+      <ul class="nav-ed-list">
+        ${g.tabs.map((t,ti)=>{
           const meta = TAB_META[t]||{label:t,icon:""};
-          return `<span style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .55rem;background:var(--s3);border:1px solid var(--ln);font-size:.72rem;font-family:var(--fm)">
-            ${meta.icon||""} ${meta.label}
-            <button onclick="moveTabFromGroup(${gi},'${t}')" title="Retirer / déplacer" style="background:none;border:none;color:var(--rd);cursor:pointer;font-size:.85rem;line-height:1;padding:0">×</button>
-          </span>`;
-        }).join("")||'<span style="color:var(--dm);font-size:.72rem;font-style:italic">Aucun onglet</span>'}
-      </div>
-      <!-- Ajouter un onglet non assigné à ce groupe -->
-      <div style="margin-top:.6rem">
-        <select class="inline-sel" style="font-size:.72rem" onchange="addTabToGroup(${gi},this.value);this.value=''">
-          <option value="">+ Ajouter un onglet…</option>
-          ${allTabs.filter(t=>!g.tabs.includes(t)).map(t=>`<option value="${t}">${(TAB_META[t].icon||"")} ${TAB_META[t].label}</option>`).join("")}
-        </select>
-      </div>
-    </div>`).join("") + `
-    <button class="sbtn" style="grid-column:1/-1;justify-self:start;margin-top:.3rem" onclick="addNavGroup()">+ Nouveau groupe</button>`;
+          return `<li class="nav-ed-tab">
+            <span class="nav-ed-rank">${ti+1}</span>
+            <span class="nav-ed-lbl" title="${esc(meta.label)}">${meta.icon?meta.icon+" ":""}${esc(meta.label)}</span>
+            <button class="icon-btn" onclick="moveTabInGroup(${gi},${ti},-1)"${ti===0?" disabled":""}
+              title="Monter" aria-label="Monter ${esc(meta.label)}">↑</button>
+            <button class="icon-btn" onclick="moveTabInGroup(${gi},${ti},1)"${ti===g.tabs.length-1?" disabled":""}
+              title="Descendre" aria-label="Descendre ${esc(meta.label)}">↓</button>
+            <button class="icon-btn del" onclick="moveTabFromGroup(${gi},'${escJs(t)}')"
+              title="Retirer du groupe" aria-label="Retirer ${esc(meta.label)}">✕</button>
+          </li>`;
+        }).join("")||'<li class="nav-ed-empty">Aucun onglet dans ce groupe</li>'}
+      </ul>
+      <select class="inline-sel nav-ed-add" onchange="addTabToGroup(${gi},this.value);this.value=''"
+        aria-label="Ajouter un onglet au groupe ${esc(g.label)}">
+        <option value="">+ Ajouter un onglet…</option>
+        ${allTabs.filter(t=>!g.tabs.includes(t)).map(t=>
+          `<option value="${esc(t)}">${TAB_META[t].icon||""} ${esc(TAB_META[t].label)}</option>`).join("")}
+      </select>
+    </div>`).join("");
+
+  const orph=document.getElementById("navEditorOrphans");
+  if(orph){
+    const pris=new Set();
+    _navEditDraft.forEach(g=>g.tabs.forEach(t=>pris.add(t)));
+    const seuls=allTabs.filter(t=>!pris.has(t));
+    orph.style.display=seuls.length?"":"none";
+    orph.textContent=seuls.length
+      ? "⚠ Hors de tout groupe, donc inaccessible : "+seuls.map(t=>TAB_META[t].label).join(", ")
+      : "";
+  }
+}
+
+/* Rang d'un onglet dans son groupe. */
+function moveTabInGroup(gi,ti,dir){
+  const g=_navEditDraft[gi];
+  if(!g) return;
+  const j=ti+dir;
+  if(j<0||j>=g.tabs.length) return;
+  const t=g.tabs.splice(ti,1)[0];
+  g.tabs.splice(j,0,t);
+  renderNavEditor();
+}
+
+/* Rang d'un groupe dans la barre. */
+function moveNavGroup(gi,dir){
+  const j=gi+dir;
+  if(j<0||j>=_navEditDraft.length) return;
+  const g=_navEditDraft.splice(gi,1)[0];
+  _navEditDraft.splice(j,0,g);
+  renderNavEditor();
+}
+
+/* Remet les onglets de chaque groupe dans l'ordre conseillé, sans toucher à
+   la répartition entre groupes. */
+function sortNavTabs(){
+  const ordre=navCanonicalOrder();
+  const rang=t=>{const i=ordre.indexOf(t);return i===-1?999:i;};
+  let bouge=false;
+  _navEditDraft.forEach(g=>{
+    const avant=g.tabs.join("|");
+    g.tabs.sort((a,b)=>rang(a)-rang(b));
+    if(g.tabs.join("|")!==avant) bouge=true;
+  });
+  renderNavEditor();
+  toast(bouge?"Onglets remis dans l'ordre conseillé":"Les onglets étaient déjà dans l'ordre",
+        bouge?"success":"info");
 }
 
 function updateNavGroupField(gi,field,value){
