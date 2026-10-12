@@ -8378,7 +8378,8 @@ function pollWake(immediat){
 ["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,()=>{
   if(_pollDelay!==POLL_BASE) pollWake(false);
 },{passive:true}));
-document.addEventListener("visibilitychange",()=>{ if(!document.hidden) pollWake(true); });
+/* Le retour sur l'onglet est deja traite plus bas, par un ecouteur qui force
+   en plus une relecture des tables (pollCount=2). On n'en pose pas un second. */
 
 async function pollRealtime(){
   if(_pollBusy) return schedulePoll();
