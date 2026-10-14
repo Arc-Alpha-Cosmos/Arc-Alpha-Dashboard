@@ -7335,6 +7335,18 @@ function canSeeAllRapports(){
   if(canReviewRapport())return true;
   return gradeLevel(getSessionGrade())>=6;
 }
+/* Suppression. Un compte rendu validé est une décision d'officier, pas un
+   brouillon : son auteur ne peut plus l'effacer seul. Tant qu'il n'a pas été
+   validé, en revanche, il reste à lui. */
+function canDeleteRapport(r){
+  if(!r||!Auth.ok())return false;
+  if(session.role==="brs")return false;
+  if(session.role==="admin"||session.role==="amiraute")return true;
+  if(canReviewRapport())return true;
+  if(gradeLevel(getSessionGrade())>=6)return true;
+  return rapIsMine(r)&&rapStatut(r)!=="valide";
+}
+
 /* Officier assez gradé mais sans la tâche : on lui explique pourquoi. */
 function rapOfficerWithoutTask(){
   if(!Auth.ok())return false;
@@ -7711,6 +7723,40 @@ function rapPill(r){
   const e=rapEtat(r);
   return `<span style="font-family:var(--fm);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.12rem .45rem;border:1px solid ${e.color};color:${e.color}">${esc(e.label)}</span>`;
 }
+async function rapDelete(id){
+  const r=rapById(id);
+  if(!r){toast("Compte rendu introuvable","error");return;}
+  if(!canDeleteRapport(r)){toast("Tu ne peux pas supprimer ce compte rendu","error");return;}
+
+  const dit=["Supprimer définitivement « "+String(r.titre||"?")+" » ?"];
+  if(r.published_at)dit.push("Il a déjà été publié : le message Discord, lui, restera en place.");
+  else if(rapStatut(r)==="valide")dit.push("Il a été validé par "+String(r.reviewer_name||"un officier")+".");
+  if(!await uiConfirm({kicker:"// SUPPRESSION",title:"Supprimer le compte rendu",
+    message:dit.join("\n\n"),okText:"Supprimer",cancelText:"Annuler",danger:true}))return;
+
+  const res=await rapRpc("arc_rapport_delete",{p_id:String(id)});
+  if(res.failed){toast("La base a refusé la suppression","error");return;}
+  if(res.ok){
+    if(!res.data||res.data.ok!==true){
+      const quoi=(res.data&&res.data.reason)||"";
+      toast(quoi==="interdit"?"La base a refusé : droits insuffisants"
+           :(quoi==="introuvable"?"Ce compte rendu n'existe plus":"Suppression refusée"),"error");
+      await rapRefresh();
+      return;
+    }
+  }else if(supaOK){
+    /* Pas encore de fonction SQL : suppression directe. */
+    const w=await supaDelete(T.rapports,"id=eq."+encodeURIComponent(id));
+    if(!w){toast("Suppression impossible : la base a refusé","error");return;}
+  }
+  state.rapports=rapList().filter(x=>String(x.id)!==String(id));
+  if(!supaOK)saveLS();
+  closeModal("rapportViewModal");
+  renderRapports();checkMyReportStatus();
+  toast("Compte rendu supprimé","info");
+  await logActivity((session?.user||"?")+" a supprimé le compte rendu : "+String(r.titre||"?"));
+}
+
 function rapCardHtml(r,opts){
   const o=opts||{}, e=rapEtat(r), st=rapStatut(r);
   const acts=[`<button class="sbtn" style="padding:.18rem .5rem;font-size:.6rem" onclick="openRapportView('${escJs(r.id)}')">Consulter</button>`];
@@ -7723,6 +7769,9 @@ function rapCardHtml(r,opts){
   }
   if(o.mine&&st==="refuse"){
     acts.push(`<button class="sbtn" style="padding:.18rem .5rem;font-size:.6rem" onclick="openRapportModal('${escJs(r.id)}')">Reprendre</button>`);
+  }
+  if(canDeleteRapport(r)){
+    acts.push(`<button class="sbtn danger" style="padding:.18rem .5rem;font-size:.6rem" onclick="rapDelete('${escJs(r.id)}')">Supprimer</button>`);
   }
   const meta=[esc(r.author_name||"?"),fmtDate(r.created_at)];
   const _np=rapPieces(r).length;
@@ -7769,6 +7818,9 @@ function openRapportView(id){
     }
     if(rapIsMine(r)&&st==="refuse"){
       acts.push(`<button class="btn btn-primary" onclick="closeModal('rapportViewModal');openRapportModal('${escJs(r.id)}')">Reprendre</button>`);
+    }
+    if(canDeleteRapport(r)){
+      acts.splice(1,0,`<button class="btn btn-danger" onclick="rapDelete('${escJs(r.id)}')">Supprimer</button>`);
     }
     f.innerHTML=acts.join("");
   }
