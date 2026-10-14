@@ -418,6 +418,19 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .st-absent{color:var(--rd)}.st-absent .d{background:var(--rd)}
 .st-reserve{color:var(--dm)}.st-reserve .d{background:var(--dm)}
 
+/* Bandeau des places par grade (onglet Effectif) : purement informatif. */
+.plc-band{display:flex;flex-wrap:wrap;gap:.45rem;margin:0 0 1rem}
+.plc{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;border:1px solid var(--ln);
+  border-radius:3px;background:var(--s1);font-family:var(--fm);font-size:.62rem;letter-spacing:.04em}
+.plc b{font-weight:700;color:var(--tx)}
+.plc i{font-style:normal;color:var(--dm);text-transform:uppercase;letter-spacing:.1em;font-size:.56rem}
+.plc.p-libre{border-color:rgba(34,217,122,.28)}
+.plc.p-libre i{color:var(--gr)}
+.plc.p-plein{border-color:rgba(107,118,137,.38)}
+.plc.p-over{border-color:rgba(255,59,92,.45);background:rgba(255,59,92,.07)}
+.plc.p-over i{color:var(--rd)}
+.plc.p-open{border-style:dashed}
+
 .sbtn{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;font-family:var(--fr);font-weight:700;
   font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid var(--ls);
   background:transparent;color:var(--ac);transition:all .22s}
@@ -1813,6 +1826,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           <span class="tag" id="rosterCount"></span>
           <button class="sbtn green" onclick="openMemberModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter</button>
         </div>
+        <div class="plc-band" id="rosterPlaces" aria-label="Places par grade"></div>
         <div class="panel"><div class="panel-body flush">
           <table class="tbl">
             <thead><tr><th>Grade</th><th>Matricule</th><th>Nom</th><th>Régiment</th><th>RCT</th><th>Formations</th><th>Statut</th><th>Dernière promo</th><th>CMD<span class="info-help" data-tip-title="CMD de mission" data-tip="Points gagnés en commandant une mission.<br><br>Chef de mission : +1 pt<br>Second : +0.5 pt<br><br>Réservé aux officiers LT et plus.">?</span></th><th>Promo<span class="info-help" data-tip-title="Règles de promotion" data-tip="✅ = éligible, ⛔ = pas encore.<br><br>ARC→SGT : 10j<br>SGT→LT : 17j<br>LT→CPT : 20j + 1.5 CMD<br>CPT→MAJ : 25j + 3 CMD<br>MAJ→VCMD : 30j + 5 CMD<br>VCMD→CMD : 30j + 8 CMD<br>CMD→CMDM : manuel">?</span></th><th style="text-align:right">Actions</th></tr></thead>
@@ -4994,7 +5008,6 @@ function renderOverview(){
   renderTodo();ovRenderDeadline();ovInitRadar();
 }
 
-/* Effectif visé par l'unité : sert de repère à la jauge d'effectif. */
 /* Effectif visé par l'unité. Réglable dans l'Administration : il a été
    réduit à 12 le 2026-10-14, il changera encore. 15 n'est que le repli
    quand la configuration n'a rien dit. */
@@ -6441,8 +6454,77 @@ async function applyCategorie(memberId,target,date,raison){
 }
 
 let rosterSearchQ="";
+/* Places par grade, telles que le commandement les a fixees. Confirmees sans
+   changement le 2026-10-14 : le corps d'officiers garde ses 8 postes. Les
+   grades absents de cette table sont sans limite (LT, SGT, ARC).
+   Tout est informatif : rien ici ne refuse une promotion. */
+const GRADE_PLACES={CMDM:1,CMD:1,VCMD:1,MAJ:2,CPT:3};
+
+function gradePlaces(g){
+  const n=GRADE_PLACES[g];
+  return (n>0)?n:null;
+}
+
+/* Compte les titulaires d'un grade dans l'effectif. `saufId` ecarte la fiche en
+   cours de modification : promouvoir un CPT au grade de MAJ ne doit pas compter
+   sa place de depart. Reserve et blacklist n'occupent aucune place. */
+function gradeOccupe(g,saufId){
+  return (state.members||[]).filter(m=>
+    (m.categorie||"effectif")==="effectif" && m.grade===g &&
+    (saufId===undefined||saufId===null||String(m.id)!==String(saufId))
+  ).length;
+}
+
+function renderRosterPlaces(){
+  const band=document.getElementById("rosterPlaces");
+  if(!band)return;
+  const chips=GRADE_ORDER.filter(g=>gradePlaces(g)).map(g=>{
+    const max=gradePlaces(g), occ=gradeOccupe(g);
+    const reste=max-occ;
+    const cls=reste>0?"p-libre":(reste===0?"p-plein":"p-over");
+    const mot=reste>0?(reste+" libre"+(reste>1?"s":""))
+             :(reste===0?"complet":("+"+(-reste)+" hors place"+(reste<-1?"s":"")));
+    const tenus=(state.members||[]).filter(m=>(m.categorie||"effectif")==="effectif"&&m.grade===g)
+      .map(m=>m.matricule||m.nom||"?");
+    const bulle=gradeLabel(g)+" : "+occ+" sur "+max+" place"+(max>1?"s":"")
+      +(tenus.length?" ("+tenus.join(", ")+")":"");
+    return `<span class="plc ${cls}" title="${esc(bulle)}">`
+      +`<span class="grade-pill gp-${g.toLowerCase()}" style="color:${GRADE_COLORS[g]};border-color:${GRADE_COLORS[g]}44">${g}</span>`
+      +`<b>${occ} / ${max}</b><i>${esc(mot)}</i></span>`;
+  });
+  const libres=GRADE_ORDER.filter(g=>!gradePlaces(g));
+  if(libres.length)chips.push(`<span class="plc p-open" title="Ces grades n'ont pas de place limitee"><b>${libres.join(" · ")}</b><i>sans limite</i></span>`);
+  band.innerHTML=chips.join("");
+}
+
+/* Avertissement, jamais un refus : la place peut etre depassee en connaissance
+   de cause, par exemple une promotion juste avant un depart. Repond true quand
+   on continue, false quand l'officier annule. */
+async function placeAlerte(grade,mat,saufId){
+  const max=gradePlaces(grade);
+  if(!max)return true;
+  const occ=gradeOccupe(grade,saufId);
+  if(occ<max)return true;
+  const tenus=(state.members||[]).filter(m=>
+    (m.categorie||"effectif")==="effectif" && m.grade===grade &&
+    (saufId===undefined||saufId===null||String(m.id)!==String(saufId))
+  ).map(m=>m.matricule||m.nom||"?");
+  const lib=gradeLabel(grade);
+  const tete=max===1?("La place de "+lib+" est deja tenue")
+            :(occ>max?("Les "+max+" places de "+lib+" sont deja depassees")
+                     :("Les "+max+" places de "+lib+" sont deja tenues"));
+  return await uiConfirm({
+    kicker:"// PLACES",
+    title:lib+" : "+occ+" / "+max,
+    message:tete+(tenus.length?" par "+tenus.join(", "):"")+".\n\n"
+      +(mat||"Ce membre")+" occuperait une place en trop. Tu peux passer outre : "
+      +"le bandeau de l'onglet Effectif signalera le depassement.",
+    okText:"Continuer quand meme",cancelText:"Annuler",danger:true});
+}
+
 function renderRoster(){
   const tbody=document.getElementById("rosterBody");if(!tbody)return;
+  renderRosterPlaces();
   let list=state.members.filter(m=>(m.categorie||"effectif")==="effectif");
   const q=(rosterSearchQ||"").trim().toLowerCase();
   if(q){
@@ -6472,7 +6554,7 @@ function renderRoster(){
 
     const gradeCell=editable
       ? `<select class="inline-sel" data-grade="${esc(m.grade)}" style="color:${GRADE_COLORS[m.grade]||"#e9eef7"}"
-          onchange="updateField('${escJs(m.id)}','grade',this.value);savePromoDate('${escJs(m.id)}',new Date().toISOString().slice(0,10));colorGradeSelect(this)">${gradeOpts}</select>`
+          onchange="rosterSetGrade('${escJs(m.id)}',this.value,this)">${gradeOpts}</select>`
       : `<span class="grade-pill gp-${esc((m.grade||"arc").toLowerCase())}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${esc(m.grade||"ARC")}</span>`;
 
     const regCell=editable
@@ -7724,6 +7806,7 @@ async function saveMember(){
   const remarque=(canWriteRemarque()&&document.getElementById("mRemarque"))?document.getElementById("mRemarque").value.trim():"";
   if(!mat){toast("Matricule requis","error");return;}
   const categorie=window._memberModalMode||"effectif";
+  if(categorie==="effectif"&&!await placeAlerte(grade,mat,null))return;
 
   let obj={matricule:mat,nom,grade,regiment:reg,status:stat,categorie,
     regiment_rct:regRct,date_arrivee:arrivee||null,
@@ -7794,12 +7877,24 @@ async function savePromoDate(id, value){
   refreshMemberViews();
 }
 
+/* Changement de grade depuis le tableau. Un seul point d'entree, parce que
+   l'avertissement de place doit pouvoir tout annuler, date de promotion
+   comprise : avant, les deux appels etaient enchaines dans le `onchange` et la
+   date partait meme si le grade ne changeait pas. */
+async function rosterSetGrade(id,value,sel){
+  const ok=await updateField(id,"grade",value);
+  if(ok===false){return;}
+  await savePromoDate(id,new Date().toISOString().slice(0,10));
+  if(sel&&sel.isConnected)colorGradeSelect(sel);
+}
+
 async function updateField(id,field,value){
   if(!canEdit("roster")){toast("Accès insuffisant","error");return;}
   const m=state.members.find(x=>x.id==id);if(!m)return;
   if(field==="date_promo"&&!value)return;
   let _promo=null,_gradeChange=null;
   if(field==="grade"&&value!==m.grade){
+    if(!await placeAlerte(value,m.matricule,m.id)){renderRoster();return false;}
     const oldLvl=GRADE_LEVEL[m.grade]||0, newLvl=GRADE_LEVEL[value]||0;
     if(newLvl>oldLvl)_promo={old:m.grade,new:value};
     _gradeChange={old:m.grade,new:value};
@@ -10308,6 +10403,8 @@ async function saveMemberProfile(){
   const fCmd=document.getElementById("mpFCmd")?.checked||false;
   const fNego=document.getElementById("mpFNego")?.checked||false;
   if(!mat){toast("Matricule requis","error");return;}
+  if(grade!==_oldGrade&&(m.categorie||"effectif")==="effectif"
+     &&!await placeAlerte(grade,mat,m.id))return;
 
   const patch={matricule:mat,nom,grade,regiment:reg,status:stat,
     regiment_rct:regRct,date_arrivee:arrivee||null,
