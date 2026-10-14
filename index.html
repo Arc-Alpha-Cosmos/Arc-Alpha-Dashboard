@@ -1754,7 +1754,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
               <div class="ov-kpis">
                 <div class="ov-kpi k-ac" id="ovKpiTotal">
                   <span class="ov-kpi-l">Effectif</span>
-                  <span class="ov-kpi-v"><b id="ovTotal">0</b><small id="ovTotalMax">/ 15</small></span>
+                  <span class="ov-kpi-v"><b id="ovTotal">0</b><small id="ovTotalMax">/ -</small></span>
                   <span class="ov-kpi-g"><i id="ovTotalBar"></i></span>
                 </div>
                 <div class="ov-kpi k-ok" id="ovKpiPresent">
@@ -2212,6 +2212,21 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           </div>
           
           
+          <div class="panel" id="ciblePanel">
+            <div class="panel-head"><h3><span class="pk">//</span> Effectif cible</h3></div>
+            <div class="panel-body">
+              <p class="card-b" style="margin-bottom:1rem">Nombre de membres visé par l'unité. Sert de repère à la jauge de la vue d'ensemble. Réservé aux CMD, CMDM et à l'administration.</p>
+              <div style="display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap">
+                <div class="field" style="margin:0;max-width:140px">
+                  <label for="cibleInput">Effectif visé</label>
+                  <input type="number" id="cibleInput" min="1" max="999" step="1" inputmode="numeric" value="15">
+                </div>
+                <button class="sbtn green" onclick="saveEffectifCible()">Enregistrer</button>
+              </div>
+              <div id="cibleHint" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);margin-top:.7rem"></div>
+            </div>
+          </div>
+
           <div class="panel" id="maintPanel">
             <div class="panel-head"><h3><span class="pk">//</span> Maintenance</h3></div>
             <div class="panel-body">
@@ -3732,7 +3747,7 @@ let editMode=false;
 let reportWeekOffset=0;
 let pollCount=0;
 let state={
-  recOpen:true,maintenance:false,
+  recOpen:true,maintenance:false,effectifCible:15,
   autoReport:true,autoReportSince:null,reportExempt:{},reportWeeks:{},manualTests:{},
   members:[],blames:[],missions:[],announces:[],users:[],activity:[],
   absences:[],reports:[],cmdmissions:[],documents:[],tasks:[],content:{},
@@ -4152,6 +4167,10 @@ async function loadAll(){
     if(row.key==="recOpen")    state.recOpen    =JSON.parse(row.value);
     if(row.key==="maintenance")state.maintenance=JSON.parse(row.value);
     if(row.key==="autoReport") state.autoReport =JSON.parse(row.value);
+    if(row.key==="effectifCible"){
+      const _ec=parseInt(cfgStr(row.value),10);
+      if(_ec>0&&_ec<=999)state.effectifCible=_ec;
+    }
     if(row.key==="autoReportSince") state.autoReportSince=cfgStr(row.value);
     if(row.key==="reportExempt"){
       const parsed=JSON.parse(row.value);
@@ -4787,6 +4806,40 @@ function applyRec(){
   if(rl)rl.textContent=state.recOpen?"Recrutement ouvert":"Recrutement fermé";
 }
 
+/* Réglage de l'effectif visé. Même niveau que l'organisation des menus :
+   CMD, CMDM et administration. */
+function renderCiblePanel(){
+  const p=document.getElementById("ciblePanel");
+  if(!p)return;
+  if(!canEditNav()){p.style.display="none";return;}
+  p.style.display="block";
+  const i=document.getElementById("cibleInput");
+  if(i&&document.activeElement!==i)i.value=effectifCible();
+  const h=document.getElementById("cibleHint");
+  if(h){
+    const eff=(state.members||[]).filter(m=>(m.categorie||"effectif")==="effectif").length;
+    const c=effectifCible(), d=eff-c;
+    h.textContent="Effectif actuel : "+eff+" · "
+      +(d>0?(d+" au-dessus de la cible"):(d<0?((-d)+" place"+(d<-1?"s":"")+" à pourvoir"):"cible atteinte"));
+  }
+}
+
+async function saveEffectifCible(){
+  if(!canEditNav()){toast("Réservé aux CMD, CMDM et à l'administration","error");return;}
+  const i=document.getElementById("cibleInput");
+  const n=parseInt(i&&i.value,10);
+  if(!(n>0&&n<=999)){toast("Indique un nombre entre 1 et 999","error");return;}
+  const avant=effectifCible();
+  if(n===avant){toast("L'effectif cible est déjà à "+n,"info");return;}
+  state.effectifCible=n;
+  if(supaOK)await setConfig("effectifCible",String(n));
+  else saveLS();
+  renderCiblePanel();
+  try{renderOverview();}catch(e){}
+  toast("Effectif cible : "+n+" membres","success");
+  await logActivity(`${session?.user} a fixé l'effectif cible à ${n} (était ${avant})`);
+}
+
 async function toggleRec(){
   if(!Auth.ok()||session.role!=="admin"){toast("Accès admin requis","error");return;}
   state.recOpen=!state.recOpen;
@@ -4899,9 +4952,15 @@ function renderOverview(){
     const b=k.querySelector(".ov-kpi-g i");
     if(b)b.style.width=Math.max(0,Math.min(100,largeur))+"%";
   };
-  const cible=Math.max(EFFECTIF_CIBLE,total);
+  /* La cible reste affichée telle quelle, même si l'effectif la dépasse :
+     masquer le dépassement cacherait justement ce qu'on veut voir. */
+  const cible=effectifCible();
   const mx=ge("ovTotalMax"); if(mx)mx.textContent="/ "+cible;
-  kpi("ovKpiTotal","k-ac",part(total,cible));
+  const ecart=total-cible;
+  kpi("ovKpiTotal",total>=cible?"k-ok":"k-ac",part(Math.min(total,cible),cible));
+  const tm=ge("ovTotalMax");
+  if(tm)tm.title=ecart>0?(ecart+" au-dessus de la cible")
+                :(ecart<0?((-ecart)+" place"+(ecart<-1?"s":"")+" à pourvoir"):"cible atteinte");
 
   const tauxPresence=part(present.length,total);
   const pp=ge("ovPresentPct");
@@ -4936,7 +4995,14 @@ function renderOverview(){
 }
 
 /* Effectif visé par l'unité : sert de repère à la jauge d'effectif. */
-const EFFECTIF_CIBLE=15;
+/* Effectif visé par l'unité. Réglable dans l'Administration : il a été
+   réduit à 12 le 2026-10-14, il changera encore. 15 n'est que le repli
+   quand la configuration n'a rien dit. */
+const EFFECTIF_CIBLE_DEFAUT=15;
+function effectifCible(){
+  const n=parseInt(state.effectifCible,10);
+  return (n>0&&n<=999)?n:EFFECTIF_CIBLE_DEFAUT;
+}
 
 /* Position d'un membre sur le balayage : angle stable tire de son
    identifiant (il ne saute pas d'une image à l'autre), rayon donné par le
@@ -7829,6 +7895,7 @@ function renderUsers(){
 
 function renderAdmin(){
   renderDiscordPanel();
+  renderCiblePanel();
   if(!session)return;
   const isAdmin=Auth.ok()&&session.role==="admin";
   const canNav=canEditNav();
@@ -8399,6 +8466,10 @@ async function pollRealtime(){
           if(row.key==="maintenance") nm=JSON.parse(row.value);
           if(row.key==="recOpen")     nr=JSON.parse(row.value);
           if(row.key==="autoReport")  state.autoReport=JSON.parse(row.value);
+          if(row.key==="effectifCible"){
+            const _ec=parseInt(cfgStr(row.value),10);
+            if(_ec>0&&_ec<=999&&_ec!==state.effectifCible){ state.effectifCible=_ec; cfgChanged=true; }
+          }
           if(row.key==="autoReportSince"&&cfgStr(row.value)!==state.autoReportSince){
             state.autoReportSince=cfgStr(row.value); repChanged=true;
           }
