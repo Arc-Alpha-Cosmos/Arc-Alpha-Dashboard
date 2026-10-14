@@ -431,6 +431,27 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .plc.p-over i{color:var(--rd)}
 .plc.p-open{border-style:dashed}
 
+/* Pieces jointes d'un compte rendu. */
+.rap-pj{display:flex;align-items:center;gap:.5rem;padding:.32rem .5rem;margin-bottom:.3rem;
+  border:1px solid var(--ln);background:var(--s1);font-size:.74rem}
+.rap-pj a{color:var(--ac);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.rap-pj a:hover{text-decoration:underline}
+.rap-pj-t{font-family:var(--fm);font-size:.54rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dm);border:1px solid var(--ln);padding:.08rem .3rem;flex:none}
+.rap-pj-s{font-family:var(--fm);font-size:.58rem;color:var(--dm);flex:none}
+.rap-pj-x{background:none;border:none;color:var(--dm);cursor:pointer;font-size:.8rem;
+  line-height:1;padding:.15rem .3rem;flex:none}
+.rap-pj-x:hover{color:var(--rd)}
+.rap-pj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.55rem}
+.rap-pj-img{display:block;border:1px solid var(--ln);background:var(--s1);text-decoration:none;overflow:hidden}
+.rap-pj-img img{display:block;width:100%;height:110px;object-fit:cover;background:var(--s3)}
+.rap-pj-img span{display:block;padding:.3rem .45rem;font-family:var(--fm);font-size:.58rem;
+  color:var(--tx2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rap-pj-img:hover{border-color:var(--ls)}
+.rap-pj-doc{display:flex;align-items:center;gap:.45rem;padding:.5rem .55rem;border:1px solid var(--ln);
+  background:var(--s1);color:var(--ac);text-decoration:none;font-size:.74rem;overflow:hidden}
+.rap-pj-doc:hover{border-color:var(--ls)}
+
 .sbtn{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;font-family:var(--fr);font-weight:700;
   font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid var(--ls);
   background:transparent;color:var(--ac);transition:all .22s}
@@ -2886,6 +2907,21 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">
           <span>Relu par un officier avant publication</span><span id="rapCountLbl">0 / 3500</span>
         </div>
+      </div>
+      <div class="field">
+        <label for="rapPieceUrl">Pièces jointes <span style="color:var(--dm);font-weight:400;text-transform:none;letter-spacing:0">facultatif</span></label>
+        <div id="rapPiecesList" style="margin-bottom:.5rem"></div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+          <input type="url" id="rapPieceUrl" maxlength="600" autocomplete="off" placeholder="Colle un lien (capture Discord, Imgur…)" style="flex:1;min-width:180px">
+          <input type="text" id="rapPieceNom" maxlength="80" autocomplete="off" placeholder="Nom (facultatif)" style="width:140px">
+          <button type="button" class="sbtn" id="rapPieceAddBtn" onclick="rapPieceAdd()">Joindre le lien</button>
+          <button type="button" class="sbtn" id="rapPieceFileBtn" onclick="document.getElementById('rapPieceFile').click()">Parcourir…</button>
+          <input type="file" id="rapPieceFile" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf" style="display:none" onchange="rapPieceFichier(this)">
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">
+          <span>Images et PDF, 3 Mo au maximum par fichier</span><span id="rapPiecesCount">0 / 5</span>
+        </div>
+        <div id="rapPieceHint" style="display:none;margin-top:.4rem;font-family:var(--fm);font-size:.6rem;color:var(--or)"></div>
       </div>
       <div id="rapErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:3px"></div>
     </div>
@@ -7203,6 +7239,64 @@ const RAP_ETATS={
 };
 const RAP_TITRE_MAX=90, RAP_TEXTE_MAX=3500, RAP_TEXTE_MIN=20, RAP_MOTIF_MAX=400;
 
+/* Pièces jointes, facultatives. Deux façons de joindre (coller un lien, ou
+   envoyer un fichier), une seule structure stockée :
+   {t:"lien"|"fichier", url, nom, taille}. */
+const RAP_PIECES_MAX=5, RAP_PIECE_URL_MAX=600, RAP_PIECE_NOM_MAX=80;
+const RAP_FICHIER_MAX=3*1024*1024;
+const RAP_BUCKET="rapports";
+const RAP_FICHIER_TYPES=["image/png","image/jpeg","image/gif","image/webp","application/pdf"];
+
+/* Une adresse n'est acceptée qu'en http(s). C'est ce qui ferme la porte à
+   javascript: et data: dans un href ou un src. Revérifié à l'affichage et
+   pas seulement à la saisie : la donnée vient de la base. */
+function rapUrlOk(u){
+  const s=String(u||"").trim();
+  if(!s||s.length>RAP_PIECE_URL_MAX)return false;
+  if(/[\s<>"'\\]/.test(s))return false;
+  return /^https?:\/\/[^\/]+\.[^\/]/i.test(s);
+}
+function rapPieceNom(p){
+  const n=String((p&&p.nom)||"").trim();
+  if(n)return n.slice(0,RAP_PIECE_NOM_MAX);
+  try{
+    const u=new URL(String(p&&p.url||""));
+    const bout=u.pathname.split("/").filter(Boolean).pop();
+    return decodeURIComponent(bout||u.hostname).slice(0,RAP_PIECE_NOM_MAX);
+  }catch(e){ return "Pièce jointe"; }
+}
+function rapPieces(r){
+  let v=r&&r.pieces;
+  if(typeof v==="string"){ try{ v=JSON.parse(v); }catch(e){ v=null; } }
+  if(!Array.isArray(v))return [];
+  return v.filter(p=>p&&rapUrlOk(p.url)).slice(0,RAP_PIECES_MAX).map(p=>({
+    t:(p.t==="fichier"?"fichier":"lien"),
+    url:String(p.url).trim(),
+    nom:rapPieceNom(p),
+    taille:(+p.taille>0?+p.taille:0)}));
+}
+function rapEstImage(u){ return /\.(png|jpe?g|gif|webp|avif)(\?|#|$)/i.test(String(u||"")); }
+function rapTaille(n){
+  const o=+n||0;
+  if(!o)return "";
+  return o>=1048576?((Math.round(o/104857.6)/10)+" Mo"):(Math.round(o/1024)+" Ko");
+}
+function rapPiecesHtml(r){
+  const ps=rapPieces(r);
+  if(!ps.length)return "";
+  const items=ps.map(p=>{
+    const lien=esc(p.url), nom=esc(p.nom);
+    if(rapEstImage(p.url)){
+      return `<a class="rap-pj-img" href="${lien}" target="_blank" rel="noopener noreferrer" title="${nom}"><img src="${lien}" alt="${nom}" loading="lazy"><span>${nom}</span></a>`;
+    }
+    return `<a class="rap-pj-doc" href="${lien}" target="_blank" rel="noopener noreferrer" title="${nom}"><span class="rap-pj-t">${p.t==="fichier"?"fichier":"lien"}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${nom}</span>${p.taille?`<span class="rap-pj-s">${esc(rapTaille(p.taille))}</span>`:""}</a>`;
+  }).join("");
+  return `<div style="margin-top:.9rem">
+      <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dm);margin-bottom:.45rem">Pièces jointes (${ps.length})</div>
+      <div class="rap-pj-grid">${items}</div>
+    </div>`;
+}
+
 function rapStatut(r){ return String((r&&r.statut)||"en_attente"); }
 function rapEtat(r){ return RAP_ETATS[rapStatut(r)]||RAP_ETATS.en_attente; }
 function rapList(){ return Array.isArray(state.rapports)?state.rapports:[]; }
@@ -7274,6 +7368,90 @@ function rapCount(){
   el.textContent=n+" / "+RAP_TEXTE_MAX;
   el.style.color=n>RAP_TEXTE_MAX?"var(--rd)":(n<RAP_TEXTE_MIN?"var(--dm)":"var(--gr)");
 }
+/* Liste en cours de saisie. Remise à zéro à chaque ouverture du formulaire. */
+let _rapPieces=[];
+
+function renderRapPieces(){
+  const box=document.getElementById("rapPiecesList");
+  if(box){
+    box.innerHTML=_rapPieces.length
+      ? _rapPieces.map((p,i)=>`<div class="rap-pj">
+          <span class="rap-pj-t">${p.t==="fichier"?"fichier":"lien"}</span>
+          <a href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.nom)}</a>
+          ${p.taille?`<span class="rap-pj-s">${esc(rapTaille(p.taille))}</span>`:""}
+          <button type="button" class="rap-pj-x" title="Retirer" aria-label="Retirer ${esc(p.nom)}" onclick="rapPieceDel(${i})">✕</button>
+        </div>`).join("")
+      : `<div style="font-family:var(--fm);font-size:.6rem;color:var(--dm)">Aucune pièce jointe.</div>`;
+  }
+  const c=document.getElementById("rapPiecesCount");
+  if(c)c.textContent=_rapPieces.length+" / "+RAP_PIECES_MAX;
+  const plein=_rapPieces.length>=RAP_PIECES_MAX;
+  ["rapPieceAddBtn","rapPieceFileBtn"].forEach(k=>{
+    const b=document.getElementById(k);
+    if(b){b.disabled=plein;b.title=plein?("Maximum atteint : "+RAP_PIECES_MAX+" pièces jointes"):"";}
+  });
+}
+function rapPieceDel(i){ _rapPieces.splice(i,1); renderRapPieces(); }
+function rapPieceAdd(){
+  const iu=document.getElementById("rapPieceUrl"), inom=document.getElementById("rapPieceNom");
+  const url=((iu&&iu.value)||"").trim(), nom=((inom&&inom.value)||"").trim();
+  if(_rapPieces.length>=RAP_PIECES_MAX){toast("Cinq pièces jointes au maximum","error");return;}
+  if(!rapUrlOk(url)){toast("Colle une adresse complète, commençant par http:// ou https://","error");return;}
+  if(_rapPieces.some(p=>p.url===url)){toast("Ce lien est déjà joint","info");return;}
+  _rapPieces.push({t:"lien",url:url,nom:nom?nom.slice(0,RAP_PIECE_NOM_MAX):rapPieceNom({url:url}),taille:0});
+  if(iu)iu.value="";
+  if(inom)inom.value="";
+  renderRapPieces();
+}
+
+/* Envoi d'un fichier dans l'espace de stockage. Le site doit continuer de
+   marcher si l'espace n'existe pas encore : on le dit clairement et les liens
+   restent disponibles. */
+async function rapUpload(f){
+  const qui=String((session&&session.userHash)||"anon").replace(/[^a-zA-Z0-9]/g,"").slice(0,24)||"anon";
+  const base=(f.name||"piece").replace(/[^a-zA-Z0-9._-]/g,"_").slice(-60)||"piece";
+  const chemin=qui+"/"+Date.now()+"_"+base;
+  try{
+    const rep=await fetch(`${SUPA_URL}/storage/v1/object/${RAP_BUCKET}/${encodeURI(chemin)}`,{
+      method:"POST",
+      headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,
+        "Content-Type":f.type||"application/octet-stream","x-upsert":"false"},
+      body:f});
+    if(rep.ok)return{ok:true,url:`${SUPA_URL}/storage/v1/object/public/${RAP_BUCKET}/${encodeURI(chemin)}`};
+    if(rep.status===404)return{ok:false,message:"L'espace de stockage « rapports » n'existe pas encore : exécute rapports.sql, ou colle un lien."};
+    if(rep.status===401||rep.status===403)return{ok:false,message:"L'espace de stockage refuse l'envoi : vérifie ses règles d'accès, ou colle un lien."};
+    if(rep.status===409)return{ok:false,message:"Un fichier de ce nom existe déjà : renomme-le."};
+    if(rep.status===413)return{ok:false,message:"Fichier refusé par le stockage : trop lourd."};
+    return{ok:false,message:"Envoi impossible ("+rep.status+") : colle un lien en attendant."};
+  }catch(e){
+    return{ok:false,message:"Envoi impossible (réseau) : colle un lien en attendant."};
+  }
+}
+async function rapPieceFichier(input){
+  const f=input&&input.files&&input.files[0];
+  if(!f)return;
+  input.value="";
+  const hint=document.getElementById("rapPieceHint");
+  const dire=(m,c)=>{if(hint){hint.style.display=m?"":"none";hint.textContent=m||"";hint.style.color=c||"var(--or)";}};
+  if(_rapPieces.length>=RAP_PIECES_MAX){toast("Cinq pièces jointes au maximum","error");return;}
+  if(RAP_FICHIER_TYPES.indexOf(f.type)===-1){
+    dire("Formats acceptés : PNG, JPEG, GIF, WebP et PDF.");toast("Format refusé","error");return;}
+  if(f.size>RAP_FICHIER_MAX){
+    dire("Fichier trop lourd : "+rapTaille(f.size)+" pour "+rapTaille(RAP_FICHIER_MAX)+" au maximum.");
+    toast("Fichier trop lourd","error");return;}
+  if(!supaOK||!Auth.ok()){dire("Envoi de fichier indisponible hors connexion : colle un lien.");return;}
+  const btn=document.getElementById("rapPieceFileBtn");
+  if(btn)btn.disabled=true;
+  dire("Envoi de "+f.name+"…","var(--dm)");
+  const r=await rapUpload(f);
+  if(btn)btn.disabled=false;
+  if(!r.ok){dire(r.message);toast("Envoi impossible","error");return;}
+  dire("");
+  _rapPieces.push({t:"fichier",url:r.url,nom:(f.name||"fichier").slice(0,RAP_PIECE_NOM_MAX),taille:f.size});
+  renderRapPieces();
+  toast("Pièce jointe ajoutée","success");
+}
+
 function openRapportModal(fromId){
   if(!canWriteRapport()){toast("La rédaction est réservée aux grades CT à LTN","error");return;}
   const src=fromId?rapById(fromId):null;
@@ -7292,6 +7470,11 @@ function openRapportModal(fromId){
     if(src&&src.refus_motif){mb.style.display="";mb.textContent="Motif du refus : "+String(src.refus_motif);}
     else{mb.style.display="none";mb.textContent="";}
   }
+  _rapPieces=src?rapPieces(src):[];
+  ["rapPieceUrl","rapPieceNom"].forEach(k=>{const e=document.getElementById(k);if(e)e.value="";});
+  const ph=document.getElementById("rapPieceHint");
+  if(ph){ph.style.display="none";ph.textContent="";}
+  renderRapPieces();
   rapCount();
   document.getElementById("rapportModal").classList.add("show");
 }
@@ -7308,8 +7491,10 @@ async function saveRapport(){
   if(contenu.length<RAP_TEXTE_MIN){fail("Le compte rendu est trop court : "+contenu.length+" caractères sur "+RAP_TEXTE_MIN+" minimum.");return;}
   if(contenu.length>RAP_TEXTE_MAX){fail("Le compte rendu est trop long : "+contenu.length+" caractères, maximum "+RAP_TEXTE_MAX+".");return;}
   const wk=getWeekKey(0);
+  const pieces=_rapPieces.slice(0,RAP_PIECES_MAX).filter(p=>rapUrlOk(p.url));
   const res=await rapRpc("arc_rapport_submit",
-    {p_titre:titre.slice(0,RAP_TITRE_MAX),p_type:type,p_contenu:contenu,p_week:wk});
+    {p_titre:titre.slice(0,RAP_TITRE_MAX),p_type:type,p_contenu:contenu,p_week:wk,
+     p_pieces:pieces.length?pieces:null});
   if(res.failed){fail("La base a refusé l'envoi : ton grade ne permet peut-être pas la rédaction.");return;}
   let row=null;
   if(res.ok){
@@ -7324,8 +7509,16 @@ async function saveRapport(){
       author_member_id:me?String(me.id):null,author_grade:me?String(me.grade||""):"",
       titre:titre.slice(0,RAP_TITRE_MAX),type:type,contenu:contenu,
       statut:"en_attente",week_key:wk,created_at:new Date().toISOString()};
+    if(pieces.length)obj.pieces=pieces;
     if(supaOK){
-      const w=await supaPost(T.rapports,obj);
+      let w=await supaPost(T.rapports,obj);
+      if(w===null&&pieces.length){
+        /* La colonne « pieces » manque sans doute : mieux vaut garder le
+           compte rendu et le dire que tout perdre. */
+        delete obj.pieces;
+        w=await supaPost(T.rapports,obj);
+        if(w!==null)toast("Compte rendu envoyé, mais sans les pièces jointes : la colonne manque en base","info");
+      }
       if(w===null){fail("Envoi impossible : exécute rapports.sql dans Supabase (table arc_rapports).");return;}
       row=(w&&w[0])||obj;
     }else{obj.id=Date.now().toString();row=obj;}
@@ -7489,20 +7682,28 @@ function discordRapportPayload(r,validateur){
   const titre=String((r&&r.titre)||"Compte rendu");
   const corps=String((r&&r.contenu)||"");
   const auteur=String((r&&r.author_name)||"?")+((r&&r.author_grade)?" ("+String(r.author_grade)+")":"");
-  return {
-    embeds:[{
-      title:"📝 "+titre.slice(0,250),
-      description:corps.length>3900?corps.slice(0,3900)+"…":corps,
-      color:rapTypeColor(r&&r.type),
-      fields:[
-        {name:"Auteur",value:auteur.slice(0,250)||"?",inline:true},
-        {name:"Type",value:String((r&&r.type)||"Autre").slice(0,250),inline:true},
-        {name:"Validé par",value:String(validateur||"?").slice(0,250),inline:true}
-      ],
-      footer:{text:"Compte rendu validé · Centre de Commandement"},
-      timestamp:new Date().toISOString()
-    }]
+  const pieces=rapPieces(r);
+  const embed={
+    title:"📝 "+titre.slice(0,250),
+    description:corps.length>3900?corps.slice(0,3900)+"…":corps,
+    color:rapTypeColor(r&&r.type),
+    fields:[
+      {name:"Auteur",value:auteur.slice(0,250)||"?",inline:true},
+      {name:"Type",value:String((r&&r.type)||"Autre").slice(0,250),inline:true},
+      {name:"Validé par",value:String(validateur||"?").slice(0,250),inline:true}
+    ],
+    footer:{text:"Compte rendu validé · Centre de Commandement"},
+    timestamp:new Date().toISOString()
   };
+  if(pieces.length){
+    /* Les crochets et parenthèses casseraient le lien Markdown de Discord. */
+    const lignes=pieces.map(p=>"["+String(p.nom).replace(/[\[\]()]/g,"").slice(0,80)+"]("+p.url+")");
+    embed.fields.push({name:"Pièces jointes ("+pieces.length+")",
+      value:lignes.join("\n").slice(0,1000),inline:false});
+    const img=pieces.find(p=>rapEstImage(p.url));
+    if(img)embed.image={url:img.url};
+  }
+  return {embeds:[embed]};
 }
 
 const RAP_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
@@ -7524,6 +7725,8 @@ function rapCardHtml(r,opts){
     acts.push(`<button class="sbtn" style="padding:.18rem .5rem;font-size:.6rem" onclick="openRapportModal('${escJs(r.id)}')">Reprendre</button>`);
   }
   const meta=[esc(r.author_name||"?"),fmtDate(r.created_at)];
+  const _np=rapPieces(r).length;
+  if(_np)meta.push(_np+" pièce"+(_np>1?"s":"")+" jointe"+(_np>1?"s":""));
   if(r.reviewed_at)meta.push((st==="valide"?"validé":"refusé")+" par "+esc(r.reviewer_name||"?")+" le "+fmtDate(r.reviewed_at));
   if(r.published_at)meta.push("publié sur Discord");
   else if(st==="valide")meta.push("pas encore publié");
@@ -7550,6 +7753,7 @@ function openRapportView(id){
       <div style="font-family:var(--fs);font-size:1rem;font-weight:700;margin-bottom:.25rem">${escTrunc(r.titre,RAP_TITRE_MAX)}</div>
       <div style="font-family:var(--fm);font-size:.62rem;color:var(--dm);margin-bottom:.9rem">${esc(r.author_name||"?")}${r.author_grade?" · "+esc(r.author_grade):""} · ${fmtDate(r.created_at)}</div>
       <div style="white-space:pre-wrap;font-size:.86rem;color:var(--tx);line-height:1.7;background:var(--s2);border:1px solid var(--ln);padding:.9rem 1rem">${esc(r.contenu||"")}</div>
+      ${rapPiecesHtml(r)}
       ${(st==="refuse"&&r.refus_motif)?`<div style="margin-top:.8rem;padding:.6rem .8rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25);font-size:.82rem"><b style="color:var(--rd)">Motif du refus :</b> ${escTrunc(r.refus_motif,RAP_MOTIF_MAX)}</div>`:""}
       ${r.reviewed_at?`<div style="margin-top:.6rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">${st==="valide"?"Validé":"Refusé"} par ${esc(r.reviewer_name||"?")} le ${fmtDate(r.reviewed_at)}</div>`:""}`;
   }
