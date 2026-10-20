@@ -2313,8 +2313,8 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
                 <input type="password" id="dscRecrutAlpha" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
               </div>
               <div class="field">
-                <label>Rôles à mentionner (recrutements) <span style="color:var(--dm);font-weight:400">(identifiants de rôle, séparés par un espace ou une virgule)</span></label>
-                <input type="text" id="dscRecrutRoles" placeholder="ex : 123456789012345678 987654321098765432" autocomplete="off">
+                <label>Rôles à mentionner (recrutements) <span style="color:var(--dm);font-weight:400">(identifiants séparés par un espace ; vide = les deux rôles par défaut, « aucun » pour ne mentionner personne)</span></label>
+                <input type="text" id="dscRecrutRoles" placeholder="vide = rôles par défaut" autocomplete="off">
               </div>
               <div class="field">
                 <label>Nom affiché du bot <span style="color:var(--dm);font-weight:400">(annonces et unité, vide = celui de Discord)</span></label>
@@ -12086,10 +12086,14 @@ async function saveRecrutement(){
   await logActivity(`${session?.user} a déposé un compte rendu de recrutement ${kind==="trooper"?"ARC Trooper":"ARC Alpha"} pour ${d.infos.eleve} (${total}/${max})`);
 }
 
-/* Identifiants de roles a mentionner pour les recrutements (extraits
-   de la config : accepte des IDs bruts ou des mentions <@&...>). */
+/* Rôles mentionnés sur les comptes rendus de recrutement, et nulle part
+   ailleurs. Les deux identifiants ont été donnés par le commandement le
+   2026-10-20 ; ils ne servent que si le champ de l'Administration est vide,
+   lequel reste prioritaire. Pour ne mentionner personne, mettre un mot dans
+   ce champ ("aucun") : il ne contient alors aucun identifiant valide. */
+const RECRUT_ROLES_DEFAUT="946321599542485022 806676615052525630";
 function recMentionIds(){
-  const raw=String(state.discord.recrutRoles||"");
+  const raw=String(state.discord.recrutRoles||"").trim()||RECRUT_ROLES_DEFAUT;
   return [...new Set(raw.match(/[0-9]{15,25}/g)||[])];
 }
 
