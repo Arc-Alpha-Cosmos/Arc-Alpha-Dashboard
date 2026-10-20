@@ -522,6 +522,17 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .modal.tall .modal-h{padding:.9rem 1.3rem}
 .modal.tall .modal-f{padding:.7rem 1.3rem;flex-wrap:wrap}
 .modal.tall .modal-b{flex:1 1 auto;min-height:0;overflow-y:auto;padding:1rem 1.3rem}
+/* Le dialogue de confirmation doit tenir dans l'écran. Sans hauteur maximale,
+   un message long (l'aperçu Discord d'un compte rendu) le faisait déborder en
+   haut comme en bas, et les boutons devenaient inatteignables. */
+#confirmModal{padding-top:calc(var(--nav) + 1rem)}
+#confirmModal>.modal{display:flex;flex-direction:column;max-width:420px;
+  max-height:calc(100vh - var(--nav) - 2rem);max-height:calc(100dvh - var(--nav) - 2rem)}
+#confirmModal .modal-h,#confirmModal .modal-f{flex-shrink:0}
+#confirmModal .modal-b{flex:1 1 auto;min-height:0;overflow-y:auto}
+/* La largeur vient d'ici et plus d'un style en ligne, sinon l'option large
+   n'aurait aucun effet : un style en ligne bat toujours la feuille. */
+#confirmModal>.modal.wide{max-width:600px}
 .modal-h{padding:1.3rem 1.5rem;border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between}
 .modal-h h3{font-family:var(--fs);font-weight:700;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em}
 .modal-h .k{font-family:var(--fm);font-size:.62rem;color:var(--ac);letter-spacing:.15em;text-transform:uppercase;display:block;margin-bottom:.3rem}
@@ -2676,7 +2687,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
 <!-- CONFIRM MODAL (réutilisable) -->
 <div class="modal-bg" id="confirmModal" style="z-index:900">
-  <div class="modal" style="max-width:420px">
+  <div class="modal">
     <div class="modal-h">
       <div><span class="k" id="confirmKicker">// CONFIRMATION</span><h3 id="confirmTitle">Confirmation</h3></div>
       <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="confirmResolve(false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -7564,7 +7575,7 @@ async function rapReview(id,decision){
         +discordPreview(discordRapportPayload(r,session?.user))
       : "Aucun salon Discord n'est configuré : le compte rendu sera validé sans être publié.";
     if(!await uiConfirm({kicker:"// VALIDATION",title:"Valider ce compte rendu ?",
-      message:apercu,okText:"Valider et publier"}))return;
+      message:apercu,okText:"Valider et publier",wide:true}))return;
   }
 
   const res=await rapRpc("arc_rapport_review",{p_id:String(id),p_decision:decision,p_motif:motif});
@@ -8953,6 +8964,9 @@ function _uiDialog(opts){
   cancelBtn.style.display=(mode==="alert")?"none":"";
   cancelBtn.textContent=opts.cancelText||"Annuler";
   okBtn.className="btn "+(danger?"btn-danger":"btn-primary");
+  /* Un aperçu a besoin de largeur ; une question simple n'en veut pas. */
+  const box=m.querySelector(".modal");
+  if(box)box.classList.toggle("wide",!!opts.wide);
   const icon=document.getElementById("confirmIcon");
   if(danger){
     icon.style.borderColor="rgba(255,59,92,.4)";icon.style.background="rgba(255,59,92,.08)";
@@ -12131,14 +12145,25 @@ function recTestPayload(kind){
   return discordRecrutPayload(kind,d,Math.round(t*2)/2,recMax(s),session?.user);
 }
 
-function discordPreview(payload){
+/* Un aperçu n'est pas le message : au-delà d'une certaine longueur il rend le
+   dialogue illisible, et c'est ce dialogue qui porte les boutons. Ce qui part
+   sur Discord, lui, n'est jamais raccourci. */
+function _dpCap(txt,lim){
+  const s=String(txt||"").trim();
+  if(s.length<=lim)return s;
+  return s.slice(0,lim).trim()+`
+
+[...] aperçu raccourci - le message part en entier sur Discord`;
+}
+function discordPreview(payload,max){
+  const lim=(max>0)?max:1200;
   const e=(payload.embeds||[])[0];
   const strip=s=>String(s||"").split("**").join("");
   const head=payload.content?("Mention : "+payload.content.replace(/<@&[0-9]+>/g,"@role").trim()+"\n"):"";
-  if(!e) return strip(payload.content);
+  if(!e) return _dpCap(strip(payload.content),lim);
   let out=head+(e.title||"")+"\n"+strip(e.description);
   (e.fields||[]).forEach(f=>{out+="\n"+f.name+" : "+f.value;});
-  return out.trim();
+  return _dpCap(out,lim);
 }
 
 async function discordConfirmSend(kind,payload){
