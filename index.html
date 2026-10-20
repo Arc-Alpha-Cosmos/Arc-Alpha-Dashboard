@@ -12097,27 +12097,90 @@ function recMentionIds(){
   return [...new Set(raw.match(/[0-9]{15,25}/g)||[])];
 }
 
+/* Barre de progression en blocs pleins et vides. */
+function recBarre(pct,n){
+  const t=n||10;
+  const v=Math.max(0,Math.min(100,pct));
+  let p=Math.round(v/100*t);
+  /* seul 100 % remplit la barre, sinon 99 % et 100 % se ressemblent ;
+     et une note non nulle garde toujours au moins un bloc visible */
+  if(v<100&&p>=t)p=t-1;
+  if(v>0&&p===0)p=1;
+  return "█".repeat(p)+"░".repeat(t-p);
+}
+
+/* Les libellés du formulaire portent la question et son emoji : utiles à
+   l'écran, bruyants dans un message. On les nettoie à l'envoi, sans toucher au
+   formulaire, pour que le message continue de suivre les questions posées. */
+function recLabelCourt(s){
+  return String(s||"")
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{2300}-\u{23FF}\u{FE0E}\u{FE0F}\u{200D}]/gu,"")
+    .replace(/\s+/g," ").trim();
+}
+
 function discordRecrutPayload(kind,d,total,max,author){
   const s=REC_FORMS[kind];
   const pct=max?Math.round(total/max*100):0;
+
+  /* En-tête : qui, par qui, quand, et le score tout de suite. C'est ce qu'on
+     veut lire en premier ; le détail vient après. */
+  const sujet=String(d.infos.eleve||"").trim();
+  const par=String(d.infos.formateur||"").trim();
+  let quand="";
+  if(d.infos.date){ try{ quand=fmtDate(d.infos.date); }catch(e){ quand=String(d.infos.date); } }
+  const tete=[];
+  if(sujet)tete.push("**"+sujet+"**");
+  const sous=[];
+  if(par)sous.push("évalué par **"+par+"**");
+  if(quand)sous.push(quand);
+  if(sous.length)tete.push(sous.join("  ·  "));
+  tete.push("");
+  tete.push("`"+recBarre(pct,20)+"`  **"+total+" / "+max+"**  ·  **"+pct+" %**");
+
   const fields=[];
-  /* les champs du message suivent le formulaire : si une question est
-     ajoutée ou renommée, le message suit sans retouche */
-  s.infos.forEach(f=>{
+
+  /* Les informations qui ne sont pas déjà dans l'en-tête. */
+  const vus=["eleve","formateur","date"];
+  const reste=(s.infos||[]).filter(f=>vus.indexOf(f.id)===-1).map(f=>{
     let v=String(d.infos[f.id]||"-");
     if(f.type==="date"&&d.infos[f.id]){ try{ v=fmtDate(d.infos[f.id]); }catch(e){} }
-    fields.push({name:f.label.slice(0,256),value:v.slice(0,1024),inline:v.length<=40});
+    return "**"+recLabelCourt(f.label)+"** · "+v;
   });
-  s.notes.forEach(n=>{ fields.push({name:n.label.slice(0,256),value:`${d.notes[n.id]} / ${n.max}`,inline:true}); });
-  fields.push({name:"TOTAL",value:`**${total} / ${max}**  (${pct} %)`,inline:false});
-  if(s.essais)fields.push({name:"Essai",value:d.essais||"-",inline:true});
-  fields.push({name:"Commentaire",value:String(d.commentaire||"-").slice(0,1024),inline:false});
-  const sujet=d.infos.eleve, par=d.infos.formateur;
+  if(reste.length)fields.push({name:recLabelCourt(s.secInfos)||"Informations",
+    value:reste.join("\n").slice(0,1024),inline:false});
+
+  /* Les notes dans un bloc à chasse fixe : les colonnes s'alignent, au lieu de
+     partir en grille de trois où plus rien ne se compare. */
+  const lg=(s.notes||[]).map(n=>{
+    const v=parseFloat(d.notes[n.id])||0;
+    const p=n.max?Math.round(v/n.max*100):0;
+    let lab=recLabelCourt(n.label);
+    if(lab.length>20)lab=lab.slice(0,19)+"…";
+    return {lab:lab,sc:v+"/"+n.max,p:p};
+  });
+  if(lg.length){
+    const wl=Math.max(4,...lg.map(l=>l.lab.length));
+    const ws=Math.max(5,...lg.map(l=>l.sc.length));
+    const lignes=lg.map(l=>
+      l.lab.padEnd(wl)+"  "+l.sc.padStart(ws)+"  "+recBarre(l.p,9)+" "+(l.p+"%").padStart(4));
+    let bloc=lignes.join("\n");
+    /* on coupe sur une ligne entière : un bloc de code tronqué au milieu
+       resterait ouvert et avalerait la suite du message */
+    while(bloc.length>980&&lignes.length>1){ lignes.pop(); bloc=lignes.join("\n")+"\n…"; }
+    fields.push({name:recLabelCourt(s.secNotes)||"Évaluation",
+      value:"```\n"+bloc+"\n```",inline:false});
+  }
+
+  if(s.essais&&String(d.essais||"").trim())
+    fields.push({name:"Essai",value:String(d.essais).slice(0,1024),inline:true});
+  const com=String(d.commentaire||"").trim();
+  if(com)fields.push({name:recLabelCourt(s.secFin)||"Commentaire",value:com.slice(0,1024),inline:false});
+
   const _m=recMentionIds();
   const _out={
     embeds:[{
-      title:("📝 "+(s.titre||"Recrutement").toUpperCase()).slice(0,256),
-      description:(sujet&&par)?`**${sujet}** évalué par **${par}**.`:(sujet?`**${sujet}**`:""),
+      title:recLabelCourt((s.titre||"Recrutement")).toUpperCase().slice(0,256),
+      description:tete.join("\n").slice(0,4096),
       color:recColorInt(pct),
       fields:fields.slice(0,25),
       footer:{text:`Déposé par ${author||"?"} · Centre de Commandement`},
