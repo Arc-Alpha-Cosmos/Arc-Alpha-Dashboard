@@ -2345,6 +2345,7 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
                 <div>
                   <div class="mis-sec">Tirage de la semaine en cours</div>
                   <div id="misRotNow"></div>
+                  <div id="misAnnonceEtat" style="font-family:var(--fm);font-size:.6rem;margin-top:.5rem;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap"></div>
                 </div>
                 <div>
                   <div class="mis-sec">Aperçu de la semaine prochaine</div>
@@ -8297,7 +8298,10 @@ function misJoursRestants(semaine){
 let _misFigeEnCours=false;
 async function misEnsureWeek(){
   if(_misFigeEnCours||!supaOK||!Auth.ok())return false;
-  if(!canEditMissions())return false;
+  /* Figer la semaine est une écriture que la base accepte dès le CPT : on
+     s'aligne dessus, sinon l'annonce du lundi attendrait qu'un gestionnaire
+     passe. */
+  if(!misPeutAnnoncer())return false;
   const wk=getWeekKey(0);
   if(misRotDe(wk))return false;
   const choix=misTirage(wk,0);
@@ -8525,6 +8529,139 @@ async function misChargerDepart(){
   if(n)await logActivity((session?.user||"?")+" a chargé la bibliothèque de missions de départ ("+n+")");
 }
 
+/* ------------------------- annonce du lundi -------------------------
+   Le site n'a ni serveur ni tâche planifiée : l'annonce part au premier
+   passage d'un officier le lundi à partir de 9 h, heure locale. La ligne
+   de la semaine porte le drapeau et la réservation est atomique, donc un
+   seul message même si plusieurs personnes sont connectées. */
+const MIS_PING_ROLE="1054864224242913330";
+const MIS_ANNONCE_HEURE=9;
+const MIS_LIEN_DEFAUT="https://arc-alpha-cosmos.github.io/Arc-Alpha-Dashboard/";
+
+function misLien(){
+  try{
+    if(location.protocol==="http:"||location.protocol==="https:")
+      return location.origin+location.pathname;
+  }catch(e){}
+  return MIS_LIEN_DEFAUT;
+}
+
+/* Qui peut déclencher l'envoi : le niveau que la base acceptera de toute
+   façon pour écrire la réservation. Plus large que la gestion des missions,
+   sinon l'annonce attendrait qu'un gestionnaire se connecte. */
+function misPeutAnnoncer(){
+  if(!Auth.ok())return false;
+  if(session.role==="brs")return false;
+  if(session.role==="admin"||session.role==="amiraute")return true;
+  return gradeLevel(getSessionGrade())>=3;
+}
+
+function misAnnonceFaite(semaine){
+  const r=misRotDe(semaine);
+  return !!(r&&r.annonce_at);
+}
+
+/* Lundi 9 h passé ? */
+function misAnnonceDue(semaine){
+  const p=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(semaine||""));
+  if(!p)return false;
+  const debut=new Date(+p[1],+p[2]-1,+p[3],MIS_ANNONCE_HEURE,0,0,0);
+  return new Date().getTime()>=debut.getTime();
+}
+
+function misAnnoncePayload(semaine,liste){
+  const lignes=liste.map((m,i)=>{
+    const t=String(m.nom||"Mission");
+    const c=m.categorie?"  ·  "+String(m.categorie):"";
+    let d=String(m.description||"").replace(/\s+/g," ").trim();
+    if(d.length>190)d=d.slice(0,190).trim()+"…";
+    return "**"+(i+1)+". "+t+"**"+c+(d?"\n"+d:"");
+  });
+  const embed={
+    title:"MISSIONS DE LA SEMAINE",
+    description:(lignes.join("\n\n")+"\n\n**[Ouvrir le Dashboard]("+misLien()+")**").slice(0,4000),
+    color:0x00e5ff,
+    fields:[{name:"Période",value:misPeriode(semaine)||String(semaine),inline:true},
+            {name:"À jouer",value:liste.length+" mission"+(liste.length>1?"s":""),inline:true}],
+    footer:{text:"Nouvelles missions chaque lundi · Centre de Commandement"},
+    timestamp:new Date().toISOString()
+  };
+  const out={embeds:[embed]};
+  const role=String(MIS_PING_ROLE||"").replace(/[^0-9]/g,"");
+  if(role){ out.content="<@&"+role+">"; out.allowed_mentions={roles:[role]}; }
+  return out;
+}
+
+/* Réservation : le filtre porte sur annonce_at, donc le premier qui écrit
+   gagne et les autres repartent les mains vides. Même mécanisme que la
+   publication des comptes rendus. */
+async function misAnnonceClaim(semaine){
+  const r=misRotDe(semaine);
+  if(!r)return false;
+  const maintenant=new Date().toISOString();
+  if(!supaOK){ r.annonce_at=maintenant; return true; }
+  const w=await supaPatch(T.missionRot,
+    "id=eq."+encodeURIComponent(r.id)+"&annonce_at=is.null",
+    {annonce_at:maintenant,annonce_par:session?.user||""});
+  if(w===null)return false;
+  if(Array.isArray(w)&&w.length===0)return false;
+  r.annonce_at=maintenant;
+  return true;
+}
+/* L'envoi a échoué : on rend la réservation pour pouvoir réessayer. */
+async function misAnnonceRelease(semaine){
+  const r=misRotDe(semaine);
+  if(!r)return;
+  if(supaOK)await supaPatch(T.missionRot,"id=eq."+encodeURIComponent(r.id),{annonce_at:null});
+  r.annonce_at=null;
+}
+
+let _misAnnonceEnCours=false;
+async function misAnnonceAuto(){
+  if(_misAnnonceEnCours)return false;
+  if(!misPeutAnnoncer())return false;
+  if(!state.discord.annonces)return false;
+  const wk=getWeekKey(0);
+  if(!misAnnonceDue(wk))return false;
+  if(misAnnonceFaite(wk))return false;
+  if(!misSemaine(wk).length)return false;
+  if(!misRotDe(wk)&&!await misEnsureWeek())return false;
+  _misAnnonceEnCours=true;
+  try{
+    if(!await misAnnonceClaim(wk))return false;
+    const liste=misSemaine(wk);
+    const ok=await discordSend(state.discord.annonces,misAnnoncePayload(wk,liste));
+    if(!ok){ await misAnnonceRelease(wk); return false; }
+    await logActivity("Annonce automatique des missions de la semaine "+wk+" envoyée sur Discord");
+    try{ renderMissionAdmin(); }catch(e){}
+    return true;
+  }finally{ _misAnnonceEnCours=false; }
+}
+
+async function misAnnonceManuelle(){
+  if(!canEditMissions()){toast("Réservé à la gestion des missions","error");return;}
+  const wk=getWeekKey(0);
+  const liste=misSemaine(wk);
+  if(!liste.length){toast("Aucune mission à annoncer cette semaine","error");return;}
+  if(!state.discord.annonces){toast("Aucun salon d'annonces configuré","error");return;}
+  const deja=misAnnonceFaite(wk);
+  const ok=await uiConfirm({kicker:"// ANNONCE",
+    title:deja?"Renvoyer l'annonce ?":"Annoncer les missions ?",
+    message:(deja?"L'annonce de cette semaine est déjà partie. Un second message sera publié.\n\n":"")
+      +discordPreview(misAnnoncePayload(wk,liste)),
+    okText:"Envoyer",cancelText:"Annuler",danger:deja,wide:true});
+  if(!ok)return;
+  const envoye=await discordSend(state.discord.annonces,misAnnoncePayload(wk,liste));
+  if(!envoye){toast("Envoi refusé par Discord","error");return;}
+  if(!deja){
+    if(!misRotDe(wk))await misEnsureWeek();
+    await misAnnonceClaim(wk);
+  }
+  renderMissionAdmin();
+  toast("Annonce envoyée dans le salon des annonces","success");
+  await logActivity((session?.user||"?")+" a annoncé les missions de la semaine "+wk+" sur Discord");
+}
+
 /* ------------------------------ affichage ------------------------------ */
 function misCarte(m,opts){
   const o=opts||{};
@@ -8633,6 +8770,20 @@ function renderMissionAdmin(){
             r?("figée en base"+(r.manuelle?" · tirage manuel":"")+" · "+esc(misPeriode(wk)))
              :("calculée, pas encore figée · "+esc(misPeriode(wk)))}</div>`
       : '<div class="empty"><p>Aucune mission tirable</p></div>';
+    const a=document.getElementById("misAnnonceEtat");
+    if(a){
+      const r=misRotDe(wk);
+      const faite=!!(r&&r.annonce_at);
+      a.innerHTML=(faite
+        ? '<span class="mis-tag t-etat">annonce envoyée</span> <span style="color:var(--dm)">le '
+          +esc(fmtDate(String(r.annonce_at).slice(0,10)))+(r.annonce_par?" par "+esc(r.annonce_par):"")+"</span>"
+        : (misAnnonceDue(wk)
+            ? '<span class="mis-tag t-dif">annonce en attente</span> <span style="color:var(--dm)">elle partira au prochain passage d\'un officier</span>'
+            : '<span class="mis-tag t-fin">annonce prévue</span> <span style="color:var(--dm)">lundi à '
+              +MIS_ANNONCE_HEURE+" h</span>"))
+        +' <button class="sbtn" style="padding:.14rem .45rem;font-size:.58rem;margin-left:.3rem" onclick="misAnnonceManuelle()">'
+        +(faite?"Renvoyer":"Envoyer maintenant")+"</button>";
+    }
   }
   const nxt=document.getElementById("misRotNext");
   if(nxt){
@@ -9661,7 +9812,13 @@ async function pollRealtime(){
 
         const _day=new Date().toISOString().slice(0,10);
         const _hour=Math.floor(Date.now()/3600000);
-        if(session && _lastWeeklyJobsHour!==_hour){ _lastWeeklyJobsHour=_hour; runWeeklyReportJobs(); }
+        if(session && _lastWeeklyJobsHour!==_hour){
+          _lastWeeklyJobsHour=_hour;
+          runWeeklyReportJobs();
+          /* même rendez-vous horaire pour l'annonce du lundi : elle ne fait
+             rien tant que l'heure n'est pas venue ou que c'est déjà parti */
+          try{ misAnnonceAuto(); }catch(e){ console.warn("annonce missions",e); }
+        }
         if(session && (_lastReconcileDay!==_day||changed.has("absences")||changed.has("members"))){
           _lastReconcileDay=_day;
           try{ if(await reconcileAbsenceStatus()) changed.add("members"); }
