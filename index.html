@@ -3802,9 +3802,9 @@ function canEdit(tab){
     case "cmd":
       return lvl>=3;
     case "missions":
-      /* la bibliothèque et le tirage suivent le même principe que
-         l'effectif : le grade, ou la tâche qui le délègue */
-      return lvl>=4 || (lvl>=3 && myTasks.includes("missions"));
+      /* le capitaine gère les missions sans avoir besoin d'une tâche :
+         c'est lui qui anime le terrain */
+      return lvl>=3;
     case "blames":
       return lvl>=4;
     case "announce":
@@ -4816,11 +4816,22 @@ function canManageUsers(){
   return gradeLevel(getSessionGrade())>=6;
 }
 
+/* Le panneau de recrutement de l'Administration, ouvert à partir du
+   Vice-Commandant. Même forme que canEditNav, un cran plus bas. */
+function canAdminRecrut(){
+  if(!Auth.ok()) return false;
+  if(session.role==="admin") return true;
+  if(session.role==="brs"||session.role==="amiraute") return false;
+  return gradeLevel(getSessionGrade())>=5;
+}
+
 function canViewTab(tab){
   if(!Auth.ok()) return false;
   if(session.role==="admin") return true;
   if(tab==="admin"){
-    return canManageUsers() || canEditNav();
+    /* on entre dans l'onglet dès qu'un panneau s'y adresse à nous : chaque
+       panneau se cache ensuite tout seul si le droit manque */
+    return canManageUsers() || canEditNav() || canAdminRecrut() || canEditMissions();
   }
   if(tab==="journal"){
     if(session.role==="amiraute") return true;
@@ -9222,7 +9233,7 @@ function renderAdmin(){
   if(!session)return;
   const isAdmin=Auth.ok()&&session.role==="admin";
   const canNav=canEditNav();
-  const canRecruit=canEditNav();
+  const canRecruit=canAdminRecrut();
   const strictAdminPanels=["vitrinePanel","guidePanel","maintPanel","debugPanel"];
   strictAdminPanels.forEach(id=>{
     const el=document.getElementById(id);
@@ -9234,7 +9245,10 @@ function renderAdmin(){
   const np=document.getElementById("navEditorPanel");
   if(np)np.style.display=canNav?"block":"none";
   const adminTag=document.querySelector('[data-dtc="admin"] .sec-head .tag');
-  if(adminTag)adminTag.textContent=isAdmin?"ADMIN ONLY":(canNav?"GESTION":"GESTION DES COMPTES");
+  if(adminTag)adminTag.textContent=isAdmin?"ADMIN ONLY"
+    :(canNav?"GESTION"
+    :(canManageUsers()?"GESTION DES COMPTES"
+    :(canRecruit?"RECRUTEMENT ET MISSIONS":"MISSIONS")));
   const up=document.getElementById("usersPanel");
   if(up)up.style.display=canManageUsers()?"block":"none";
   const cab=document.getElementById("createAdminBtn");
