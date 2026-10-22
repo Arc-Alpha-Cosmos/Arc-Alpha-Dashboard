@@ -486,6 +486,19 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 .mis-row .n{flex:1;min-width:150px;font-size:.82rem;color:var(--tx)}
 .mis-row .n small{display:block;font-family:var(--fm);font-size:.58rem;color:var(--dm)}
 .mis-acts{display:flex;gap:.3rem;flex-wrap:wrap}
+/* Administration : le panneau prend toute la largeur, et ses trois volets
+   se rangent côte à côte tant que la place le permet. */
+.mis-adm-bar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1.1rem}
+.mis-adm-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:1rem 1.2rem;margin-bottom:1.1rem}
+.mis-adm-cols .mis-sec{margin-top:0}
+.mis-lib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));
+  gap:.35rem .6rem;max-height:460px;overflow-y:auto;padding-right:.2rem}
+.mis-lib-grid .mis-row{margin-bottom:0}
+.mis-lib-grid::-webkit-scrollbar{width:8px}
+.mis-lib-grid::-webkit-scrollbar-track{background:var(--s1)}
+.mis-lib-grid::-webkit-scrollbar-thumb{background:var(--s3);border:1px solid var(--ln)}
+.mis-lib-grid::-webkit-scrollbar-thumb:hover{background:var(--ls)}
 
 .sbtn{display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .8rem;font-family:var(--fr);font-weight:700;
   font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid var(--ls);
@@ -2310,12 +2323,12 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
           </div>
           
           
-          <div class="panel" id="missionPanel">
+          <div class="panel" id="missionPanel" style="grid-column:1/-1">
             <div class="panel-head"><h3><span class="pk">//</span> Gestion des missions</h3>
               <span class="tag" id="misLibTag"></span></div>
             <div class="panel-body">
               <p class="card-b" style="margin-bottom:.9rem">Bibliothèque des missions et tirage hebdomadaire. Réservé aux MAJ et plus, ou aux officiers portant la tâche « Gérer les missions ».</p>
-              <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem">
+              <div class="mis-adm-bar">
                 <button class="sbtn green" onclick="openMissionModal()">Nouvelle mission</button>
                 <button class="sbtn" onclick="misRotationManuelle()">Nouveau tirage</button>
                 <button class="sbtn" id="misSeedBtn" style="display:none" onclick="misChargerDepart()">Charger la bibliothèque de départ</button>
@@ -2328,17 +2341,23 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
                 </select>
               </div>
 
-              <div class="mis-sec">Tirage de la semaine en cours</div>
-              <div id="misRotNow" style="margin-bottom:1rem"></div>
-
-              <div class="mis-sec">Aperçu de la semaine prochaine</div>
-              <div id="misRotNext" style="margin-bottom:1rem"></div>
+              <div class="mis-adm-cols">
+                <div>
+                  <div class="mis-sec">Tirage de la semaine en cours</div>
+                  <div id="misRotNow"></div>
+                </div>
+                <div>
+                  <div class="mis-sec">Aperçu de la semaine prochaine</div>
+                  <div id="misRotNext"></div>
+                </div>
+                <div>
+                  <div class="mis-sec">Historique des rotations</div>
+                  <div id="misHist"></div>
+                </div>
+              </div>
 
               <div class="mis-sec">Bibliothèque</div>
-              <div id="misLibList" style="margin-bottom:1rem"></div>
-
-              <div class="mis-sec">Historique des rotations</div>
-              <div id="misHist"></div>
+              <div id="misLibList" class="mis-lib-grid"></div>
             </div>
           </div>
 
