@@ -4337,7 +4337,11 @@ window.addEventListener("DOMContentLoaded",async()=>{
   await loadAll();
   await Auth.restore();
   await discordConfigLoad();
-  applyMaintenance();applyRec();renderContent();renderDashboard();nav("home");
+  applyMaintenance();applyRec();renderContent();
+  /* on regarde le repère avant de rendre, pour savoir où atterrir */
+  const _cibleLien=ongletDuLien(false);
+  renderDashboard();
+  nav(_cibleLien?"dashboard":"home");
   schedulePoll();
 });
 
@@ -5072,12 +5076,28 @@ function applyNow(){
   window.open("https://docs.google.com/forms/d/e/1FAIpQLSc8kJahEjC6zjjd52mgFRXS9XUUp1mwOzY0CVf4fH6-XHVw9g/viewform","_blank");
 }
 
+/* Un lien du type .../#missions ouvre directement cet onglet du Dashboard.
+   Le repère n'est lu qu'une fois : sans cela, chaque rendu y ramènerait et
+   on ne pourrait plus changer d'onglet. Tant que la session n'est pas
+   ouverte il n'est pas consommé, donc il survit à la connexion. */
+let _lienOngletVu=false;
+function ongletDuLien(consommer){
+  if(_lienOngletVu)return null;
+  let h="";
+  try{ h=decodeURIComponent(String(location.hash||"")).replace(/^#/,"").trim(); }
+  catch(e){ return null; }
+  if(!h||!TAB_META[h])return null;
+  if(!canViewTab(h))return null;
+  if(consommer)_lienOngletVu=true;
+  return h;
+}
+
 function renderDashboard(){
   const locked=document.getElementById("dashLocked"),content=document.getElementById("dashContent");
   if(!session){locked.style.display="flex";content.style.display="none";return;}
   locked.style.display="none";content.style.display="block";
   renderNav();
-  dashTab(_activeTab||"overview");
+  dashTab(ongletDuLien(true)||_activeTab||"overview");
   applyPermissionsUI();
   checkMyReportStatus();
   startChat();
@@ -8538,12 +8558,15 @@ const MIS_PING_ROLE="1054864224242913330";
 const MIS_ANNONCE_HEURE=9;
 const MIS_LIEN_DEFAUT="https://arc-alpha-cosmos.github.io/Arc-Alpha-Dashboard/";
 
+/* Le lien envoyé sur Discord. Il porte le repère de l'onglet, pour tomber
+   sur les missions et pas sur l'accueil public. */
 function misLien(){
+  let base=MIS_LIEN_DEFAUT;
   try{
     if(location.protocol==="http:"||location.protocol==="https:")
-      return location.origin+location.pathname;
+      base=location.origin+location.pathname.replace(/index\.html?$/i,"");
   }catch(e){}
-  return MIS_LIEN_DEFAUT;
+  return base.replace(/#.*$/,"")+"#missions";
 }
 
 /* Qui peut déclencher l'envoi : le niveau que la base acceptera de toute
