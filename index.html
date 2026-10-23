@@ -51,9 +51,18 @@ body::after{content:'';position:fixed;inset:0;z-index:9990;pointer-events:none;
 @keyframes slideL{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
 @keyframes glowPulse{0%,100%{text-shadow:0 0 50px var(--gw)}50%{text-shadow:0 0 80px rgba(0,229,255,.7),0 0 36px var(--gw)}}
 @keyframes ringPulse{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.7);opacity:0}}
-@keyframes scan{0%{top:0}100%{top:100%}}
+/* Balayage holographique d'un panneau. La regle existait depuis le debut
+   du projet sans etre utilisee une seule fois, et animait « top », donc un
+   recalcul de mise en page par image. Reecrite sur transform. */
+@keyframes scan{0%{opacity:0;transform:translateY(-100%)}
+  14%{opacity:1}
+  82%{opacity:1}
+  100%{opacity:0;transform:translateY(0)}}
 @keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes barFill{from{width:0}}
+/* Remplissage d'une barre. Animait « width », donc une mise en page
+   recalculee a chaque image : passe sur transform, qui reste sur le
+   compositeur. L'origine a gauche conserve le sens de remplissage. */
+@keyframes barFill{from{transform:scaleX(0)}}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 
 nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
@@ -71,9 +80,15 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
   text-transform:uppercase;cursor:pointer;position:relative;white-space:nowrap;transition:color .25s}
 .nav-tab:hover{color:var(--tx2)}
 .nav-tab.on{color:var(--ac)}
-.nav-tab::after{content:'';position:absolute;bottom:0;left:50%;width:0;height:2px;background:var(--ac);
-  transform:translateX(-50%);transition:width .3s cubic-bezier(.16,1,.3,1);box-shadow:0 0 10px var(--ac)}
-.nav-tab.on::after{width:75%}
+/* Marqueur de l'onglet actif. Il animait « width » : mis a l'echelle, il
+   reste sur le compositeur, et son halo cesse d'etre peint sous les onglets
+   inactifs (une largeur nulle n'empeche pas une ombre portee de s'afficher). */
+.nav-tab::after{content:'';position:absolute;bottom:0;left:50%;width:75%;height:2px;background:var(--ac);
+  transform:translateX(-50%) scaleX(0);transition:transform .3s cubic-bezier(.16,1,.3,1);box-shadow:0 0 10px var(--ac)}
+.nav-tab.on::after{transform:translateX(-50%) scaleX(1);animation:navSpark .55s ease-out}
+/* L'accent cyan se renforce un instant au moment du changement d'onglet. */
+@keyframes navSpark{0%{box-shadow:0 0 22px var(--ac),0 0 8px rgba(255,255,255,.85)}
+  100%{box-shadow:0 0 10px var(--ac)}}
 .nav-tab .ti{width:15px;height:15px;opacity:.8}
 .nav-lock{font-size:.6rem;opacity:.5}
 .nav-right{display:flex;align-items:center;gap:.7rem;flex-shrink:0}
@@ -350,7 +365,19 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
   background:linear-gradient(90deg,transparent,rgba(0,229,255,.06),transparent);transition:left .7s;pointer-events:none}
 .card:hover{transform:translateY(-4px);border-color:var(--ls);box-shadow:0 12px 30px rgba(0,0,0,.4),0 0 22px rgba(0,229,255,.07)}
 .card:hover::after{left:160%}
-.card.on-anim{animation:cardIn .55s cubic-bezier(.16,1,.3,1) backwards}
+/* Apparition sequencee. Le mecanisme etait ecrit (cardIn, et surtout le
+   mode « backwards », qui ne sert a rien sans delai), mais la feuille ne
+   contenait aucun animation-delay : les 23 elements arrivaient ensemble.
+   La regle ne ciblait en plus que .card, laissant les quatre .mlc qui
+   portent la classe sans aucune animation.
+   Le decalage est plafonne a cinq crans pour qu'une grille remplie
+   n'installe jamais une cascade longue. */
+.on-anim{animation:cardIn .55s cubic-bezier(.16,1,.3,1) backwards}
+.on-anim:nth-child(2){animation-delay:.06s}
+.on-anim:nth-child(3){animation-delay:.12s}
+.on-anim:nth-child(4){animation-delay:.18s}
+.on-anim:nth-child(5){animation-delay:.24s}
+.on-anim:nth-child(n+6){animation-delay:.3s}
 .card-k{font-family:var(--fm);font-size:.6rem;color:var(--ac);letter-spacing:.13em;text-transform:uppercase;margin-bottom:.4rem}
 .card-t{font-family:var(--fs);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.5rem}
 .card-b{font-size:.88rem;color:var(--tx2);font-weight:300;line-height:1.6}
@@ -377,9 +404,26 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
   font-family:var(--fm);font-size:.66rem;color:var(--ac);letter-spacing:.1em}
 
 .stat-bar{height:4px;background:var(--s3);margin-top:.7rem;border-radius:2px;overflow:hidden}
-.stat-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--vi));border-radius:2px;animation:barFill 1s cubic-bezier(.16,1,.3,1)}
+.stat-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--vi));border-radius:2px;
+  transform-origin:left center;animation:barFill 1s cubic-bezier(.16,1,.3,1)}
 
-.panel{background:var(--s1);border:1px solid var(--ln);overflow:hidden;margin-bottom:1.1rem}
+.panel{background:var(--s1);border:1px solid var(--ln);overflow:hidden;margin-bottom:1.1rem;position:relative}
+/* Une ligne cyan traverse le panneau une fois, a l'ouverture de l'onglet.
+   Aucun JavaScript : l'onglet passe de display:none a block, ce qui suffit
+   a rejouer l'animation. L'overflow du panneau la decoupe, pointer-events
+   la rend inerte, et elle ne laisse rien derriere elle faute de « forwards ».
+   Le voile couvre tout le panneau et c'est le degrade qui porte la bande :
+   translateY se calculant sur la hauteur de l'element, un voile plafonne
+   ne traverserait pas un panneau haut. Les arrets sont bornes par min(),
+   faute de quoi la bande atteignait 373 px sur les panneaux mesures. */
+.panel::before{content:'';position:absolute;inset:0;z-index:2;
+  pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,rgba(0,229,255,0) calc(100% - min(38%,190px)),
+    rgba(0,229,255,.05) calc(100% - min(11%,56px)),rgba(0,229,255,.42));
+  animation:scan .42s cubic-bezier(.33,1,.68,1)}
+.panel:nth-of-type(2)::before{animation-delay:.05s}
+.panel:nth-of-type(3)::before{animation-delay:.1s}
+.panel:nth-of-type(n+4)::before{animation-delay:.15s}
 .panel-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.2rem;
   background:var(--s2);border-bottom:1px solid var(--ln)}
 .panel-head h3{font-family:var(--fs);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:.5rem}
@@ -573,6 +617,16 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
   padding:1rem;padding-top:calc(var(--nav) + 1rem);animation:pageIn .3s}
 .modal-bg.show{display:flex}
 .modal-bg.show>.modal{animation:modalIn .26s cubic-bezier(.16,1,.3,1)}
+/* La fenetre recoit le meme balayage que les panneaux, sans nouvelle
+   animation a declarer. Le clip-path de .modal le decoupe, et comme le
+   pseudo-element est en position absolue il ne devient pas un element
+   flexible de la colonne. Il n'intercepte aucun clic et n'ajoute aucun
+   delai avant la saisie. */
+.modal-bg.show>.modal::before{content:'';position:absolute;inset:0;z-index:3;
+  pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,rgba(0,229,255,0) calc(100% - min(32%,170px)),
+    rgba(0,229,255,.06) calc(100% - min(10%,50px)),rgba(0,229,255,.46));
+  animation:scan .45s cubic-bezier(.33,1,.68,1)}
 @keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 /* Toute fenêtre tient dans l'écran : en-tête et pied figés, corps qui défile.
    Sans cela, un contenu long la fait déborder et les boutons deviennent
@@ -697,6 +751,21 @@ nav{position:fixed;top:0;left:0;right:0;height:var(--nav);z-index:100;
 #toast.success{border-color:var(--gr)}#toast.success .ti{color:var(--gr)}
 #toast.error{border-color:var(--rd)}#toast.error .ti{color:var(--rd)}
 #toast.info{border-color:var(--ac)}#toast.info .ti{color:var(--ac)}
+/* Pointe de confirmation. Elle suit le resultat reel de l'operation : toast()
+   n'est appelee qu'apres coup, et son type vient de l'issue. Une reussite
+   s'epanouit, un echec se cabre, jamais l'inverse. */
+#toast.pop.success .ti{animation:okPop .5s cubic-bezier(.16,1,.3,1)}
+#toast.pop.error .ti{animation:koNudge .4s ease-out}
+@keyframes okPop{0%{transform:scale(.3);opacity:0}55%{transform:scale(1.25);opacity:1}100%{transform:scale(1)}}
+@keyframes koNudge{0%,100%{transform:translateX(0)}20%{transform:translateX(-3px)}
+  40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}}
+/* Mise en evidence d'une valeur qui vient reellement de changer. Portee par
+   un pseudo-element pour ne pas ecraser l'animation countUp que .stat-v
+   declare deja : deux regles « animation » sur le meme noeud s'excluent. */
+.val-new{position:relative}
+.val-new::after{content:'';position:absolute;inset:-4px -8px;pointer-events:none;
+  border:1px solid var(--ac);opacity:0;animation:valFlash .9s ease-out}
+@keyframes valFlash{0%{opacity:.85;transform:scale(.88)}100%{opacity:0;transform:scale(1.07)}}
 
 .tl{position:relative;padding-left:2rem}
 .tl::before{content:'';position:absolute;left:7px;top:4px;bottom:4px;width:1px;
@@ -1151,6 +1220,16 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 @keyframes accentBreathe{0%,100%{opacity:.12}50%{opacity:.38}}
 @media(prefers-reduced-motion:reduce){
   .sec-head .line::after,.card::before,.panel-head::after,.rb-dot::after{animation:none}
+  /* Les balayages et les pointes sont purement decoratifs : ils disparaissent
+     entierement, la ou les deux regles globales se contentent de les ecourter.
+     Le marqueur d'onglet garde sa transformation, qui porte une information. */
+  .panel::before,.modal-bg.show>.modal::before,.val-new::after,
+  .nav-tab.on::after{animation:none}
+  /* La pointe du toast se declare par type : « #toast.pop .ti » pese moins
+     que « #toast.pop.success .ti » et se faisait battre a la specificite.
+     Mesure faite, l'animation survivait au mouvement reduit. */
+  #toast.pop.success .ti,#toast.pop.error .ti{animation:none}
+  .on-anim{animation:none}
 }
 /* ===== FICHE CDM (vue publique, styles confines a #v-fichecdm) ===== */
 #v-fichecdm .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:2.5rem;align-items:center;min-height:70vh;margin-bottom:3rem}
@@ -9990,6 +10069,10 @@ function toast(msg,type="info"){
   const icons={success:'<polyline points="20 6 9 17 4 12"/>',error:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>'};
   t.querySelector(".ti").innerHTML=icons[type]||icons.info;
   t.className=type;m.textContent=msg;t.classList.add("show");
+  /* Retirer puis remettre la classe force l'animation a rejouer, y compris
+     sur un toast deja affiche : sans ce passage par un reflow, deux messages
+     consecutifs ne donneraient qu'une seule pointe. */
+  t.classList.remove("pop");void t.offsetWidth;t.classList.add("pop");
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3500);
 }
 
@@ -10030,7 +10113,10 @@ function initParticles(){
       }
       raf=requestAnimationFrame(tick);
     };
-    const start=()=>{if(raf===null)raf=requestAnimationFrame(tick);};
+    /* Comme le radar : on ne lance pas la boucle si la page est chargee
+       dans un onglet deja masque. L'ecouteur ci-dessous s'en chargera au
+       moment ou elle redevient visible. */
+    const start=()=>{if(raf===null&&!document.hidden)raf=requestAnimationFrame(tick);};
     const stop=()=>{if(raf!==null){cancelAnimationFrame(raf);raf=null;}};
     document.addEventListener("visibilitychange",()=>{document.hidden?stop():start();});
     start();
@@ -11790,9 +11876,24 @@ function fallbackCopy(txt){
 function animateCount(el,target){
   if(!el)return;
   target=parseInt(target)||0;
+  /* Premier remplissage : au chargement, passer du zero affiche a la vraie
+     valeur n'est pas un changement pour celui qui regarde, et le cadre n'y
+     serait que du bruit. On ne peut pas se fier a data-val pour le savoir :
+     showSkeletons() le remet a "0" juste avant loadAll(). D'ou cette marque
+     a nous, que ni le balisage ni le squelette ne posent. Elle est ecrite
+     avant le retour anticipe ci-dessous, sinon un compteur inchange au
+     demarrage passerait pour neuf a sa premiere vraie variation. */
+  const premier=(el.dataset.vu!=="1");
+  el.dataset.vu="1";
   const current=parseInt(el.dataset.val||"0");
   if(current===target){el.textContent=target;return;}
   el.dataset.val=target;
+  /* On arrive ici seulement si la valeur a vraiment bouge : l'egalite
+     au-dessus rend la main. Le cadre ne clignote donc pas sur un simple
+     reaffichage, ni sur le tout premier affichage. */
+  if(!premier){
+    el.classList.remove("val-new");void el.offsetWidth;el.classList.add("val-new");
+  }
   const start=current;
   const duration=600;
   const startTime=performance.now();
