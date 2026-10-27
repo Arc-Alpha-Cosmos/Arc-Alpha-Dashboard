@@ -675,6 +675,18 @@ input:disabled::placeholder,textarea:disabled::placeholder{color:var(--fd)}
 .rec-tot .n{font-family:var(--fs);font-size:1.4rem;font-weight:700;line-height:1}
 .rec-tot .k{font-family:var(--fm);font-size:.6rem;color:var(--dm);letter-spacing:.1em;text-transform:uppercase}
 .rec-nmax{white-space:nowrap}
+/* Tableau des baremes : epreuves en lignes, versions en colonnes. Il defile
+   de lui-meme plutot que de pousser la page quand les versions s'accumulent. */
+.rec-bar-wrap{overflow-x:auto;margin-bottom:.5rem}
+.rec-bar{border-collapse:collapse;font-family:var(--fm);font-size:.68rem}
+.rec-bar th,.rec-bar td{padding:.25rem .4rem;border-bottom:1px solid var(--ln);text-align:center;white-space:nowrap}
+.rec-bar th:first-child,.rec-bar td:first-child{text-align:left;color:var(--tx2);
+  white-space:normal;min-width:130px;padding-left:0}
+.rec-bar thead th{color:var(--ac);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+  border-bottom:1px solid var(--ls)}
+.rec-bar .rec-bar-tot td{color:var(--tx);font-weight:700;border-top:1px solid var(--ls)}
+/* Un maximum propre a la version, par opposition a celui dont il herite. */
+.inline-inp.rec-bar-sur{color:var(--ac);border-bottom-color:var(--ls)}
 .rec-tot .k.rec-admis{color:var(--gr)}
 .rec-tot .k.rec-refuse{color:var(--rd)}
 /* Une note au-dessus du maximum du RCT choisi. On la signale sans y toucher :
@@ -12916,6 +12928,24 @@ function discordFormationPayload(f,author,maj){
    en base : le compte rendu part dans le salon Discord prévu pour lui,
    après confirmation, comme tout le reste du site.
    ============================================================ */
+/* Baremes par version du recrutement : valeurs de depart seulement. Ils
+   vivent ensuite dans le formulaire lui-meme, champ « rcts », donc dans
+   arc_config comme les questions et leur ordre. Ils s'editent depuis
+   l'Administration, sans repasser par ce fichier.
+
+   Une version ne declare que les maximums qui changent ; les autres epreuves
+   gardent celui du formulaire. Ajouter une version tient donc a une ligne,
+   ici comme dans l'editeur.
+
+   Une liste, et non un objet indexe par le nom : l'editeur doit pouvoir
+   renommer et reordonner, ce qu'une cle d'objet rend malcommode. */
+const RCT_BAREMES=[
+  {nom:"RCT 1",seuil:125,max:{strategie:10,ordres:10}},
+  {nom:"RCT 2",seuil:151,max:{strategie:20,ordres:30}},
+  {nom:"RCT 3",seuil:151,max:{strategie:20,ordres:30}},
+  {nom:"RCT 4",seuil:151,max:{strategie:20,ordres:30}}
+];
+
 const REC_DEFAULTS={
   trooper:{
     cle:"recrutTrooper",
@@ -12968,25 +12998,12 @@ const REC_DEFAULTS={
       {id:"discipline",label:"Discipline 🎭",          max:10}
     ],
     essais:false,
-    rct:true
+    /* Le formulaire ARC Alpha a change de bareme en cours de route : la
+       theorie, le CQB et le reste n'ont pas bouge, mais la strategie
+       militaire et les ordres CMDM pesent plus lourd depuis le RCT 2.
+       Une copie, pour que l'editeur ne modifie jamais la constante. */
+    rcts:JSON.parse(JSON.stringify(RCT_BAREMES))
   }
-};
-
-/* Barèmes par version du recrutement. Le formulaire ARC Alpha a change de
-   bareme en cours de route : la theorie, le CQB et le reste n'ont pas bouge,
-   mais la strategie militaire et les ordres CMDM pesent beaucoup plus lourd
-   depuis le RCT 2.
-
-   On ne redecrit donc pas les onze epreuves pour chaque version : seuls les
-   maximums qui changent sont listes, le reste venant du formulaire lui-meme,
-   qui reste modifiable depuis l'Administration. Ajouter un RCT 5 tient en
-   une ligne, et les totaux se recalculent tout seuls : 145 pour le RCT 1,
-   175 pour les suivants. */
-const RCT_BAREMES={
-  "RCT 1":{seuil:125, max:{strategie:10, ordres:10}},
-  "RCT 2":{seuil:151, max:{strategie:20, ordres:30}},
-  "RCT 3":{seuil:151, max:{strategie:20, ordres:30}},
-  "RCT 4":{seuil:151, max:{strategie:20, ordres:30}}
 };
 
 /* Les deux formulaires sont modifiables depuis le site : les questions, leur
@@ -13019,6 +13036,29 @@ function recNettoieSpec(base,s){
     if(l.length)base.notes=l;
   }
   if("essais" in s)base.essais=!!s.essais;
+  /* Les versions viennent d'arc_config, donc d'une base que l'on peut
+     editer : on les assainit comme les questions. Une liste vide est une
+     consigne valable, elle rend au formulaire son bareme unique. */
+  if(Array.isArray(s.rcts)){
+    const vus={}, l=[];
+    s.rcts.forEach(v=>{
+      if(!v||typeof v!=="object")return;
+      const nom=String(v.nom||"").trim().slice(0,24);
+      if(!nom||vus[nom])return;
+      vus[nom]=1;
+      const mx={};
+      if(v.max&&typeof v.max==="object"){
+        Object.keys(v.max).forEach(k=>{
+          const id=String(k).replace(/[^A-Za-z0-9_]/g,"").slice(0,24);
+          const n=parseFloat(v.max[k]);
+          if(id&&!isNaN(n))mx[id]=Math.max(1,Math.min(1000,n));
+        });
+      }
+      const seuil=parseFloat(v.seuil);
+      l.push({nom:nom,seuil:isNaN(seuil)?0:Math.max(0,Math.min(100000,seuil)),max:mx});
+    });
+    base.rcts=l;
+  }
   return base;
 }
 function recFormsLoad(){
@@ -13039,7 +13079,8 @@ function recFormsPourBase(){
     const s=_recDraft[k];
     out[k]={titre:s.titre,essais:!!s.essais,
       infos:s.infos.map(f=>({id:f.id,label:f.label,type:f.type,ph:f.ph||""})),
-      notes:s.notes.map(n=>({id:n.id,label:n.label,max:n.max}))};
+      notes:s.notes.map(n=>({id:n.id,label:n.label,max:n.max})),
+      rcts:recVersions(s).map(v=>({nom:v.nom,seuil:v.seuil,max:Object.assign({},v.max||{})}))};
   });
   return out;
 }
@@ -13070,7 +13111,12 @@ function recDraftAdd(sec){
 function recDraftDel(sec,i){
   const s=_recDraft[_recEditKind]; if(!s||!s[sec])return;
   if(s[sec].length<=1){toast("Il faut garder au moins une ligne","error");return;}
-  s[sec].splice(i,1);renderRecEditor();
+  const parti=s[sec][i];
+  s[sec].splice(i,1);
+  /* Retirer une epreuve doit retirer ses surcharges : sinon elles dormiraient
+     en base et reviendraient si un jour un identifiant tombait sur le meme. */
+  if(sec==="notes"&&parti)recVersions(s).forEach(v=>{ if(v.max)delete v.max[parti.id]; });
+  renderRecEditor();
 }
 function recDraftMove(sec,i,dir){
   const s=_recDraft[_recEditKind]; if(!s||!s[sec])return;
@@ -13078,6 +13124,47 @@ function recDraftMove(sec,i,dir){
   const t=s[sec][i]; s[sec][i]=s[sec][j]; s[sec][j]=t; renderRecEditor();
 }
 function recDraftEssais(v){ const s=_recDraft[_recEditKind]; if(s){s.essais=!!v;renderRecEditor();} }
+
+/* ----- les versions du recrutement, dans l'editeur ----- */
+function recNomVersionLibre(s){
+  const pris={}; recVersions(s).forEach(v=>{pris[v.nom]=1;});
+  for(let i=1;i<200;i++){ const n="RCT "+i; if(!pris[n])return n; }
+  return "Nouvelle version";
+}
+function recDraftRctAdd(){
+  const s=_recDraft[_recEditKind]; if(!s)return;
+  if(!Array.isArray(s.rcts))s.rcts=[];
+  /* La nouvelle version reprend le bareme de la precedente : c'est presque
+     toujours ce qu'on veut, et il ne reste qu'a changer ce qui differe. */
+  const der=s.rcts[s.rcts.length-1];
+  s.rcts.push({nom:recNomVersionLibre(s),
+               seuil:der?der.seuil:0,
+               max:der?Object.assign({},der.max):{}});
+  renderRecEditor();
+}
+function recDraftRctDel(i){
+  const s=_recDraft[_recEditKind]; if(!s||!s.rcts||!s.rcts[i])return;
+  s.rcts.splice(i,1);
+  renderRecEditor();
+}
+function recDraftRctSet(i,prop,val){
+  const s=_recDraft[_recEditKind]; if(!s||!s.rcts||!s.rcts[i])return;
+  if(prop==="seuil"){ const v=parseFloat(val); s.rcts[i].seuil=isNaN(v)?0:Math.max(0,Math.min(100000,v)); }
+  else s.rcts[i].nom=String(val).slice(0,24);
+  renderRecEditor();
+}
+function recDraftRctMax(i,noteId,val){
+  const s=_recDraft[_recEditKind]; if(!s||!s.rcts||!s.rcts[i])return;
+  const note=(s.notes||[]).find(n=>n.id===noteId); if(!note)return;
+  if(!s.rcts[i].max)s.rcts[i].max={};
+  const v=parseFloat(val);
+  /* Une valeur egale au bareme du formulaire n'est pas une exception : on
+     retire la surcharge au lieu de la figer, pour qu'elle continue de suivre
+     si ce bareme change plus tard. */
+  if(isNaN(v)||v===note.max)delete s.rcts[i].max[noteId];
+  else s.rcts[i].max[noteId]=Math.max(1,Math.min(1000,v));
+  renderRecEditor();
+}
 function recDraftTitre(v){ const s=_recDraft[_recEditKind]; if(s)s.titre=String(v).slice(0,80); }
 
 function renderRecEditor(){
@@ -13111,7 +13198,14 @@ function renderRecEditor(){
     </div>`).join("");
   h+=`<button class="sbtn" style="margin-top:.3rem" onclick="recDraftAdd('infos')">+ Information</button>`;
   const tot=s.notes.reduce((t,n)=>t+(parseFloat(n.max)||0),0);
-  h+=`<div class="rec-sec">Épreuves notées <span style="color:var(--dm)">· total sur ${tot}</span></div>`;
+  /* Avec des versions, annoncer un total unique serait faux. */
+  let totTxt=`total sur ${tot}`;
+  if(recAVersions(s)){
+    const b=recVersions(s).map(v=>recTotalRct(s,v.nom));
+    const lo=Math.min(...b), hi=Math.max(...b);
+    totTxt=(lo===hi)?`total sur ${lo}`:`total sur ${lo} à ${hi} selon la version`;
+  }
+  h+=`<div class="rec-sec">Épreuves notées <span style="color:var(--dm)">· ${esc(totTxt)}</span></div>`;
   h+=s.notes.map((n,i)=>`<div class="rec-erow">
       <input type="text" class="inline-inp" value="${esc(n.label)}" maxlength="120" style="flex:1 1 190px;min-width:0"
         oninput="recDraftSet('notes',${i},'label',this.value)" title="Libellé de l'épreuve">
@@ -13120,6 +13214,45 @@ function renderRecEditor(){
       ${fleches("notes",i,s.notes.length)}
     </div>`).join("");
   h+=`<button class="sbtn" style="margin-top:.3rem" onclick="recDraftAdd('notes')">+ Épreuve</button>`;
+  /* Les versions, en tableau : epreuves en lignes, versions en colonnes.
+     C'est la seule disposition ou l'on compare deux baremes d'un coup d'oeil,
+     et elle reste courte meme avec six versions. */
+  const vs=recVersions(s);
+  h+=`<div class="rec-sec">Versions du recrutement <span style="color:var(--dm)">· barème par version</span></div>`;
+  h+=`<p style="font-size:.76rem;color:var(--dm);margin:-.3rem 0 .7rem">`
+    +(vs.length
+      ? `Une version ne change que les épreuves qui diffèrent : les autres suivent le barème ci-dessus `
+        +`<span style="color:var(--ac)">et s'affichent en cyan quand elles sont propres à la version</span>.`
+      : `Aucune version : le formulaire garde un barème unique et ne demande pas de RCT.`)
+    +`</p>`;
+  if(vs.length){
+    h+=`<div class="rec-bar-wrap"><table class="rec-bar"><thead><tr><th>Épreuve</th>`
+      +vs.map((v,i)=>`<th><input type="text" class="inline-inp" value="${esc(v.nom)}" maxlength="24"
+          style="width:80px;text-align:center" onchange="recDraftRctSet(${i},'nom',this.value)"
+          title="Nom de la version"><button class="sbtn danger" style="padding:.1rem .3rem;margin-left:.25rem"
+          title="Retirer cette version" onclick="recDraftRctDel(${i})">✕</button></th>`).join("")
+      +`</tr></thead><tbody>`;
+    s.notes.forEach(n=>{
+      h+=`<tr><td>${esc(recLabelCourt(n.label))||"&nbsp;"}</td>`
+        +vs.map((v,i)=>{
+          const propre=!!(v.max&&v.max[n.id]!=null);
+          const val=propre?v.max[n.id]:n.max;
+          return `<td><input type="number" class="inline-inp${propre?" rec-bar-sur":""}" value="${val}"
+            min="1" max="1000" step="1" style="width:64px;text-align:center"
+            onchange="recDraftRctMax(${i},'${esc(n.id)}',this.value)"
+            title="${propre?"Propre à cette version":"Hérité du barème du formulaire"}"></td>`;
+        }).join("")+`</tr>`;
+    });
+    h+=`<tr class="rec-bar-tot"><td>Total</td>`
+      +vs.map(v=>`<td>${recTotalRct(s,v.nom)}</td>`).join("")+`</tr>`;
+    h+=`<tr><td>Admis à partir de</td>`
+      +vs.map((v,i)=>`<td><input type="number" class="inline-inp" value="${v.seuil}" min="0" max="100000" step="1"
+         style="width:64px;text-align:center" onchange="recDraftRctSet(${i},'seuil',this.value)"
+         title="Seuil d'admission"></td>`).join("")+`</tr>`;
+    h+=`</tbody></table></div>`;
+  }
+  h+=`<button class="sbtn" style="margin-top:.3rem" onclick="recDraftRctAdd()">+ Version</button>`;
+
   h+=`<div class="rec-sec">Conclusion</div>
     <label class="act-mrow" style="display:inline-flex">
       <input type="checkbox"${s.essais?" checked":""} onchange="recDraftEssais(this.checked)">
@@ -13140,6 +13273,14 @@ async function saveRecForms(){
     if(!s.notes.length)souci.push("un formulaire n'a plus d'épreuve");
     s.infos.concat(s.notes).forEach(x=>{ if(!String(x.label||"").trim())souci.push("un libellé est vide"); });
     s.notes.forEach(n=>{ if(!(n.max>=1))souci.push("un barème est invalide"); });
+    const nomsVus={};
+    recVersions(s).forEach(v=>{
+      const nom=String(v.nom||"").trim();
+      if(!nom)souci.push("une version de recrutement n'a pas de nom");
+      else if(nomsVus[nom])souci.push(`deux versions s'appellent « ${nom} »`);
+      else nomsVus[nom]=1;
+      if(!(v.seuil>=0))souci.push("un seuil d'admission est invalide");
+    });
   });
   if(souci.length){toast(souci[0],"error");return;}
   state.content=state.content||{};
@@ -13170,21 +13311,33 @@ const REC_ESSAIS=["1er","2ème","3ème","4ème","5ème","6ème","7ème","8ème",
 
 function recMax(spec){ return spec.notes.reduce((t,n)=>t+n.max,0); }
 
-/* Le formulaire tel qu'il est, mais avec les maximums du RCT choisi. On rend
-   une copie : REC_FORMS ne doit jamais etre modifie, c'est lui qui porte la
-   configuration enregistree. Sans RCT choisi, ou sur un formulaire qui n'en
-   demande pas, on rend la specification d'origine telle quelle.
+/* Un formulaire demande une version des lors qu'il en declare au moins une :
+   pas de drapeau separe a tenir a jour, donc pas de risque qu'il contredise
+   la liste. Vider la liste depuis l'editeur rend simplement au formulaire son
+   bareme unique. */
+function recVersions(s){ return (s&&Array.isArray(s.rcts))?s.rcts:[]; }
+function recAVersions(s){ return recVersions(s).length>0; }
+function recVersion(s,nom){
+  const n=String(nom||"").trim();
+  if(!n)return null;
+  return recVersions(s).find(v=>v&&v.nom===n)||null;
+}
+
+/* Le formulaire tel qu'il est, mais avec les maximums de la version choisie.
+   On rend une copie : REC_FORMS ne doit jamais etre modifie, c'est lui qui
+   porte la configuration enregistree. Sans version choisie, ou sur un
+   formulaire qui n'en declare pas, on rend la specification telle quelle.
    Le rattachement se fait par identifiant d'epreuve : si quelqu'un renomme
    l'identifiant « strategie » depuis l'Administration, le bareme ne s'y
-   applique plus, ce qui est le comportement voulu. */
+   applique plus, ce qui vaut mieux qu'un bareme qui suivrait un champ
+   devenu autre chose. */
 function recSpecRct(base,rct){
-  if(!base||!base.rct)return base;
-  const b=RCT_BAREMES[String(rct||"")];
-  if(!b)return base;
+  const v=recVersion(base,rct);
+  if(!v)return base;
   const s=JSON.parse(JSON.stringify(base));
-  (s.notes||[]).forEach(n=>{ if(b.max&&b.max[n.id]!=null)n.max=b.max[n.id]; });
-  s.rctChoisi=String(rct);
-  s.seuil=b.seuil;
+  (s.notes||[]).forEach(n=>{ if(v.max&&v.max[n.id]!=null)n.max=v.max[n.id]; });
+  s.rctChoisi=v.nom;
+  s.seuil=v.seuil;
   return s;
 }
 function recRctLu(){ const e=document.getElementById("rec_rct"); return e?String(e.value||"").trim():""; }
@@ -13207,8 +13360,8 @@ function renderRecrutements(){
     if(t)t.textContent=s.titre;
     /* Avec un bareme par RCT, annoncer un total unique serait faux. */
     let tot=`total sur ${recMax(s)}`;
-    if(s.rct){
-      const bornes=Object.keys(RCT_BAREMES).map(r=>recTotalRct(s,r));
+    if(recAVersions(s)){
+      const bornes=recVersions(s).map(v=>recTotalRct(s,v.nom));
       const lo=Math.min(...bornes), hi=Math.max(...bornes);
       tot=(lo===hi)?`total sur ${lo}`:`total sur ${lo} à ${hi} selon le RCT`;
     }
@@ -13240,12 +13393,12 @@ function recBuild(kind){
   const s=REC_FORMS[kind];
   let h=`<div class="rec-sec">${esc(s.secInfos)}</div>`;
   /* Le RCT commande tout le reste du formulaire : il vient donc en premier. */
-  if(s.rct){
+  if(recAVersions(s)){
     h+=`<div class="field"><label>RCT passé 🎖 <span style="color:var(--rd);font-weight:400">obligatoire</span></label>`
       +`<select id="rec_rct" onchange="recRctChange()">`
       +`<option value="">Sélectionner…</option>`
-      +Object.keys(RCT_BAREMES).map(k=>
-        `<option value="${esc(k)}">${esc(k)} · sur ${recTotalRct(s,k)} · admis à ${RCT_BAREMES[k].seuil}</option>`).join("")
+      +recVersions(s).map(v=>
+        `<option value="${esc(v.nom)}">${esc(v.nom)} · sur ${recTotalRct(s,v.nom)} · admis à ${v.seuil}</option>`).join("")
       +`</select></div>`;
   }
   h+=`<div class="form-row fr2">${s.infos.slice(0,2).map(recFieldHtml).join("")}</div>`;
@@ -13304,7 +13457,7 @@ function recTotal(){
   if(p)p.textContent=pct+" %";
   const a=document.getElementById("recAdmis");
   if(a){
-    if(base.rct&&!s.rctChoisi){ a.textContent="RCT à choisir"; a.className="k"; }
+    if(recAVersions(base)&&!s.rctChoisi){ a.textContent="RCT à choisir"; a.className="k"; }
     /* Un verdict calcule sur des notes hors bareme ne veut rien dire : on
        dit ce qu'il faut corriger plutot que d'affirmer une admission. */
     else if(horsBornes){
@@ -13345,7 +13498,7 @@ function recLire(kind){
   const s=REC_FORMS[kind];
   const val=(id)=>{const el=document.getElementById("rec_"+id);return el?String(el.value||"").trim():"";};
   const d={infos:{},notes:{},commentaire:val("commentaire"),essais:s.essais?val("essais"):"",
-           rct:s.rct?val("rct"):""};
+           rct:recAVersions(s)?val("rct"):""};
   s.infos.forEach(f=>{d.infos[f.id]=val(f.id);});
   s.notes.forEach(n=>{d.notes[n.id]=val(n.id);});
   return d;
@@ -13368,7 +13521,7 @@ async function saveRecrutement(){
   const sp=recSpecRct(s,d.rct);
   /* toutes les questions des formulaires d'origine sont obligatoires */
   const manque=[];
-  if(s.rct&&!d.rct)manque.push("RCT passé");
+  if(recAVersions(s)&&!d.rct)manque.push("RCT passé");
   s.infos.forEach(f=>{ if(!d.infos[f.id])manque.push(f.label); });
   sp.notes.forEach(n=>{
     const v=parseFloat(d.notes[n.id]);
@@ -13507,8 +13660,9 @@ function discordRecrutPayload(kind,d,total,max,author,spec){
 /* Jeu de valeurs pour le bouton « Tester » du panneau Discord. */
 function recDemo(kind){
   const base=REC_FORMS[kind];
-  /* Le test prend la version la plus recente : c'est celle qu'on fait passer. */
-  const rct=base.rct?Object.keys(RCT_BAREMES).slice(-1)[0]:"";
+  /* Le test prend la derniere version declaree : c'est celle qu'on fait passer. */
+  const vs=recVersions(base);
+  const rct=vs.length?vs[vs.length-1].nom:"";
   const s=recSpecRct(base,rct);
   const d={infos:{},notes:{},commentaire:"Test de liaison : si tu lis ceci, le webhook fonctionne.",
            essais:s.essais?"1er":"",rct:rct};
