@@ -13599,7 +13599,9 @@ function discordRecrutPayload(kind,d,total,max,author,spec){
      cherche en premier quand on relit un compte rendu des mois plus tard. */
   if(s.rctChoisi){
     const verdict=(s.seuil!=null)?(total>=s.seuil?"Admis":"Non admis"):"";
-    tete.push("**"+s.rctChoisi+"**  ·  **"+total+"/"+max+"**"
+    /* Le score est deja sur la ligne juste au-dessus : le repeter ici
+       n'ajoutait rien et alourdissait l'en-tete. */
+    tete.push("**"+s.rctChoisi+"**"
       +(verdict?"  ·  **"+verdict+"**":"")
       +(s.seuil!=null?"  _(seuil "+s.seuil+")_":""));
   }
@@ -13646,7 +13648,12 @@ function discordRecrutPayload(kind,d,total,max,author,spec){
   const _m=recMentionIds();
   const _out={
     embeds:[{
-      title:recLabelCourt((s.titre||"Recrutement")).toUpperCase().slice(0,256),
+      /* La version passe dans le titre : c'est la premiere chose lue dans le
+         salon, et la seule que Discord reprend dans sa notification quand le
+         message n'a pour contenu que des mentions. Une ligne de description
+         se remarque beaucoup moins. */
+      title:(recLabelCourt(s.titre||"Recrutement")
+             +(s.rctChoisi?" · "+s.rctChoisi:"")).toUpperCase().slice(0,256),
       description:tete.join("\n").slice(0,4096),
       color:recColorInt(pct),
       fields:fields.slice(0,25),
