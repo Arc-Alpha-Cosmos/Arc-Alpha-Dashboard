@@ -674,6 +674,13 @@ input:disabled::placeholder,textarea:disabled::placeholder{color:var(--fd)}
   background:var(--s2);border:1px solid var(--ln)}
 .rec-tot .n{font-family:var(--fs);font-size:1.4rem;font-weight:700;line-height:1}
 .rec-tot .k{font-family:var(--fm);font-size:.6rem;color:var(--dm);letter-spacing:.1em;text-transform:uppercase}
+.rec-nmax{white-space:nowrap}
+.rec-tot .k.rec-admis{color:var(--gr)}
+.rec-tot .k.rec-refuse{color:var(--rd)}
+/* Une note au-dessus du maximum du RCT choisi. On la signale sans y toucher :
+   c'est au formateur de decider s'il la corrige ou s'il change de RCT. */
+.field input.rec-depasse,.field input.rec-depasse:focus,
+.field input.rec-depasse:hover:not(:focus){border-color:var(--rd);color:var(--rd)}
 .rec-card{border:1px solid var(--ln);background:var(--s2);padding:1rem;display:flex;flex-direction:column;gap:.6rem;min-width:0}
 .rec-card h4{font-family:var(--fs);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx)}
 .rec-card p{font-size:.8rem;color:var(--tx2);line-height:1.6;flex:1}
@@ -12960,8 +12967,26 @@ const REC_DEFAULTS={
       {id:"citadelle", label:"Citadelle ⚡",            max:10},
       {id:"discipline",label:"Discipline 🎭",          max:10}
     ],
-    essais:false
+    essais:false,
+    rct:true
   }
+};
+
+/* Barèmes par version du recrutement. Le formulaire ARC Alpha a change de
+   bareme en cours de route : la theorie, le CQB et le reste n'ont pas bouge,
+   mais la strategie militaire et les ordres CMDM pesent beaucoup plus lourd
+   depuis le RCT 2.
+
+   On ne redecrit donc pas les onze epreuves pour chaque version : seuls les
+   maximums qui changent sont listes, le reste venant du formulaire lui-meme,
+   qui reste modifiable depuis l'Administration. Ajouter un RCT 5 tient en
+   une ligne, et les totaux se recalculent tout seuls : 145 pour le RCT 1,
+   175 pour les suivants. */
+const RCT_BAREMES={
+  "RCT 1":{seuil:125, max:{strategie:10, ordres:10}},
+  "RCT 2":{seuil:151, max:{strategie:20, ordres:30}},
+  "RCT 3":{seuil:151, max:{strategie:20, ordres:30}},
+  "RCT 4":{seuil:151, max:{strategie:20, ordres:30}}
 };
 
 /* Les deux formulaires sont modifiables depuis le site : les questions, leur
@@ -13144,6 +13169,27 @@ async function resetRecForms(){
 const REC_ESSAIS=["1er","2ème","3ème","4ème","5ème","6ème","7ème","8ème","9ème","10ème"];
 
 function recMax(spec){ return spec.notes.reduce((t,n)=>t+n.max,0); }
+
+/* Le formulaire tel qu'il est, mais avec les maximums du RCT choisi. On rend
+   une copie : REC_FORMS ne doit jamais etre modifie, c'est lui qui porte la
+   configuration enregistree. Sans RCT choisi, ou sur un formulaire qui n'en
+   demande pas, on rend la specification d'origine telle quelle.
+   Le rattachement se fait par identifiant d'epreuve : si quelqu'un renomme
+   l'identifiant « strategie » depuis l'Administration, le bareme ne s'y
+   applique plus, ce qui est le comportement voulu. */
+function recSpecRct(base,rct){
+  if(!base||!base.rct)return base;
+  const b=RCT_BAREMES[String(rct||"")];
+  if(!b)return base;
+  const s=JSON.parse(JSON.stringify(base));
+  (s.notes||[]).forEach(n=>{ if(b.max&&b.max[n.id]!=null)n.max=b.max[n.id]; });
+  s.rctChoisi=String(rct);
+  s.seuil=b.seuil;
+  return s;
+}
+function recRctLu(){ const e=document.getElementById("rec_rct"); return e?String(e.value||"").trim():""; }
+function recSpecCourant(kind){ return recSpecRct(REC_FORMS[kind],recRctLu()); }
+function recTotalRct(base,rct){ return recMax(recSpecRct(base,rct)); }
 function recUrl(kind){ const s=REC_FORMS[kind]; return s?(state.discord[s.cle]||""):""; }
 function recColorCss(pct){ return pct>=70?"var(--gr)":(pct>=50?"var(--or)":"var(--rd)"); }
 function recColorInt(pct){ return pct>=70?0x22d97a:(pct>=50?0xff8a3d:0xff3b5c); }
@@ -13159,8 +13205,15 @@ function renderRecrutements(){
     if(b)b.style.display=droit?"":"none";
     if(w)w.style.display=(droit&&!recUrl(k))?"":"none";
     if(t)t.textContent=s.titre;
+    /* Avec un bareme par RCT, annoncer un total unique serait faux. */
+    let tot=`total sur ${recMax(s)}`;
+    if(s.rct){
+      const bornes=Object.keys(RCT_BAREMES).map(r=>recTotalRct(s,r));
+      const lo=Math.min(...bornes), hi=Math.max(...bornes);
+      tot=(lo===hi)?`total sur ${lo}`:`total sur ${lo} à ${hi} selon le RCT`;
+    }
     if(p)p.textContent=`${s.infos.length} information${s.infos.length>1?"s":""} · `
-      +`${s.notes.length} épreuve${s.notes.length>1?"s":""} · total sur ${recMax(s)}`
+      +`${s.notes.length} épreuve${s.notes.length>1?"s":""} · ${tot}`
       +(s.essais?" · numéro d'essai":"")+" · commentaire";
   });
   const nr=document.getElementById("recNoRight");
@@ -13179,16 +13232,26 @@ function recFieldHtml(f){
     <input type="${f.type==="date"?"date":"text"}" id="rec_${esc(f.id)}" autocomplete="off"${ph}></div>`;
 }
 function recNoteHtml(n){
-  return `<div class="field"><label>${esc(n.label)} <span style="color:var(--dm);font-weight:400">/ ${n.max}</span></label>
+  /* Le maximum porte un identifiant : il change quand on change de RCT. */
+  return `<div class="field"><label>${esc(n.label)} <span class="rec-nmax" id="recmax_${esc(n.id)}" style="color:var(--dm);font-weight:400">/ ${n.max}</span></label>
     <input type="number" id="rec_${esc(n.id)}" min="0" max="${n.max}" step="0.5" inputmode="decimal" oninput="recTotal()" placeholder="0"></div>`;
 }
 function recBuild(kind){
   const s=REC_FORMS[kind];
   let h=`<div class="rec-sec">${esc(s.secInfos)}</div>`;
+  /* Le RCT commande tout le reste du formulaire : il vient donc en premier. */
+  if(s.rct){
+    h+=`<div class="field"><label>RCT passé 🎖 <span style="color:var(--rd);font-weight:400">obligatoire</span></label>`
+      +`<select id="rec_rct" onchange="recRctChange()">`
+      +`<option value="">Sélectionner…</option>`
+      +Object.keys(RCT_BAREMES).map(k=>
+        `<option value="${esc(k)}">${esc(k)} · sur ${recTotalRct(s,k)} · admis à ${RCT_BAREMES[k].seuil}</option>`).join("")
+      +`</select></div>`;
+  }
   h+=`<div class="form-row fr2">${s.infos.slice(0,2).map(recFieldHtml).join("")}</div>`;
   h+=s.infos.slice(2).map(recFieldHtml).join("");
   h+=`<div class="rec-sec">${esc(s.secNotes)}</div>`;
-  h+=`<div class="rec-tot"><span class="n" id="recTotN">0</span><span class="k">sur ${recMax(s)} points</span><span class="k" id="recTotPct"></span></div>`;
+  h+=`<div class="rec-tot"><span class="n" id="recTotN">0</span><span class="k" id="recTotMax">sur ${recMax(s)} points</span><span class="k" id="recTotPct"></span><span class="k" id="recAdmis"></span></div>`;
   h+=`<div class="rec-grid">${s.notes.map(recNoteHtml).join("")}</div>`;
   h+=`<div class="rec-sec">${esc(s.secFin)}</div>`;
   h+=`<div class="field"><label>Commentaire 💬</label><textarea id="rec_commentaire" rows="4" placeholder="Ce qui a marché, ce qui doit être retravaillé"></textarea></div>`;
@@ -13201,21 +13264,60 @@ function recBuild(kind){
   return h;
 }
 
+/* Changement de RCT : les maximums affiches, les bornes des champs, le total
+   et le verdict suivent. Une note deja saisie qui depasse le nouveau maximum
+   est signalee en rouge et laissee telle quelle : la corriger en silence
+   ferait perdre au formateur la valeur qu'il avait notee. */
+function recRctChange(){
+  const ke=document.getElementById("recKind");
+  if(!ke||!REC_FORMS[ke.value])return;
+  const s=recSpecCourant(ke.value);
+  (s.notes||[]).forEach(n=>{
+    const lab=document.getElementById("recmax_"+n.id);
+    if(lab)lab.textContent="/ "+n.max;
+    const el=document.getElementById("rec_"+n.id);
+    if(el)el.max=n.max;
+  });
+  const tm=document.getElementById("recTotMax");
+  if(tm)tm.textContent="sur "+recMax(s)+" points";
+  recTotal();
+}
+
 function recTotal(){
   const ke=document.getElementById("recKind");
-  const s=ke?REC_FORMS[ke.value]:null;
-  if(!s)return 0;
-  let t=0;
+  const base=ke?REC_FORMS[ke.value]:null;
+  if(!base)return 0;
+  const s=recSpecCourant(ke.value);
+  let t=0,horsBornes=0;
   s.notes.forEach(n=>{
     const el=document.getElementById("rec_"+n.id);
     const v=el?parseFloat(el.value):NaN;
     if(!isNaN(v))t+=v;
+    const faux=!isNaN(v)&&(v<0||v>n.max);
+    if(faux)horsBornes++;
+    if(el)el.classList.toggle("rec-depasse",faux);
   });
   t=Math.round(t*2)/2;
   const max=recMax(s), pct=max?Math.round(t/max*100):0;
   const n=document.getElementById("recTotN"), p=document.getElementById("recTotPct");
   if(n){n.textContent=String(t);n.style.color=recColorCss(pct);}
   if(p)p.textContent=pct+" %";
+  const a=document.getElementById("recAdmis");
+  if(a){
+    if(base.rct&&!s.rctChoisi){ a.textContent="RCT à choisir"; a.className="k"; }
+    /* Un verdict calcule sur des notes hors bareme ne veut rien dire : on
+       dit ce qu'il faut corriger plutot que d'affirmer une admission. */
+    else if(horsBornes){
+      a.textContent=horsBornes+" note"+(horsBornes>1?"s":"")+" hors barème";
+      a.className="k rec-refuse";
+    }
+    else if(s.seuil!=null){
+      const admis=t>=s.seuil;
+      a.textContent=(admis?"Admis":"Non admis")+" · seuil "+s.seuil;
+      a.className="k "+(admis?"rec-admis":"rec-refuse");
+    }
+    else { a.textContent=""; a.className="k"; }
+  }
   return t;
 }
 
@@ -13242,7 +13344,8 @@ function openRecModal(kind){
 function recLire(kind){
   const s=REC_FORMS[kind];
   const val=(id)=>{const el=document.getElementById("rec_"+id);return el?String(el.value||"").trim():"";};
-  const d={infos:{},notes:{},commentaire:val("commentaire"),essais:s.essais?val("essais"):""};
+  const d={infos:{},notes:{},commentaire:val("commentaire"),essais:s.essais?val("essais"):"",
+           rct:s.rct?val("rct"):""};
   s.infos.forEach(f=>{d.infos[f.id]=val(f.id);});
   s.notes.forEach(n=>{d.notes[n.id]=val(n.id);});
   return d;
@@ -13260,10 +13363,14 @@ async function saveRecrutement(){
   if(!recUrl(kind)){fail("Le webhook de ce salon n'est pas configuré.");return;}
 
   const d=recLire(kind);
+  /* Le bareme depend du RCT : on valide les notes contre les maximums de la
+     version choisie, pas contre ceux du formulaire au repos. */
+  const sp=recSpecRct(s,d.rct);
   /* toutes les questions des formulaires d'origine sont obligatoires */
   const manque=[];
+  if(s.rct&&!d.rct)manque.push("RCT passé");
   s.infos.forEach(f=>{ if(!d.infos[f.id])manque.push(f.label); });
-  s.notes.forEach(n=>{
+  sp.notes.forEach(n=>{
     const v=parseFloat(d.notes[n.id]);
     if(d.notes[n.id]===""||isNaN(v)){manque.push(n.label);return;}
     if(v<0||v>n.max)manque.push(`${n.label} (entre 0 et ${n.max})`);
@@ -13272,12 +13379,14 @@ async function saveRecrutement(){
   if(s.essais&&!d.essais)manque.push("Combientième d'essais");
   if(manque.length){fail("À compléter : "+manque.join(", "));return;}
 
-  const total=recTotal(), max=recMax(s);
-  const payload=discordRecrutPayload(kind,d,total,max,session?.user);
+  const total=recTotal(), max=recMax(sp);
+  const payload=discordRecrutPayload(kind,d,total,max,session?.user,sp);
   const envoye=await discordConfirmSend(s.cle,payload);
   if(!envoye)return;
   closeModal("recModal");
-  await logActivity(`${session?.user} a déposé un compte rendu de recrutement ${kind==="trooper"?"ARC Trooper":"ARC Alpha"} pour ${d.infos.eleve} (${total}/${max})`);
+  await logActivity(`${session?.user} a déposé un compte rendu de recrutement ${kind==="trooper"?"ARC Trooper":"ARC Alpha"}`
+    +`${d.rct?" "+d.rct:""} pour ${d.infos.eleve} (${total}/${max}`
+    +`${sp.seuil!=null?(total>=sp.seuil?", admis":", non admis"):""})`);
 }
 
 /* Rôles mentionnés sur les comptes rendus de recrutement, et nulle part
@@ -13312,8 +13421,11 @@ function recLabelCourt(s){
     .replace(/\s+/g," ").trim();
 }
 
-function discordRecrutPayload(kind,d,total,max,author){
-  const s=REC_FORMS[kind];
+function discordRecrutPayload(kind,d,total,max,author,spec){
+  /* La specification effective est passee par l'appelant quand un bareme de
+     RCT s'applique : sans elle on retomberait sur les maximums au repos et
+     le detail des notes serait faux. */
+  const s=spec||REC_FORMS[kind];
   const pct=max?Math.round(total/max*100):0;
 
   /* En-tête : qui, par qui, quand, et le score tout de suite. C'est ce qu'on
@@ -13330,6 +13442,14 @@ function discordRecrutPayload(kind,d,total,max,author){
   if(sous.length)tete.push(sous.join("  ·  "));
   tete.push("");
   tete.push("`"+recBarre(pct,20)+"`  **"+total+" / "+max+"**  ·  **"+pct+" %**");
+  /* La version passee et le verdict, sur leur propre ligne : c'est ce qu'on
+     cherche en premier quand on relit un compte rendu des mois plus tard. */
+  if(s.rctChoisi){
+    const verdict=(s.seuil!=null)?(total>=s.seuil?"Admis":"Non admis"):"";
+    tete.push("**"+s.rctChoisi+"**  ·  **"+total+"/"+max+"**"
+      +(verdict?"  ·  **"+verdict+"**":"")
+      +(s.seuil!=null?"  _(seuil "+s.seuil+")_":""));
+  }
 
   const fields=[];
 
@@ -13386,9 +13506,12 @@ function discordRecrutPayload(kind,d,total,max,author){
 
 /* Jeu de valeurs pour le bouton « Tester » du panneau Discord. */
 function recDemo(kind){
-  const s=REC_FORMS[kind];
+  const base=REC_FORMS[kind];
+  /* Le test prend la version la plus recente : c'est celle qu'on fait passer. */
+  const rct=base.rct?Object.keys(RCT_BAREMES).slice(-1)[0]:"";
+  const s=recSpecRct(base,rct);
   const d={infos:{},notes:{},commentaire:"Test de liaison : si tu lis ceci, le webhook fonctionne.",
-           essais:s.essais?"1er":""};
+           essais:s.essais?"1er":"",rct:rct};
   s.infos.forEach(f=>{
     d.infos[f.id]=f.id==="date"?new Date().toISOString().slice(0,10)
                  :f.id==="formateur"?"A-00"
@@ -13401,9 +13524,9 @@ function recDemo(kind){
 
 /* Charge de démonstration pour le bouton « Tester » du panneau Discord. */
 function recTestPayload(kind){
-  const s=REC_FORMS[kind], d=recDemo(kind);
+  const d=recDemo(kind), s=recSpecRct(REC_FORMS[kind],d.rct);
   let t=0; s.notes.forEach(n=>{ t+=parseFloat(d.notes[n.id])||0; });
-  return discordRecrutPayload(kind,d,Math.round(t*2)/2,recMax(s),session?.user);
+  return discordRecrutPayload(kind,d,Math.round(t*2)/2,recMax(s),session?.user,s);
 }
 
 /* Un aperçu n'est pas le message : au-delà d'une certaine longueur il rend le
