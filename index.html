@@ -4122,7 +4122,9 @@ function activityCreditFor(memberId,weekKey){
   const end=addDaysYmd(weekKey,6),id=String(memberId);
   const inWeek=r=>{const d=activityDay(r);return !!d&&d>=weekKey&&d<=end;};
   if((state.formations||[]).some(f=>f.formateur_id!=null&&String(f.formateur_id)===id&&inWeek(f)))return "formation";
-  if((state.cmdmissions||[]).some(c=>String(c.member_id)===id&&inWeek(c)))return "cmd";
+  /* On ne credite que de vraies missions : un ajustement de compteur ne vaut
+     pas presence sur le terrain, et validerait sinon le rapport de la semaine. */
+  if(cmdVraiesMissions().some(c=>String(c.member_id)===id&&inWeek(c)))return "cmd";
   if((state.activites||[]).some(a=>actIds(a).includes(id)&&inWeek(a)))return "entrainement";
   return null;
 }
@@ -5353,6 +5355,70 @@ function sortMembers(arr){
 
 function getCmdTotal(memberId){
   return state.cmdmissions.filter(c=>c.member_id==memberId).reduce((s,c)=>s+parseFloat(c.points||0),0);
+}
+
+/* Un ajustement n'est pas une mission : il corrige un total sans rien effacer
+   de ce qui a ete fait. Il se reconnait a son role, et lui seul peut porter
+   des points negatifs. Il compte dans le total, jamais dans le decompte des
+   missions ni dans l'activite de la semaine. */
+function cmdEstAjust(c){ return String((c&&c.role)||"").toLowerCase()==="ajustement"; }
+function cmdVraiesMissions(){ return (state.cmdmissions||[]).filter(c=>!cmdEstAjust(c)); }
+function cmdSigne(n){ const v=Math.round((parseFloat(n)||0)*100)/100; return (v>0?"+":"")+v; }
+
+/* Corriger ce compteur decide des promotions : cela ne regarde que le
+   commandement. CMD et CMDM, plus l'administration. */
+function canAjusterCmd(){
+  if(!Auth.ok()) return false;
+  if(session.role==="admin") return true;
+  if(session.role==="brs"||session.role==="amiraute") return false;
+  return gradeLevel(getSessionGrade())>=6;
+}
+
+async function ajusterCmdPoints(memberId){
+  if(!canAjusterCmd()){toast("Réservé aux CMD et CMDM","error");return;}
+  const m=(state.members||[]).find(x=>String(x.id)===String(memberId));
+  if(!m){toast("Membre introuvable","error");return;}
+  const actuel=Math.round(getCmdTotal(m.id)*100)/100;
+  const rep=await uiPrompt({
+    kicker:"// POINTS CMD DE MISSION",
+    title:`${m.matricule} ${m.nom||""}`.trim(),
+    message:`Total actuel : ${actuel} point${Math.abs(actuel)>1?"s":""}.\n\n`
+      +"Indique le nouveau total. Aucune mission n'est supprimée : la correction "
+      +"s'enregistre comme un ajustement, visible dans l'onglet CMD Mission.",
+    defaultValue:String(actuel),
+    placeholder:"ex : 1.5",
+    okText:"Ajuster"
+  });
+  if(rep===null||rep===undefined)return;
+  const brut=String(rep).trim().replace(",",".");
+  const cible=Math.round(parseFloat(brut)*100)/100;
+  if(brut===""||isNaN(cible)||cible<0||cible>999){
+    toast("Entre un nombre entre 0 et 999","error");return;
+  }
+  if(cible===actuel){toast("Total inchangé","info");return;}
+  const delta=Math.round((cible-actuel)*100)/100;
+  const obj={member_id:m.id,
+    member_name:`${m.matricule} ${m.nom||""}`.trim(),
+    points:delta,
+    mission_name:`Ajustement : ${actuel} → ${cible}`,
+    date:ymdLocal(new Date()),
+    role:"Ajustement"};
+  let enregistre=true;
+  if(supaOK){
+    const r=await supaPost(T.cmdmissions,obj);
+    if(r&&r.length>0)state.cmdmissions.unshift(r[0]); else enregistre=false;
+  }else{
+    obj.id=Date.now().toString();state.cmdmissions.unshift(obj);saveLS();
+  }
+  if(!enregistre){toast("Erreur réseau : ajustement non enregistré","error");return;}
+  toast(`Points CMD de ${m.matricule} : ${actuel} → ${cible}`,"success");
+  await logActivity(`${session?.user} a ajusté les points CMD de ${obj.member_name} : `
+    +`${actuel} → ${cible} (${cmdSigne(delta)}), sans supprimer de mission`);
+  renderRoster();renderOverview();
+  if(typeof renderCmd==="function")renderCmd();
+  /* La fiche reste ouverte : on la redessine pour qu'elle montre le nouveau
+     total plutot que celui d'avant. */
+  if(_mpCurrentId!=null&&String(_mpCurrentId)===String(m.id))openMemberProfile(m.id);
 }
 
 async function resetCmdOnPromotion(m,oldGrade,newGrade){
@@ -7121,12 +7187,13 @@ function renderCmd(){
   /* Chiffres clés du tableau de chasse. */
   const totPts=state.cmdmissions.reduce((s,c)=>s+parseFloat(c.points||0),0);
   const gc2=id=>document.getElementById(id);
-  if(gc2("cmdStatMis"))gc2("cmdStatMis").textContent=state.cmdmissions.length;
+  const nbMissions=cmdVraiesMissions().length;
+  if(gc2("cmdStatMis"))gc2("cmdStatMis").textContent=nbMissions;
   if(gc2("cmdStatPts"))gc2("cmdStatPts").textContent=Math.round(totPts*10)/10;
   if(gc2("cmdStatMem"))gc2("cmdStatMem").textContent=sorted.length;
   if(gc2("cmdStatTop"))gc2("cmdStatTop").textContent=sorted.length?memberLabel(sorted[0].id,sorted[0].stored):"-";
-  statTone("cmdStatMis",state.cmdmissions.length?"ac":"mute","enregistrées");
-  statTone("cmdStatPts",totPts?"ok":"mute",state.cmdmissions.length?"chefs et seconds":"");
+  statTone("cmdStatMis",nbMissions?"ac":"mute","enregistrées");
+  statTone("cmdStatPts",totPts?"ok":"mute",nbMissions?"chefs et seconds":"");
   statTone("cmdStatMem",sorted.length?"ac":"mute",sorted.length?"au classement":"");
   statTone("cmdStatTop",sorted.length?"ok":"mute",
     sorted.length?(Math.round(sorted[0].pts*10)/10+(sorted[0].pts>1?" points":" point")):"");
@@ -7146,8 +7213,8 @@ function renderCmd(){
   const cmdEditable=canEdit("cmd");
   tbody.innerHTML=state.cmdmissions.map(c=>`<tr>
     <td class="nm">${esc(memberLabel(c.member_id,c.member_name))}</td>
-    <td><span style="font-family:var(--fm);font-size:.7rem;color:${c.points===1?"var(--ac)":"var(--vi)"}">${esc(c.role)||"Chef"}</span></td>
-    <td style="font-family:var(--fm);font-size:.82rem;color:var(--ac)">${c.points||"-"}</td>
+    <td><span style="font-family:var(--fm);font-size:.7rem;color:${cmdEstAjust(c)?"var(--or)":(c.points===1?"var(--ac)":"var(--vi)")}">${esc(c.role)||"Chef"}</span></td>
+    <td style="font-family:var(--fm);font-size:.82rem;color:${cmdEstAjust(c)?"var(--or)":"var(--ac)"}">${cmdEstAjust(c)?esc(cmdSigne(c.points)):(c.points||"-")}</td>
     <td style="color:var(--tx2);font-size:.82rem">${esc(c.mission_name)||"-"}</td>
     <td style="font-family:var(--fm);font-size:.72rem;color:var(--dm)">${fmtDate(c.date||c.created_at)}</td>
     <td style="text-align:right">${cmdEditable?`<button class="icon-btn del" onclick="deleteCmdMission('${escJs(c.id)}')" title="Supprimer">
@@ -11659,7 +11726,11 @@ function buildMemberTimeline(m){
     }
   });
   state.cmdmissions.filter(c=>c.member_id==m.id).forEach(c=>{
-    ev.push({date:c.date||c.created_at,color:"var(--or)",icon:"◈",title:`CMD : ${c.mission_name||"Mission"}`,sub:`+${c.points} pt${c.points>1?"s":""}`});
+    /* Un ajustement peut retirer des points : ecrire « + » devant serait faux. */
+    const aj=cmdEstAjust(c), p=parseFloat(c.points)||0;
+    ev.push({date:c.date||c.created_at,color:aj?"var(--ye)":"var(--or)",icon:aj?"⇄":"◈",
+      title:aj?(c.mission_name||"Ajustement des points"):`CMD : ${c.mission_name||"Mission"}`,
+      sub:`${cmdSigne(p)} pt${Math.abs(p)>1?"s":""}`});
   });
   (state.formations||[]).forEach(f=>{
     const byId=f.eleve_id!==null&&f.eleve_id!==undefined&&f.eleve_id!==""
@@ -11964,8 +12035,8 @@ function mpTab(tab){
     const el=document.getElementById("mpTabMissions");el.style.display="block";
     const mine=state.cmdmissions.filter(c=>c.member_id==_mpCurrentId);
     if(!mine.length){el.innerHTML='<div class="empty"><p>Aucun CMD de mission</p></div>';return;}
-    el.innerHTML=mine.map(c=>`<div class="log-item"><div class="log-dot"></div>
-      <div class="log-txt">${esc(c.role)||"Chef"} - ${esc(c.mission_name)||"Mission"} (+${c.points} pt${c.points>1?"s":""})</div>
+    el.innerHTML=mine.map(c=>`<div class="log-item"><div class="log-dot"${cmdEstAjust(c)?' style="background:var(--ye)"':""}></div>
+      <div class="log-txt">${esc(c.role)||"Chef"} - ${esc(c.mission_name)||"Mission"} (${esc(cmdSigne(c.points))} pt${Math.abs(parseFloat(c.points)||0)>1?"s":""})</div>
       <div class="log-time">${fmtDate(c.date||c.created_at)}</div></div>`).join("");
   }
   if(tab==="medals"){
@@ -12088,19 +12159,24 @@ function renderPromoProgress(m, elig){
         <span style="font-family:var(--fm);font-size:.72rem;color:${daysColor}">${p.days}/${p.needDays} j ${p.daysPct>=100?"✓":""}</span>
       </div>
       <div style="height:8px;background:var(--s3);border-radius:var(--r1);overflow:hidden;position:relative">
-        <div class="promo-bar-fill" style="height:100%;width:0%;background:${daysColor};border-radius:var(--r1);transition:width 1s cubic-bezier(.4,0,.2,1)" data-target="${p.daysPct}"></div>
+        <div class="promo-bar-fill" style="height:100%;width:100%;background:${daysColor};border-radius:var(--r1);transform-origin:left center;transform:scaleX(0);transition:transform var(--t4) var(--e-io)" data-target="${p.daysPct}"></div>
       </div>
     </div>`;
 
   if(p.hasCmd){
     bars+=`
     <div style="margin-bottom:.3rem">
-      <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--sp2);margin-bottom:.3rem">
         <span style="font-size:.72rem;color:var(--tx2)">Points CMD de mission</span>
-        <span style="font-family:var(--fm);font-size:.72rem;color:${cmdColor}">${p.cmd}/${p.needCmd} ${p.cmdPct>=100?"✓":""}</span>
+        <span style="display:inline-flex;align-items:center;gap:var(--sp3)">
+          <span style="font-family:var(--fm);font-size:.72rem;color:${cmdColor}">${p.cmd}/${p.needCmd} ${p.cmdPct>=100?"✓":""}</span>
+          ${canAjusterCmd()?`<button class="sbtn" style="padding:var(--sp1) var(--sp3);font-size:.6rem"
+            title="Corriger le total sans supprimer de mission"
+            onclick="ajusterCmdPoints('${escJs(m.id)}')">Ajuster</button>`:""}
+        </span>
       </div>
       <div style="height:8px;background:var(--s3);border-radius:var(--r1);overflow:hidden;position:relative">
-        <div class="promo-bar-fill" style="height:100%;width:0%;background:${cmdColor};border-radius:var(--r1);transition:width 1s cubic-bezier(.4,0,.2,1)" data-target="${p.cmdPct}"></div>
+        <div class="promo-bar-fill" style="height:100%;width:100%;background:${cmdColor};border-radius:var(--r1);transform-origin:left center;transform:scaleX(0);transition:transform var(--t4) var(--e-io)" data-target="${p.cmdPct}"></div>
       </div>
     </div>`;
   }
@@ -12115,7 +12191,9 @@ function renderPromoProgress(m, elig){
 
   requestAnimationFrame(()=>{
     el.querySelectorAll(".promo-bar-fill").forEach(bar=>{
-      requestAnimationFrame(()=>{bar.style.width=bar.dataset.target+"%";});
+      requestAnimationFrame(()=>{
+        bar.style.transform="scaleX("+(Math.max(0,Math.min(100,parseFloat(bar.dataset.target)||0))/100).toFixed(4)+")";
+      });
     });
   });
 }
