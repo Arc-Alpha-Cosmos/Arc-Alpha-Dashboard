@@ -13056,10 +13056,10 @@ function discordFormationPayload(f,author,maj){
    Une liste, et non un objet indexe par le nom : l'editeur doit pouvoir
    renommer et reordonner, ce qu'une cle d'objet rend malcommode. */
 const RCT_BAREMES=[
-  {nom:"RCT 1",seuil:125,max:{strategie:10,ordres:10}},
-  {nom:"RCT 2",seuil:151,max:{strategie:20,ordres:30}},
-  {nom:"RCT 3",seuil:151,max:{strategie:20,ordres:30}},
-  {nom:"RCT 4",seuil:151,max:{strategie:20,ordres:30}}
+  {nom:"RCT 1",seuil:110,max:{}},
+  {nom:"RCT 2",seuil:110,max:{}},
+  {nom:"RCT 3",seuil:110,max:{}},
+  {nom:"RCT 4",seuil:110,max:{}}
 ];
 
 const REC_DEFAULTS={
@@ -13101,17 +13101,16 @@ const REC_DEFAULTS={
       {id:"eleve",    label:"Régiment + Matricule + Nom du formé 🧑",  type:"text", ph:"ex : 501st 4477 Thire"}
     ],
     notes:[
-      {id:"theorie",   label:"Théorie ❓",             max:35},
-      {id:"strategie", label:"Stratégie Militaire 🧠", max:10},
-      {id:"ordres",    label:"Ordres CMDM 📕",         max:10},
-      {id:"leadership",label:"Leadership 📕",          max:15},
-      {id:"cqb",       label:"CQB 🏠",                 max:15},
-      {id:"grappin",   label:"Grappin 🌋",             max:10},
-      {id:"jetpack",   label:"Jetpack 🌋",             max:10},
-      {id:"precision", label:"Précision 🔫",           max:10},
-      {id:"rapidite",  label:"Rapidité 💨",            max:10},
-      {id:"citadelle", label:"Citadelle ⚡",            max:10},
-      {id:"discipline",label:"Discipline 🎭",          max:10}
+      {id:"theorie",   label:"Questions sur l'ARC Alpha ❓", max:25},
+      {id:"strategie", label:"Stratégie Militaire 🧠",      max:10},
+      {id:"ordres",    label:"Ordres CMDM 📕",              max:20},
+      {id:"leadership",label:"Leadership 📕",               max:15},
+      {id:"grappin",   label:"Grappin 🌋",                  max:10},
+      {id:"jetpack",   label:"Jetpack 🌋",                  max:10},
+      {id:"cqb",       label:"CQB 🏠",                      max:15},
+      {id:"precision", label:"Technique de Tir 🔫",         max:20},
+      {id:"citadelle", label:"Citadelle ⚡",                 max:10},
+      {id:"discipline",label:"Discipline 🎭",               max:10}
     ],
     essais:false,
     /* Le formulaire ARC Alpha a change de bareme en cours de route : la
