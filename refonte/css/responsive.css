@@ -1,0 +1,160 @@
+/* ARC ALPHA - points de rupture : tous les @media du projet, dans l'ordre d'origine. */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;
+  animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}}
+
+@media(max-width:900px){.cmdk-hint{display:none !important}}
+
+@media(prefers-reduced-motion:reduce){.sync-dot.busy{animation:none}}
+
+@media(max-width:720px){.me-grid{grid-template-columns:1fr}}
+
+@media(max-width:860px){.roster-search{min-width:0;flex:1}}
+
+@media(max-width:560px){.sec-head .roster-search{flex:1 1 100%;order:1}}
+
+@media(hover:none){.chat-user-del{opacity:.55}}
+
+@media(max-width:560px){.chat-panel{right:.6rem;left:.6rem;width:auto;bottom:5.2rem}.chat-fab{right:1rem;bottom:1rem}}
+
+@media(hover:none){.tbl tbody td .sbtn,.tbl tbody td .icon-btn{opacity:1}}
+
+@media(hover:none){
+  .sbtn{min-height:34px;min-width:34px}
+  .icon-btn{min-width:34px;min-height:32px}
+  .inline-inp,.inline-sel{min-height:30px}
+  .roster-search{padding-top:var(--sp4);padding-bottom:var(--sp4)}
+  .roster-search input{min-height:26px}
+  .tbl tbody td{padding-top:var(--sp4);padding-bottom:var(--sp4)}
+}
+
+@media(max-width:1100px){
+  .hero{grid-template-columns:1fr;padding-top:var(--sp8)}
+  .hero-visual{height:300px;order:-1}
+  .emb-scene{width:260px;height:260px}
+  .ering.r1{width:250px;height:250px}.ering.r2{width:190px;height:190px}.ering.r3{width:130px;height:130px}
+  .emb-core{width:120px;height:120px}
+  .emb-data{display:none}
+  .foot-in{grid-template-columns:1fr}
+  .fr2,.fr3{grid-template-columns:1fr}
+}
+
+@media(max-width:860px){
+  .nav-tabs{display:none}.nav-burger{display:block}
+  .hero-stats{gap:1.4rem;flex-wrap:wrap}
+}
+
+@media(max-width:560px){
+  .wrap{padding:1.2rem var(--sp6) var(--sp9)}
+  .hero h1{font-size:clamp(2rem,10vw,3rem)}
+  .rec-banner{flex-direction:column;gap:var(--sp6);align-items:flex-start}
+  .modal-f{flex-direction:column}.modal-f .btn,.modal-f .sbtn{width:100%;justify-content:center}
+  .modal.tall .modal-f{flex-direction:row;gap:var(--sp4);padding:var(--sp4) 4.4rem var(--sp4) var(--sp6)}
+  .modal.tall .modal-f .btn{flex:1 1 40%;width:auto;min-width:0;padding:var(--sp4) var(--sp4);font-size:.64rem}
+  .modal.tall .modal-h{padding:var(--sp5) var(--sp6)}
+  .modal.tall .modal-b{padding:var(--sp5) var(--sp6)}
+}
+
+@media(max-width:900px){
+  .cmd-grid-4{grid-template-columns:repeat(2,1fr)}
+  .cmd-grid-3{grid-template-columns:1fr}
+  .cmd-grid-2{grid-template-columns:1fr}
+}
+
+@media(max-width:640px){.ib-ticker{display:none}.indian-banner{max-width:94vw}}
+
+@media(prefers-reduced-motion:reduce){.ib-flag,.ib-track{animation:none}.indian-banner{transition:none}}
+
+@media (max-width:980px){
+  .ov-lower{grid-template-columns:1fr 1fr}
+  .ov-feedp{grid-column:span 2}
+}
+
+@media (max-width:620px){
+  .ov-lower{grid-template-columns:1fr}
+  .ov-feedp{grid-column:auto}
+  .ov-name{display:none}
+  .ov-dl-side{text-align:left}
+}
+
+@media (max-width:560px){
+  .todo-row{gap:var(--sp4);padding:var(--sp4) var(--sp5)}
+  .todo-s{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .sec-head .line::after,.card::before,.panel-head::after,.rb-dot::after{animation:none}
+  /* Les balayages et les pointes sont purement decoratifs : ils disparaissent
+     entierement, la ou les deux regles globales se contentent de les ecourter.
+     Le marqueur d'onglet garde sa transformation, qui porte une information. */
+  .panel::before,.modal-bg.show>.modal::before,.val-new::after,
+  .nav-tab.on::after{animation:none}
+  /* La pointe du toast se declare par type : « #toast.pop .ti » pese moins
+     que « #toast.pop.success .ti » et se faisait battre a la specificite.
+     Mesure faite, l'animation survivait au mouvement reduit. */
+  #toast.pop.success .ti,#toast.pop.error .ti{animation:none}
+  .on-anim{animation:none}
+  /* La barre d'occupation ne defile plus, mais elle reste affichee sur
+     toute la largeur : c'est elle qui porte l'information « en cours ». */
+  .btn[data-busy="1"]::after,.sbtn[data-busy="1"]::after{animation:none;width:100%;opacity:.55}
+}
+
+@media (max-width:980px){
+  #v-fichecdm .hero{grid-template-columns:1fr;min-height:0}
+  #v-fichecdm .units,#v-fichecdm .split,#v-fichecdm .rd{grid-template-columns:1fr}
+  #v-fichecdm .abbr{grid-template-columns:repeat(2,1fr)}
+}
+
+@media (max-width:560px){
+  #v-fichecdm .line-r{grid-template-columns:70px 1fr}
+  #v-fichecdm .cdm-tabs button{font-size:.8rem;padding:var(--sp4) var(--sp4)}
+  #v-fichecdm .cdm-tabs button span{display:none}
+}
+
+/* ===== Refonte : barre laterale, barre mobile, tableaux en cartes ===== */
+@media(max-width:980px){
+  .dash-side{display:none}
+  .dash-main{padding:var(--sp5) var(--sp6) calc(var(--sp10) + 60px)}
+  .dash-bottom{display:flex}
+  .chat-fab{bottom:calc(68px + env(safe-area-inset-bottom))}
+  .chat-panel{bottom:calc(132px + env(safe-area-inset-bottom))}
+  .hdr-clock{display:none}
+  .ov-grid2{grid-template-columns:1fr}
+  #toast{bottom:calc(72px + env(safe-area-inset-bottom))}
+}
+@media(max-width:720px){
+  .tbl.cards{display:block}
+  .tbl.cards thead{display:none}
+  .tbl.cards tbody{display:block}
+  .tbl.cards tbody tr{display:flex;flex-direction:column;gap:var(--sp1);padding:var(--sp4) var(--sp5);margin:var(--sp4);
+    border:1px solid var(--ln);background:var(--s1);border-radius:var(--r1)}
+  .tbl.cards tbody tr:nth-child(even){background:var(--s1)}
+  .tbl.cards tbody td{display:flex;justify-content:space-between;align-items:center;gap:var(--sp4);padding:var(--sp1) 0;
+    border:0;text-align:left!important;min-height:26px}
+  .tbl.cards tbody td::before{content:attr(data-label);font-family:var(--fm);font-size:.58rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dm);flex:0 0 36%}
+  .tbl.cards tbody td[data-label=""]::before,.tbl.cards tbody td:not([data-label])::before{content:none}
+  .tbl.cards tbody td>div{justify-content:flex-end!important;flex-wrap:wrap}
+  .tbl.cards tbody td .empty{width:100%}
+  .filters .count{margin-left:0;width:100%}
+  .cal-day{min-height:58px;padding:var(--sp1) var(--sp2)}
+  .cal-ev{display:none}
+  .cal-day .dots{display:flex;gap:2px;flex-wrap:wrap}
+  .cal-day .dots i{width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--ec,var(--ac))}
+  .cal-grid.week .cal-day{min-height:70px}
+  .notif-panel{right:var(--sp4);left:var(--sp4);width:auto}
+}
+@media(min-width:721px){.cal-day .dots{display:none}}
+@media(hover:none){
+  .btn,.sbtn{min-height:44px}
+  .icon-btn,.hdr-btn{min-width:44px;min-height:44px}
+  .tbl .sbtn,.tbl .icon-btn,.filters .sbtn{min-height:36px;min-width:36px}
+  .side-item{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){
+  .side-item .pulse,.dash-side{animation:none;transition:none}
+}
+@media(max-width:1180px){#syncLbl{display:none}}
+@media(max-width:560px){.user-chip .uc-info{display:none}.navi{gap:var(--sp4);padding:0 var(--sp5)}.brand-txt{font-size:.7rem}}
+@media(max-width:620px){.modal .grid.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* burger des 1180 px : la barre de droite (horloge, cloche, compte) a besoin de la place des onglets */
+@media(max-width:1180px){.nav-tabs{display:none}.nav-burger{display:block}}

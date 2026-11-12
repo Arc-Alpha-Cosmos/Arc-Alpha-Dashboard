@@ -1,0 +1,2403 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ARC ALPHA - Centre de Commandement</title>
+<link rel="icon" type="image/png" href="img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/responsive.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+</head>
+<body>
+<body>
+<a class="skip" href="#app">Aller au contenu</a>
+<canvas id="fxc"></canvas>
+<div class="fx-grid"></div>
+<div class="fx-glow"></div>
+
+<!-- MODE INDIEN - easter egg (code Konami : ↑↑↓↓←→←→ B A) -->
+<div id="indianRain" class="indian-rain" hidden aria-hidden="true"></div>
+<div id="indianBanner" class="indian-banner" hidden role="status" aria-live="polite">
+  <span class="ib-flag" aria-hidden="true">🇮🇳</span>
+  <strong class="ib-title">MODE INDIEN ACTIVÉ</strong>
+  <div class="ib-ticker" aria-hidden="true"><div class="ib-track" id="ibTrack"></div></div>
+</div>
+<audio id="indianAudio" src="indian.mp3" loop preload="none" onerror="if(!this.dataset.alt){this.dataset.alt=1;this.src='../indian.mp3';}"></audio>
+
+<nav class="top-nav" aria-label="Navigation principale">
+  <div class="navi">
+    <button class="brand" onclick="nav('home')"><span class="brand-logo" role="img" aria-label="ARC Alpha"></span><span class="brand-txt">ARC <b>ALPHA</b></span></button>
+    <div class="nav-tabs" id="navTabs">
+      <button class="nav-tab on" data-v="home" onclick="nav('home')"><i data-lucide="home" class="ti"></i>Accueil</button>
+      <button class="nav-tab" data-v="about" onclick="nav('about')"><i data-lucide="info" class="ti"></i>L'unité</button>
+      <button class="nav-tab" data-v="recruitment" onclick="nav('recruitment')"><i data-lucide="user-plus" class="ti"></i>Recrutement</button>
+      <button class="nav-tab" data-v="fichecdm" onclick="nav('fichecdm')"><i data-lucide="file-text" class="ti"></i>Fiche CDM</button>
+      <button class="nav-tab" data-v="dashboard" onclick="nav('dashboard')"><i data-lucide="layout-dashboard" class="ti"></i>Dashboard<span class="nav-lock" id="dashLock" aria-hidden="true"><i data-lucide="lock"></i></span></button>
+    </div>
+    <div class="nav-right">
+      <button class="cmdk-hint" id="cmdkHint" onclick="openCmdK()" title="Rechercher un onglet ou un membre">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Rechercher <kbd>Ctrl</kbd><kbd>K</kbd>
+      </button>
+      <div class="hdr-clock" id="hdrClock" aria-live="off"><b id="hdrTime">--:--</b><span id="hdrDate"></span></div>
+      <span class="sync-wrap" id="syncWrap" title="À jour - les modifications apparaissent automatiquement"><span class="sync-dot" id="syncDot" aria-hidden="true"></span><span id="syncLbl" class="sr-only">En ligne</span></span>
+      <button class="hdr-btn" id="notifBtn" style="display:none" onclick="toggleNotifPanel()" aria-label="Notifications" title="Notifications"><i data-lucide="bell"></i><span class="hdr-badge" id="notifCount">0</span></button>
+      <button class="login-btn" id="loginBtn" onclick="openLogin()"><i data-lucide="log-in"></i>Connexion</button>
+      <button class="user-chip" id="userChip" style="display:none" onclick="openAccount()" aria-label="Mon compte" title="Mon compte">
+        <div class="uc-av" id="ucAv">N</div>
+        <div class="uc-info"><span class="uc-name" id="ucName">nepko</span><span class="uc-role admin" id="ucRole">ADMIN</span></div>
+      </button>
+      <button class="nav-burger" onclick="openMob()" aria-label="Ouvrir le menu" title="Menu"><i data-lucide="menu"></i></button>
+    </div>
+  </div>
+</nav>
+<div class="maint-bar" id="maintBar">
+  <span class="d"></span>Mode maintenance actif - seuls les admins voient le site
+  <button class="sbtn" style="margin-left:1rem;padding:.2rem .6rem" onclick="toggleMaint(false)">Désactiver</button>
+</div>
+<div class="offline-bar" id="offlineBar" role="status" aria-live="polite">
+  <span><i data-lucide="wifi-off"></i> Connexion à la base perdue. Les données affichées peuvent être anciennes.</span>
+  <button class="sbtn danger" style="padding:.2rem .6rem" onclick="pollWake(true)">Réessayer</button>
+</div>
+<div class="mob-ov" id="mobOv" onclick="closeMob()"></div>
+<div class="mob-menu" id="mobMenu">
+  <button class="mob-item on" onclick="nav('home');closeMob()">Accueil</button>
+  <button class="mob-item" onclick="nav('about');closeMob()">L'unité</button>
+  <button class="mob-item" onclick="nav('recruitment');closeMob()">Recrutement</button>
+  <button class="mob-item" onclick="nav('fichecdm');closeMob()">Fiche CDM</button>
+  <button class="mob-item" onclick="nav('dashboard');closeMob()">Dashboard <span class="ico"><i data-lucide="lock"></i></span></button>
+  <div id="mobDash"></div>
+</div>
+<nav class="dash-bottom" id="dashBottom" aria-label="Navigation rapide" style="display:none"></nav>
+<div class="notif-panel" id="notifPanel" role="dialog" aria-label="Notifications">
+  <div class="notif-head"><span class="k">//</span><h4>Notifications</h4>
+    <button class="icon-btn" onclick="markAllNotifRead()" title="Tout marquer comme lu" aria-label="Tout marquer comme lu"><i data-lucide="check-check"></i></button>
+    <button class="icon-btn" onclick="toggleNotifPanel()" title="Fermer" aria-label="Fermer"><i data-lucide="x"></i></button>
+  </div>
+  <div class="notif-body" id="notifBody"></div>
+  <div class="notif-foot"><span style="font-family:var(--fm);font-size:.62rem;color:var(--dm)" id="notifFootTxt"></span></div>
+</div>
+<main id="app" tabindex="-1">
+
+<div class="view on" id="v-home">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-tag"><span class="dot"></span><span data-e="hero_tag">UNITÉ CLASSIFIÉE - NIVEAU OMEGA</span></div>
+      <h1>Advanced<br>Recon<br><em>Commando</em></h1>
+      <p data-e="hero_desc">L'élite absolue de la Grande Armée de la République. Cent clones de seconde génération, entraînés personnellement par Jango Fett, à l'esprit indépendant et à l'autonomie tactique totale.</p>
+      <div class="hero-cta">
+        <button class="btn btn-primary" id="heroRecBtn" onclick="nav('recruitment')">Rejoindre l'unité →</button>
+        <button class="btn btn-ghost" onclick="nav('about')">Découvrir ↓</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><span class="v" data-e="stat_units">100</span><span class="l">Effectifs d'élite</span></div>
+        <div class="hero-stat"><span class="v" data-e="stat_gen">GEN II</span><span class="l">Génération ARC</span></div>
+        <div class="hero-stat"><span class="v" data-e="stat_origin">KAMINO</span><span class="l">Origine</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="emb-scene">
+        <div class="ering r1"></div><div class="ering r2"></div><div class="ering r3"></div>
+        <div class="emb-core"><svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;filter:drop-shadow(0 0 22px rgba(0,229,255,.5))">
+  <defs>
+    <linearGradient id="eg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#0088aa"/></linearGradient>
+    <linearGradient id="eg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(0,229,255,.15)"/><stop offset="100%" stop-color="rgba(0,229,255,.04)"/></linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="96" stroke="url(#eg1)" stroke-width="1.5" fill="none" opacity=".6"/>
+  <circle cx="100" cy="100" r="90" stroke="#00e5ff" stroke-width=".5" fill="none" opacity=".25"/>
+  <g stroke="#00e5ff" stroke-width="1" opacity=".5">
+    <line x1="100" y1="4" x2="100" y2="12"/><line x1="100" y1="188" x2="100" y2="196"/>
+    <line x1="4" y1="100" x2="12" y2="100"/><line x1="188" y1="100" x2="196" y2="100"/>
+  </g>
+  <polygon points="100,20 168,60 168,140 100,180 32,140 32,60" stroke="url(#eg1)" stroke-width="2" fill="url(#eg2)"/>
+  <polygon points="100,38 152,68 152,132 100,162 48,132 48,68" stroke="#00e5ff" stroke-width="1" fill="rgba(0,229,255,.04)" opacity=".6"/>
+  <line x1="100" y1="30" x2="100" y2="170" stroke="#00e5ff" stroke-width=".6" opacity=".2"/>
+  <line x1="30" y1="100" x2="170" y2="100" stroke="#00e5ff" stroke-width=".6" opacity=".2"/>
+  <polygon points="100,72 122,100 100,128 78,100" stroke="#00e5ff" stroke-width="1.5" fill="rgba(0,229,255,.1)"/>
+  <polygon points="100,84 112,100 100,116 88,100" fill="#00e5ff" opacity=".8"/>
+  <text x="100" y="96" text-anchor="middle" font-family="Syncopate,sans-serif" font-weight="700" font-size="18" fill="#00e5ff" letter-spacing="4">ARC</text>
+  <text x="100" y="148" text-anchor="middle" font-family="Syncopate,sans-serif" font-weight="700" font-size="11" fill="#e9eef7" letter-spacing="5">ALPHA</text>
+  <text x="100" y="162" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6" fill="#3a4254" letter-spacing="2">SOL-GEN-II</text>
+  <circle cx="100" cy="22" r="2.5" fill="#00e5ff" opacity=".8"/>
+  <circle cx="100" cy="178" r="2.5" fill="#00e5ff" opacity=".8"/>
+</svg></div>
+        <div class="emb-data d1">[ STATUS: ACTIVE ]</div>
+        <div class="emb-data d2">[ UNITÉ: 100 ]</div>
+        <div class="emb-data d3">[ CLEARANCE: OMEGA ]</div>
+        <div class="emb-data d4">[ ORIGIN: TIPOCA ]</div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="sec-head"><h2>Accès rapide</h2><span class="line"></span></div>
+    <div class="grid g3">
+      <div class="ptr card on-anim" role="link" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" onclick="nav('about')"><div class="card-k">// 01</div><div class="card-t">L'unité</div><div class="card-b">Qui sont les ARC Alpha, leurs missions, leur équipement et leurs membres légendaires.</div></div>
+      <div class="ptr card on-anim" role="link" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" onclick="nav('recruitment')"><div class="card-k">// 02</div><div class="card-t">Recrutement</div><div class="card-b">Statut des engagements et processus de candidature pour rejoindre l'élite.</div></div>
+      <div class="ptr card on-anim" role="link" tabindex="0" onkeydown="if(event.key==='Enter')this.click()" onclick="nav('dashboard')"><div class="card-k">// 03</div><div class="card-t">Dashboard <span style="opacity:.5">🔒</span></div><div class="card-b">Espace réservé aux membres : effectifs, présences, missions et gestion interne.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VIEW: ABOUT ═══ -->
+<div class="view" id="v-about">
+  <div class="wrap wrap-narrow">
+    <span class="sec-kicker">// Dossier classifié</span>
+    <div class="sec-head"><h2>Qui sont les ARC Alpha</h2><span class="line"></span><span class="tag">SOL-GEN-II</span></div>
+    <p class="card-b" style="max-width:760px;margin-bottom:1.5rem;font-size:.96rem" data-e="about_intro">Les Advanced Recon Commandos de classe Alpha sont les cent premiers commandos d'élite clonés à partir de l'ADN de Jango Fett. Seconde génération succédant aux instables Null-ARC, ils furent dotés d'un esprit indépendant non modifié et entraînés personnellement par Jango lui-même. Soldats parfaits capables d'agir seuls, ils incarnent l'excellence tactique de la Grande Armée de la République.</p>
+
+    <div class="mb6 grid g2">
+      <div class="card"><div class="card-k">// Genèse</div><div class="card-b" data-e="about_genesis"><strong>Tipoca City, Kamino.</strong> Après l'échec des Null-ARC jugés trop instables, les Kaminoans affinent leur procédé. Cent clones sont confiés à Jango Fett qui leur transmet son code, son indépendance et ses techniques mandaloriennes.</div></div>
+      <div class="card"><div class="card-k">// Particularité</div><div class="card-b" data-e="about_trait"><strong>Esprit non modifié.</strong> Contrairement aux clones standard, les Alpha pensent par eux-mêmes, contestent les ordres incompétents et agissent en autonomie. Certains refuseront même l'Ordre 66.</div></div>
+    </div>
+
+    <div class="sec-head"><h2>Missions</h2><span class="line"></span></div>
+    <div class="grid g3"><div class="card on-anim"><div class="card-k">// MISSION 01</div><div class="card-t" data-e="mission_t1">Contre-terrorisme</div><div class="card-b" data-e="mission_d1">Opérations menées là où les lignes tombent et où l'ennemi se croit hors d'atteinte.</div></div><div class="card on-anim"><div class="card-k">// MISSION 02</div><div class="card-t" data-e="mission_t2">Élimination stratégique</div><div class="card-b" data-e="mission_d2">Neutralisation de cibles prioritaires : commandants droïdes, ingénieurs CSI, agents séparatistes.</div></div><div class="card on-anim"><div class="card-k">// MISSION 03</div><div class="card-t" data-e="mission_t3">Sabotage tactique</div><div class="card-b" data-e="mission_d3">Destruction d'infrastructures derrière les lignes ennemies : relais, usines à droïdes, dépôts d'armement.</div></div><div class="card on-anim"><div class="card-k">// MISSION 04</div><div class="card-t" data-e="mission_t4">Libération d'otages</div><div class="card-b" data-e="mission_d4">Opérations à haut risque pour récupérer officiers capturés, Jedi en difficulté ou civils stratégiques.</div></div><div class="card on-anim"><div class="card-k">// MISSION 05</div><div class="card-t" data-e="mission_t5">Reconnaissance avancée</div><div class="card-b" data-e="mission_d5">Infiltration profonde pour collecter des renseignements inaccessibles aux unités standard.</div></div><div class="card on-anim"><div class="card-k">// MISSION 06</div><div class="card-t" data-e="mission_t6">Missions impossibles</div><div class="card-b" data-e="mission_d6">Toute opération jugée impossible pour une unité standard, en autonomie totale et sans ordres directs.</div></div></div>
+
+    <div class="sec-head"><h2>Équipement</h2><span class="line"></span></div>
+    <div class="grid g3"><div class="card on-anim"><div class="card-k">// Armement signature</div><div class="card-t" data-e="equip_t1">Blaster M5</div><div class="card-b" data-e="equip_d1">WESTAR-M5 mandalorien, arme de prédilection de l'unité, maniée avec une précision redoutable.</div></div><div class="card on-anim"><div class="card-k">// Standard</div><div class="card-t" data-e="equip_t2">DC-17S / DC-15</div><div class="card-b" data-e="equip_d2">DC-17S maniés en duo à la manière de Jango Fett, DC-15A longue portée et DC-15S carbine selon la mission.</div></div><div class="card on-anim"><div class="card-k">// Lourd</div><div class="card-t" data-e="equip_t3">Z-6 & Quad Blaster</div><div class="card-b" data-e="equip_d3">Canon rotatif Z-6 et quad blaster pour la puissance de feu de saturation des spécialistes.</div></div><div class="card on-anim"><div class="card-k">// Explosifs</div><div class="card-t" data-e="equip_t4">PLX-1 & Grenades</div><div class="card-b" data-e="equip_d4">Lanceur PLX-1, détonateurs thermiques et charges de démolition pour le sabotage et l'ouverture de brèches.</div></div><div class="card on-anim"><div class="card-k">// Mobilité</div><div class="card-t" data-e="equip_t5">Jetpack & Grappin</div><div class="card-b" data-e="equip_d5">Jetpack, grappin de poignet et câbles ascensionnels pour l'infiltration verticale et l'extraction.</div></div><div class="card on-anim"><div class="card-k">// Spécialisé</div><div class="card-t" data-e="equip_t6">Dispositifs avancés</div><div class="card-b" data-e="equip_d6">Équipements tactiques dédiés à la mission - un ARC n'est jamais pris au dépourvu.</div></div></div>
+
+    <div class="sec-head"><h2>Membres légendaires</h2><span class="line"></span></div>
+    <div class="grid g2"><div class="mlc on-anim">
+  <div class="mlc-top">
+    <div class="mlc-sw" style="background:rgb(0,150,180)"></div>
+    <div>
+      <div class="mlc-mat" data-e="mem_mat1">A-17</div>
+      <div class="mlc-nm" data-e="mem_nm1">Alpha</div>
+      <div class="mlc-rk" data-e="mem_rk1">Capitaine ARC</div>
+    </div>
+  </div>
+  <div class="mlc-body">
+    <p data-e="mem_bio1">Le tout premier clone à recevoir un nom, donné par Anakin Skywalker. Défend Kamino, résiste à la torture sur Rattatak, puis forme les commandants clones Cody, Bly, Bacara et Gree.</p>
+  </div>
+</div><div class="mlc on-anim">
+  <div class="mlc-top">
+    <div class="mlc-sw" style="background:rgb(170,0,0)"></div>
+    <div>
+      <div class="mlc-mat" data-e="mem_mat2">A-77</div>
+      <div class="mlc-nm" data-e="mem_nm2">Fordo</div>
+      <div class="mlc-rk" data-e="mem_rk2">Capitaine - Muunilinst 10</div>
+    </div>
+  </div>
+  <div class="mlc-body">
+    <p data-e="mem_bio2">Chef des légendaires Muunilinst 10. Capture San Hill, sauve des Jedi sur Hypori face à Grievous. A gagné les Yeux Jaig pour sa bravoure. Maniait deux DC-17 simultanément.</p>
+  </div>
+</div><div class="mlc on-anim">
+  <div class="mlc-top">
+    <div class="mlc-sw" style="background:rgb(0,229,255)"></div>
+    <div>
+      <div class="mlc-mat" data-e="mem_mat3">A-26</div>
+      <div class="mlc-nm" data-e="mem_nm3">Maze</div>
+      <div class="mlc-rk" data-e="mem_rk3">Capitaine ARC - B.O.S</div>
+    </div>
+  </div>
+  <div class="mlc-body">
+    <p data-e="mem_bio3">Affecté à la Brigade des Opérations Spéciales sous le Général Arligan Zey. A refusé d'exécuter l'Ordre 66, confirmant l'autonomie morale unique de l'unité.</p>
+  </div>
+</div><div class="mlc on-anim">
+  <div class="mlc-top">
+    <div class="mlc-sw" style="background:rgb(180,140,0)"></div>
+    <div>
+      <div class="mlc-mat" data-e="mem_mat4">A-???</div>
+      <div class="mlc-nm" data-e="mem_nm4">Muzzle</div>
+      <div class="mlc-rk" data-e="mem_rk4">ARC déserteur</div>
+    </div>
+  </div>
+  <div class="mlc-body">
+    <p data-e="mem_bio4">Vétéran endurci qui a suivi les traces de Jango après la guerre en devenant chasseur de primes, fidèle à l'héritage mandalorien des Alpha.</p>
+  </div>
+</div></div>
+  </div>
+</div>
+
+<!-- ═══ VIEW: RECRUITMENT ═══ -->
+<div class="view rec-open" id="v-recruitment">
+  <div class="wrap wrap-narrow">
+    <span class="sec-kicker">// Processus d'engagement</span>
+    <div class="sec-head"><h2>Recrutement</h2><span class="line"></span></div>
+
+    <div class="rec-banner">
+      <div class="rb-left">
+        <div class="rb-dot"></div>
+        <div>
+          <div class="rb-title" id="recTitle">Recrutement ouvert</div>
+          <div class="rb-sub" id="recSub">Les candidatures sont actuellement acceptées</div>
+        </div>
+      </div>
+      <div class="rb-badge" id="recBadge">● OPEN</div>
+    </div>
+
+    <p class="card-b" style="max-width:720px;margin-bottom:1.5rem;font-size:.95rem" data-e="rec_intro">La ARC Alpha ne recrute pas de simples soldats : elle sélectionne des opérateurs capables de penser seuls, d'agir vite et de réussir là où nul autre ne le peut. Le processus se déroule en quatre phases d'évaluation distinctes.</p>
+
+    <div class="grid g4" id="recPhases"><div class="card on-anim" style="position:relative">
+      <div style="position:absolute;top:.6rem;right:.9rem;font-family:var(--fs);font-weight:700;font-size:2rem;color:var(--ac);opacity:.08;line-height:1">01</div>
+      <div class="card-k">// PHASE 01</div>
+      <div class="card-t" data-e="phase_n01">Lore & connaissances</div>
+      <div class="card-b" data-e="phase_d01">Histoire de l'unité, batailles majeures, hiérarchie, armement et héritage mandalorien.</div>
+      <div class="card-f">SCORE <span data-e="phase_s01">/ 35</span></div>
+    </div><div class="card on-anim" style="position:relative">
+      <div style="position:absolute;top:.6rem;right:.9rem;font-family:var(--fs);font-weight:700;font-size:2rem;color:var(--ac);opacity:.08;line-height:1">02</div>
+      <div class="card-k">// PHASE 02</div>
+      <div class="card-t" data-e="phase_n02">Mises en situation</div>
+      <div class="card-b" data-e="phase_d02">Décisions sous pression, coordination d'escouade, arbitrage tactique et gestion de crise.</div>
+      <div class="card-f">SCORE <span data-e="phase_s02">/ 30</span></div>
+    </div><div class="card on-anim" style="position:relative">
+      <div style="position:absolute;top:.6rem;right:.9rem;font-family:var(--fs);font-weight:700;font-size:2rem;color:var(--ac);opacity:.08;line-height:1">03</div>
+      <div class="card-k">// PHASE 03</div>
+      <div class="card-t" data-e="phase_n03">Épreuves terrain</div>
+      <div class="card-b" data-e="phase_d03">Parcours d'infiltration, CQB multi-étages, extraction de VIP et maîtrise du tir.</div>
+      <div class="card-f">SCORE <span data-e="phase_s03">/ 40</span></div>
+    </div><div class="card on-anim" style="position:relative">
+      <div style="position:absolute;top:.6rem;right:.9rem;font-family:var(--fs);font-weight:700;font-size:2rem;color:var(--ac);opacity:.08;line-height:1">04</div>
+      <div class="card-k">// PHASE 04</div>
+      <div class="card-t" data-e="phase_n04">Discipline & leadership</div>
+      <div class="card-b" data-e="phase_d04">Posture militaire, protocole hiérarchique, commandement au sol et direction d'escouade.</div>
+      <div class="card-f">SCORE <span data-e="phase_s04">/ 35</span></div>
+    </div></div>
+
+    <div class="card" id="recCtaCard" style="margin-top:1.5rem;text-align:center;padding:2.2rem;background:linear-gradient(135deg,var(--s1),var(--s2))">
+      <div class="card-t" style="font-size:1.05rem;margin-bottom:.5rem" data-e="rec_cta_t">Prêt à rejoindre l'élite ?</div>
+      <p class="card-b" style="max-width:460px;margin:0 auto 1.4rem" data-e="rec_cta_d">Si tu penses avoir le niveau, initie ta candidature. Seuls les meilleurs porteront le pauldron de la ARC Alpha.</p>
+      <button class="btn btn-primary" id="recApplyBtn" onclick="applyNow()">Initier la candidature →</button>
+    </div>
+  </div>
+</div>
+
+<!-- VUE PUBLIQUE : FICHE CDM -->
+<div class="view" id="v-fichecdm">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-assault" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 14l7-7 7 7"/><path d="M5 20l7-7 7 7"/></symbol>
+    <symbol id="i-offensive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L20 4M14 4h6v6"/><path d="M4 4l6 6M4 4v5M4 4h5"/></symbol>
+    <symbol id="i-air" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 14l10-4 10 4"/><path d="M12 4v16M9 20h6"/></symbol>
+    <symbol id="i-support" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/></symbol>
+    <symbol id="i-recon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></symbol>
+    <symbol id="i-poly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l4.3 2.5v5L12 12 7.7 9.5v-5z"/><path d="M7.7 9.5L12 12v5l-4.3 2.5L3.4 17v-5z"/><path d="M16.3 9.5L12 12v5l4.3 2.5 4.3-2.5v-5z"/></symbol>
+    <symbol id="i-force" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="6.5" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="10" opacity=".5"/></symbol>
+    <symbol id="i-special" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/></symbol>
+    <symbol id="i-intel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+
+    <symbol id="v-tank" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M30 42h140l-12 12H42z"/><path d="M60 42l10-14h50l12 14"/><path d="M120 32h50"/><path d="M40 58h120" opacity=".35"/></symbol>
+    <symbol id="v-heavy" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M22 44h156l-14 12H36z"/><path d="M40 44l8-18h92l10 18"/><path d="M78 26l6-10h28l6 10"/><path d="M112 20h54"/></symbol>
+    <symbol id="v-walker" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><rect x="58" y="10" width="84" height="22" rx="4"/><path d="M142 18h22"/><path d="M68 32l-10 12 6 16M92 32l-6 12 6 16M108 32l6 12-6 16M132 32l10 12-6 16"/></symbol>
+    <symbol id="v-biped" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><rect x="84" y="6" width="32" height="20" rx="4"/><path d="M116 14h20"/><path d="M92 26l-10 14 8 20M108 26l10 14-8 20"/></symbol>
+    <symbol id="v-speeder" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M34 38h60l20-10h40l12 10-12 6H34z"/><path d="M96 28l10-10h12"/><path d="M50 52h100" opacity=".35"/></symbol>
+    <symbol id="v-arty" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M50 44h90l-8 10H58z"/><path d="M80 44l10-16h24"/><path d="M104 32L170 10"/><circle cx="66" cy="56" r="4"/><circle cx="124" cy="56" r="4"/></symbol>
+    <symbol id="v-gunship" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M30 34l20-12h90l30 12-30 10H50z"/><path d="M80 22l-6-14h56l-6 14"/><path d="M96 44l-8 12M124 44l8 12"/></symbol>
+    <symbol id="v-fighter" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M40 32h120l20 0-20 6H40z"/><path d="M80 32l30-22h14l-14 22"/><path d="M80 38l30 20h14l-14-20"/><path d="M28 32h12"/></symbol>
+    <symbol id="v-ship" viewBox="0 0 200 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M30 34l30-16h80l30 16-30 12H60z"/><path d="M60 18l20-8h40l20 8"/><circle cx="100" cy="32" r="5"/></symbol>
+  </defs>
+</svg>
+  <div class="wrap">
+  <div class="hero">
+    <div>
+      <div class="hero-tag"><span class="dot"></span>Document interne, formés uniquement</div>
+      <h1>Commandement <em>de Mission</em></h1>
+      <p>L'essentiel de la formation CDM en un seul endroit. Un aide-mémoire pour les officiers de régiment (Capitaine 2nd et plus), l'ARC Alpha et la Marine Républicaine.</p>
+      <div class="stats">
+        <div><b>5</b><span>Modules</span></div>
+        <div><b>11</b><span>Régiments et unités</span></div>
+        <div><b>21</b><span>Véhicules</span></div>
+      </div>
+    </div>
+
+    <div class="holo" aria-label="Exemple de carte tactique avec zones et points de repère">
+      <svg viewBox="0 0 600 340" role="img">
+        <defs>
+          <pattern id="g" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="var(--ln)"/></pattern>
+          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5 0 10z" fill="var(--ac)"/></marker>
+        </defs>
+        <rect width="600" height="340" fill="url(#g)"/>
+        <path class="hz" d="M0 0H150L180 140 120 340H0z" fill="rgba(0,229,255,.07)" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <path class="hz hz-foe" d="M470 0H600V340H430L415 190z" fill="rgba(255,59,92,.08)" stroke="var(--rd)" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <path class="hr" d="M110 200 C 200 190, 220 110, 290 105 S 390 170, 440 160" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-dasharray="10 7" marker-end="url(#arr)"/>
+        <circle class="hm" r="4" fill="var(--ac)"/>
+        <path class="hr2" d="M290 105 C 300 180, 320 240, 360 262" fill="none" stroke="var(--ac)" stroke-width="1.5" stroke-dasharray="3 6" opacity=".6"/>
+        <g font-family="JetBrains Mono, monospace" font-size="12" letter-spacing="1">
+          <rect x="62" y="182" width="52" height="30" fill="none" stroke="var(--ac)" stroke-width="1.5"/><text x="88" y="201" text-anchor="middle" fill="var(--ac)">Z.A.</text>
+          <path d="M520 150l28 16v32l-28 16-28-16v-32z" fill="none" stroke="var(--rd)" stroke-width="1.5"/><text x="520" y="186" text-anchor="middle" fill="var(--rd)">A.P.</text>
+          <g fill="var(--tx)">
+            <circle cx="225" cy="140" r="5" fill="var(--ac)"/><circle cx="225" cy="140" r="11" class="hw hw1" fill="none" stroke="var(--ac)" opacity=".4"/><text x="225" y="122" text-anchor="middle">ALPHA</text>
+            <circle cx="290" cy="105" r="5" fill="var(--ac)"/><circle cx="290" cy="105" r="11" class="hw hw2" fill="none" stroke="var(--ac)" opacity=".4"/><text x="290" y="87" text-anchor="middle">BRAVO</text>
+            <circle cx="360" cy="262" r="5" fill="var(--ac)"/><circle cx="360" cy="262" r="11" class="hw hw3" fill="none" stroke="var(--ac)" opacity=".4"/><text x="360" y="290" text-anchor="middle">CHARLIE</text>
+          </g>
+          <text x="12" y="326" fill="var(--dm)" font-size="10">ZONE SÛRE</text>
+          <text x="588" y="326" fill="var(--dm)" font-size="10" text-anchor="end">ZONE ENNEMIE</text>
+        </g>
+      </svg>
+      <div class="rd-out"><span>[ FORMATION: <b>CDM</b> ]</span><span>[ ACCÈS: <b>FORMÉS</b> ]</span><span>[ STATUT: <b>ACTIF</b> ]</span></div>
+    </div>
+  </div>
+
+  <div class="warn"><span class="k">// ATTENTION</span><p>Cette fiche est réservée aux personnes qui ont déjà validé la formation. Merci de ne pas la partager avec ceux qui ne l'ont pas encore passée.</p></div>
+
+  <div class="cdm-tabs" role="tablist" aria-label="Modules de la fiche CDM">
+    <button class="on" data-cdm="m1" onclick="cdmTab('m1')"><span>01</span>Régiments</button>
+    <button data-cdm="m2" onclick="cdmTab('m2')"><span>02</span>Véhicules</button>
+    <button data-cdm="m3" onclick="cdmTab('m3')"><span>03</span>Radio</button>
+    <button data-cdm="m4" onclick="cdmTab('m4')"><span>04</span>Droits et devoirs</button>
+    <button data-cdm="m5" onclick="cdmTab('m5')"><span>05</span>Mise en situation</button>
+  </div>
+
+  <section id="m1" class="on">
+    <span class="sec-kicker">// Module 01</span>
+    <div class="sec-head"><h2>Les régiments</h2><span class="line"></span><span class="tag">Qui envoyer où</span></div>
+    <p class="lead">En tant que CDM, tu dois savoir quel régiment envoyer où. Voici le rôle de chacun et ses habilitations véhicules.</p>
+
+    <h3>Régiments réguliers</h3>
+    <div class="legend">
+      <span><i style="background:var(--rd)"></i>Première ligne</span>
+      <span><i style="background:var(--ac)"></i>Seconde ligne ou polyvalent</span>
+      <span><i style="background:var(--or)"></i>Aérien</span>
+      <span><i style="background:var(--vi)"></i>Jedi</span>
+    </div>
+
+    <div class="units">
+      <article class="unit card front"><div class="ico logo"><img src="img/regiment-01.png" loading="lazy" decoding="async" alt="Logo 501st Légion d'Attaque"></div>
+        <div><span class="k">Première ligne</span><h4>501st Légion d'Attaque</h4>
+        <p>Infanterie d'assaut frontal. Grosse puissance de feu, perce les lignes ennemies et prend n'importe quel objectif.</p>
+        <div class="chips"><span class="chip">TX-130</span><span class="chip">BARC Speeder (médic)</span></div></div></article>
+      <article class="unit card front"><div class="ico logo"><img src="img/regiment-02.png" loading="lazy" decoding="async" alt="Logo 327th Corps Stellaire"></div>
+        <div><span class="k">Première ligne</span><h4>327th Corps Stellaire</h4>
+        <p>Culture mandalorienne, spécialisé dans les grandes offensives. Discipline exemplaire et tactiques avancées en CQB.</p>
+        <div class="chips"><span class="chip">TX-427</span><span class="chip">BARC Speeder</span><span class="chip">AT-RT (CK)</span><span class="chip">AT-OT</span></div></div></article>
+      <article class="unit card air"><div class="ico logo"><img src="img/regiment-03.png" loading="lazy" decoding="async" alt="Logo 212th Bataillon Aéroporté"></div>
+        <div><span class="k">Aérien, sinon 1re ou 2e ligne</span><h4>212th Bataillon Aéroporté</h4>
+        <p>Les pilotes : transport de troupes, de matériel et de véhicules, support aérien. Envoyés au sol si l'aérien n'est pas possible ou s'il manque du monde.</p>
+        <div class="chips"><span class="chip">LAAT/I</span><span class="chip">LAAT/C</span><span class="chip">ARC-170</span><span class="chip">V-Wing</span><span class="chip">Y-Wing</span><span class="chip">AT-RT (CF, en dernier)</span><span class="chip">Rho / Nu-Class</span></div></div></article>
+      <article class="unit card"><div class="ico logo"><img src="img/regiment-04.png" loading="lazy" decoding="async" alt="Logo 104th Bataillon Wolfpack"></div>
+        <div><span class="k">Seconde ligne</span><h4>104th Bataillon Wolfpack</h4>
+        <p>L'appui : munitions, infrastructures, maintenance des véhicules, désamorçage, missions humanitaires et récupération de données.</p>
+        <div class="chips"><span class="chip">AT-TE</span><span class="chip">TX-212</span><span class="chip">AT-RT (Black-Wolf / Wolfpack)</span><span class="chip">AV-8</span></div></div></article>
+      <article class="unit card"><div class="ico logo"><img src="img/regiment-05.png" loading="lazy" decoding="async" alt="Logo 41st Légion d'Élite"></div>
+        <div><span class="k">Tous terrains</span><h4>41st Légion d'Élite</h4>
+        <p>Reconnaissance et cartographie. Sinon avant-garde de la première ligne ou sniper en arrière-garde. Polyglottes, ils assurent aussi la traduction.</p>
+        <div class="chips"><span class="chip">BARC Speeder</span><span class="chip">AT-TE (Cie Green)</span><span class="chip">AT-PT</span><span class="chip">UV-AA Sickle</span></div></div></article>
+      <article class="unit card"><div class="ico logo"><img src="img/regiment-06.png" loading="lazy" decoding="async" alt="Logo 65th Shock Trooper"></div>
+        <div><span class="k">Protection, sinon 2e ligne</span><h4>65th Shock Trooper</h4>
+        <p>Protection des personnalités, négociation et garde de l'État-Major.</p>
+        <div class="chips"><span class="chip">LAAT/I régimentaire</span><span class="chip">Radiant VII</span><span class="chip">LAAT/LE</span><span class="chip">Republic Consular</span><span class="chip">AT-PT</span><span class="chip">Repulsor Tank</span><span class="chip">Rho / Nu-Class</span></div></div></article>
+      <article class="unit card"><div class="ico logo"><img src="img/regiment-07.png" loading="lazy" decoding="async" alt="Logo 408th Corps Cosmique"></div>
+        <div><span class="k">1re ou 2e ligne</span><h4>408th Corps Cosmique</h4>
+        <p>Un des régiments les plus polyvalents grâce à ses escouades, avec beaucoup de véhicules pilotables.</p>
+        <div class="chips"><span class="chip">LAAT/I et /C</span><span class="chip">ARC-170</span><span class="chip">AT-RT</span><span class="chip">BARC Speeder</span><span class="chip">Y/V-Wing</span><span class="chip">MTV-7</span><span class="chip">HEAT</span></div></div></article>
+      <article class="unit card force"><div class="ico logo"><img src="img/regiment-08.png" loading="lazy" decoding="async" alt="Logo Ordre Jedi"></div>
+        <div><span class="k">Variable</span><h4>Ordre Jedi</h4>
+        <p>Font reculer le front en protégeant les unités qui les appuient. Premiers à intervenir face au côté obscur ou aux Magnagard.</p>
+        <div class="chips"><span class="chip">Véhicules du régiment attribué</span><span class="chip">Delta-7</span><span class="chip">U-Wing</span><span class="chip">ETA-2</span></div></div></article>
+    </div>
+
+    <p class="note"><b>// NOTE</b>Les récupérations de données du 104th ne sont pas prioritaires : premier arrivé, premier servi. Toute unité qui veut partir en reconnaissance avec la 41st doit avoir son accord.</p>
+
+    <h3>Brigade des Opérations Spéciales</h3>
+    <p class="lead">Sans mission spécifique, la BOS suit les ordres du CDM. Tous ses membres peuvent piloter n'importe quel véhicule.</p>
+    <div class="units">
+      <article class="unit card"><div class="ico logo"><img src="img/regiment-09.png" loading="lazy" decoding="async" alt="Logo ARC Alpha Class"></div>
+        <div><span class="k">BOS</span><h4>ARC Alpha Class</h4><p>Unité polyvalente capable d'opérer seule, taillée pour les objectifs à risque.</p></div></article>
+      <article class="unit card"><div class="ico logo"><img src="img/regiment-10.png" loading="lazy" decoding="async" alt="Logo Commandos Républicains"></div>
+        <div><span class="k">BOS</span><h4>Commandos Républicains</h4><p>8 membres en deux escouades, Omega et Delta. Moins polyvalents, mais redoutables sur un objectif précis.</p></div></article>
+      <article class="unit card"><div class="ico logo"><img src="img/regiment-11.png" loading="lazy" decoding="async" alt="Logo Bureau de Renseignement du Sénat"></div>
+        <div><span class="k">BOS</span><h4>Bureau de Renseignement du Sénat</h4><p>Élite polyvalente, forte au combat à distance. Agit avec ou sans la régulière et sait soutirer des informations.</p></div></article>
+    </div>
+  </section>
+
+  <!-- MODULE 2 -->
+  <section id="m2">
+    <span class="sec-kicker">// Module 02</span>
+    <div class="sec-head"><h2>Les véhicules</h2><span class="line"></span><span class="tag">Le bon outil</span></div>
+    <p class="lead">Le bon véhicule au bon endroit fait souvent la différence.</p>
+
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-f="all">Tous</button>
+      <button role="tab" aria-selected="false" data-f="sol">Terrestres</button>
+      <button role="tab" aria-selected="false" data-f="air">Aériens</button>
+    </div>
+
+    <div class="vgrid" id="vgrid">
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-01.jpg" loading="lazy" decoding="async" alt="TX-130" loading="lazy"></div><span class="k">Char léger à répulseurs</span><h4>TX-130</h4><p>Attaque rapide, passe sur toutes les surfaces.</p><div class="weak">Fragile de face, doit être soutenu</div></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-02.jpg" loading="lazy" decoding="async" alt="TX-427" loading="lazy"></div><span class="k">Blindé lourd, 327th</span><h4>TX-427</h4><p>Très polyvalent, transporte 10 soldats.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-03.jpg" loading="lazy" decoding="async" alt="TX-212" loading="lazy"></div><span class="k">Transport semi-blindé</span><h4>TX-212</h4><p>Débarquements, transport de matériel, appui de seconde ligne.</p><div class="weak">Vulnérable s'il est acculé</div></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-04.jpg" loading="lazy" decoding="async" alt="AT-TE" loading="lazy"></div><span class="k">Marcheur lourd, 6 pattes</span><h4>AT-TE</h4><p>Transport et assaut, grimpe partout, se défend sous tous les angles.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-05.jpg" loading="lazy" decoding="async" alt="AT-RT" loading="lazy"></div><span class="k">Bipode</span><h4>AT-RT</h4><p>Reconnaissance et patrouille en forêt ou en montagne.</p><div class="weak">Peu blindé</div></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-06.jpg" loading="lazy" decoding="async" alt="BARC Speeder standard" loading="lazy"><img src="img/vehicule-07.jpg" loading="lazy" decoding="async" alt="BARC Speeder médic" loading="lazy" hidden></div><div class="var"><button type="button" data-i="0" aria-pressed="true">Standard</button><button type="button" data-i="1" aria-pressed="false">Médic</button></div><span class="k">Monoplace rapide</span><h4>BARC Speeder</h4><p>Déplacements rapides, anti-infanterie.</p><div class="weak">Aucun blindage</div></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-08.jpg" loading="lazy" decoding="async" alt="AT-PT rouge" loading="lazy"><img src="img/vehicule-09.jpg" loading="lazy" decoding="async" alt="AT-PT vert" loading="lazy" hidden></div><div class="var"><button type="button" data-i="0" aria-pressed="true">Rouge</button><button type="button" data-i="1" aria-pressed="false">Vert</button></div><span class="k">Marcheur léger bipède</span><h4>AT-PT</h4><p>Reconnaissance, escorte et soutien d'infanterie. Discret et agile.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-10.jpg" loading="lazy" decoding="async" alt="Repulsor Tank" loading="lazy"></div><span class="k">Blindé d'escorte</span><h4>Repulsor Tank</h4><p>Escorte de VIP en zone hostile, 10 places conducteur compris.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-11.jpg" loading="lazy" decoding="async" alt="AV-8" loading="lazy"></div><span class="k">Artillerie mobile, 104th</span><h4>AV-8</h4><p>Artillerie au contact du front, idéale en plaine ou champ de ruines.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-12.jpg" loading="lazy" decoding="async" alt="MTV-7" loading="lazy"></div><span class="k">Assaut léger tout-terrain</span><h4>MTV-7</h4><p>Reconnaissance et soutien mobile en canyon ou ruines urbaines.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-13.jpg" loading="lazy" decoding="async" alt="AT-OT" loading="lazy"></div><span class="k">Transport, 8 pattes</span><h4>AT-OT</h4><p>Déploie rapidement beaucoup de soldats et de matériel.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-14.jpg" loading="lazy" decoding="async" alt="UV-AA Sickle-S vert" loading="lazy"><img src="img/vehicule-15.jpg" loading="lazy" decoding="async" alt="UV-AA Sickle-S noir" loading="lazy" hidden></div><div class="var"><button type="button" data-i="0" aria-pressed="true">Vert</button><button type="button" data-i="1" aria-pressed="false">Noir</button></div><span class="k">Antiaérien mobile</span><h4>UV-AA Sickle-S</h4><p>Protège les troupes contre les menaces aériennes.</p></div>
+      <div class="veh card" data-k="sol"><div class="pic"><img src="img/vehicule-16.jpg" loading="lazy" decoding="async" alt="UV-IFV Paladin" loading="lazy"></div><span class="k">Combat d'infanterie blindé</span><h4>UV-IFV Paladin</h4><p>Assaut, escorte et transport de troupes en première ligne.</p></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-17.jpg" loading="lazy" decoding="async" alt="LAAT/I" loading="lazy"></div><span class="k">Transport de troupes</span><h4>LAAT/I</h4><p>Transport de troupes et de cargaisons, soutien aérien au sol.</p></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-18.jpg" loading="lazy" decoding="async" alt="LAAT/C" loading="lazy"></div><span class="k">Transport de véhicules</span><h4>LAAT/C</h4><p>Emmène AT-TE, TX-130 et matériel. Armement léger uniquement.</p></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-19.jpg" loading="lazy" decoding="async" alt="LAAT/LE" loading="lazy"></div><span class="k">Version légère</span><h4>LAAT/LE</h4><p>Maintien de l'ordre, patrouille et appui en milieu urbain.</p></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-20.jpg" loading="lazy" decoding="async" alt="ARC-170" loading="lazy"></div><span class="k">Chasseur</span><h4>ARC-170</h4><p>Antiaérien et reconnaissance, avec artilleur arrière.</p></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-21.jpg" loading="lazy" decoding="async" alt="V-Wing" loading="lazy"></div><span class="k">Chasseur</span><h4>V-Wing</h4><p>Garantit la supériorité aérienne d'une zone.</p></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-22.jpg" loading="lazy" decoding="async" alt="Y-Wing" loading="lazy"></div><span class="k">Bombardier léger</span><h4>Y-Wing</h4><p>Bombardements ciblés au sol, se défend grâce à son artilleur.</p></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-23.jpg" loading="lazy" decoding="async" alt="Auzituck Gunship" loading="lazy"></div><span class="k">Appareil de combat lourd</span><h4>Auzituck Gunship</h4><p>Roquettes et missiles guidés en quantité.</p><div class="weak">Lent</div></div>
+      <div class="veh card" data-k="air"><div class="pic"><img src="img/vehicule-24.jpg" loading="lazy" decoding="async" alt="HEAT" loading="lazy"></div><span class="k">Vaisseau de combat rapide</span><h4>HEAT</h4><p>Gros dégâts à courte et moyenne portée.</p><div class="weak">Peu blindé</div></div>
+    </div>
+
+    <h3>Véhicules spéciaux</h3>
+    <div class="split">
+      <div class="box card"><h4>Ordre Jedi</h4><ul>
+        <li><b>Delta-7</b> : chasseur léger blindé, dès Chevalier Jedi Accompli.</li>
+        <li><b>ETA-2</b> : réservé au Conseil, aux Commandants, Généraux et Sentinelles Jedi.</li>
+        <li><b>U-Wing (UT-60D)</b> : transport et soutien au sol, dès Chevalier Jedi Accompli.</li>
+      </ul></div>
+      <div class="box card"><h4>BOS</h4><ul>
+        <li>Warp Arrow (prototype de chasseur)</li>
+        <li>LAAT/I ARC Alpha (terrestre et spatial)</li>
+        <li>LAAT/I BRS (spatial)</li>
+        <li>LAAT/I RC (terrestre et spatial)</li>
+        <li>ARC-170 aux couleurs de l'Alpha</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- MODULE 3 -->
+  <section id="m3">
+    <span class="sec-kicker">// Module 03</span>
+    <div class="sec-head"><h2>Radio et transmission</h2><span class="line"></span><span class="tag">Clair et concis</span></div>
+    <p class="lead">La radio est ton outil principal. Des messages clairs, courts et simples : une info, un ordre ou une demande.</p>
+
+    <h3>Abréviations utiles</h3>
+    <p class="lead">Les positions se désignent par des points (Alpha, Bravo, etc.) ou des positions déjà annoncées. Ces abréviations ne sont pas obligatoires, mais tout le monde les comprend.</p>
+    <div class="abbr">
+      <div class="card"><b>Z.A.</b><span>Zone d'atterrissage</span></div>
+      <div class="card"><b>A.P.</b><span>Avant-poste</span></div>
+      <div class="card"><b>D.Z.</b><span>Drop Zone</span></div>
+      <div class="card"><b>Z.E.</b><span>Zone d'exfiltration</span></div>
+    </div>
+
+    <h3>Communication classique</h3>
+    <div class="term">
+      <div class="term-head"><span>Canal CDM</span><span class="live">En ligne</span></div>
+      <div class="line-r"><span class="who">CDM</span><span class="msg">Commandant de mission pour 501st ?<small>Appel</small></span></div>
+      <div class="line-r b"><span class="who">501st</span><span class="msg">501st, à l'écoute ?<small>Réponse</small></span></div>
+      <div class="line-r"><span class="who">CDM</span><span class="msg">Rejoignez Bravo.<small>Ordre</small></span></div>
+    </div>
+
+    <h3>PDP importante</h3>
+    <div class="term">
+      <div class="term-head"><span>Canal CDM</span><span class="live u">Prioritaire</span></div>
+      <div class="line-r u"><span class="who">Unité</span><span class="msg">PDP urgente, un utilisateur de la Force hostile est sur zone !</span></div>
+      <div class="line-r"><span class="who">CDM</span><span class="msg">Reçu, tirez à vue.</span></div>
+    </div>
+    <p class="note"><b>// NOTE</b>Selon la situation, l'unité agit tout de suite ou attend ta réaction. Une PDP importante reste rare et doit servir à quelque chose d'essentiel. Tout abus est sanctionnable.</p>
+  </section>
+
+  <!-- MODULE 4 -->
+  <section id="m4">
+    <span class="sec-kicker">// Module 04</span>
+    <div class="sec-head"><h2>Droits et devoirs</h2><span class="line"></span><span class="tag">Le rôle du CDM</span></div>
+    <p class="lead">Tu es le plus haut dans la hiérarchie de la mission : tu décides, mais tu as aussi des obligations.</p>
+    <div class="rd">
+      <div class="box card"><h4><span class="k">//</span>Tes droits</h4><ul>
+        <li><b>Nommer un second</b> : utile si tu tombes ou pour gérer un autre front. Donne-lui de vraies tâches.</li>
+        <li><b>Choisir les tactiques</b>, en laissant une marge de manœuvre aux leaders de régiment.</li>
+        <li><b>Placer les unités</b> où tu veux. Un placement sans logique peut être sanctionné.</li>
+      </ul></div>
+      <div class="box card duty"><h4><span class="k">//</span>Tes devoirs</h4><ul>
+        <li>Répondre d'abord aux objectifs du superviseur.</li>
+        <li>Gérer la radio : tu décides qui parle.</li>
+        <li>Rester exemplaire : langage respectueux, ordres précis et cohérents.</li>
+        <li>Garder l'objectif malgré les pertes, sans jamais contredire les règles d'Or de la GAR.</li>
+        <li>Laisser les unités spécialisées agir d'abord (négociation par exemple), en gardant un droit de regard.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- MODULE 5 -->
+  <section id="m5">
+    <span class="sec-kicker">// Module 05</span>
+    <div class="sec-head"><h2>Mise en situation</h2><span class="line"></span><span class="tag">Évaluation</span></div>
+    <p class="lead">Le cas pratique se fait uniquement pendant la formation, avec un formateur. Il n'est pas détaillé ici pour garder l'évaluation intacte.</p>
+    <div class="box card"><h4><span class="k" style="font-family:var(--fm);font-weight:500;font-size:.6rem;color:var(--ac)">//</span>Ce qui compte le jour J</h4><ul>
+      <li>Utiliser tous les régiments disponibles, BOS comprise.</li>
+      <li>Placer ses troupes avec logique.</li>
+      <li>Garder une radio propre.</li>
+      <li>Ne pas paniquer quand la situation change.</li>
+    </ul></div>
+  </section>
+  </div>
+</div>
+<div class="view" id="v-dashboard">
+  <div class="locked" id="dashLocked">
+    <div class="locked-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+    <h2>Accès réservé</h2>
+    <p>Espace exclusivement réservé aux membres de la ARC Alpha.</p>
+    <button class="btn btn-primary" onclick="openLogin()">Se connecter</button>
+  </div>
+  <div id="dashContent" style="display:none">
+    <div class="dash-layout">
+      <aside class="dash-side" id="dashSide" aria-label="Menu du tableau de bord">
+        <div class="side-head"><span class="side-title">Centre de commandement</span>
+          <button class="icon-btn" id="sideCollapseBtn" onclick="toggleSidebar()" title="Réduire le menu" aria-label="Réduire le menu"><i data-lucide="panel-left-close"></i></button></div>
+        <nav id="dashNav"></nav>
+        <div class="side-foot">// ARC ALPHA</div>
+      </aside>
+      <div class="dash-main" id="dashMain">
+      <nav class="crumbs" id="dashCrumbs" aria-label="Fil d'Ariane"></nav>
+
+      <!-- OVERVIEW -->
+      <div class="dash-tab" data-dtc="overview">
+        <div class="ov-top">
+          <div class="sec-head"><h2>Vue d'ensemble</h2><span class="line"></span>
+            <span class="tag" id="ovDate"></span>
+            <span class="badge ok" id="ovTodoOk" style="display:none">À jour</span>
+          </div>
+          <div class="seg" id="ovSeg" role="group" aria-label="Affichage" style="display:none">
+            <button type="button" id="ovSegDet" class="on" onclick="setOverviewMode('detail')">Détaillé</button>
+            <button type="button" id="ovSegCmp" onclick="setOverviewMode('compact')">Compact</button>
+          </div>
+          <span id="cmdModeBtn" hidden></span>
+        </div>
+        <div class="ov-kpi-grid" id="ovKpis"></div>
+
+        <!-- MODE COMMANDANT -->
+        <div id="cmdModeView" style="display:none">
+
+          <!-- Ligne 1 : Statut instantané -->
+          <div class="cmd-grid-4" style="margin-bottom:.8rem">
+            <div class="cmd-block" id="cm-effectif"></div>
+            <div class="cmd-block" id="cm-presences"></div>
+            <div class="cmd-block" id="cm-alertes"></div>
+            <div class="cmd-block" id="cm-ops"></div>
+          </div>
+
+          <!-- Ligne 2 : Effectif réduit + Activité + Sondages -->
+          <div class="cmd-grid-3" style="margin-bottom:.8rem">
+            <div class="cmd-block" id="cm-roster" style="grid-row:span 2"></div>
+            <div class="cmd-block" id="cm-rapports"></div>
+            <div class="cmd-block" id="cm-polls"></div>
+          </div>
+
+          <!-- Ligne 3 : Dernières activités + absences -->
+          <div class="cmd-grid-2" style="margin-bottom:.8rem">
+            <div class="cmd-block" id="cm-activity"></div>
+            <div class="cmd-block" id="cm-absences"></div>
+          </div>
+
+        </div>
+
+        <!-- ZONE 1 : bandeau echeance -->
+        <section class="ov-dl" id="ovDeadline"></section>
+
+        <!-- ZONE 2 : A traiter (personnalise, disparait si rien a faire) -->
+        <section class="panel todo" id="ovTodo" hidden>
+          <div class="panel-head">
+            <h3><span class="pk">//</span> À traiter <span class="tag" id="ovTodoCount" style="margin-left:.5rem"></span></h3>
+            <button class="sbtn green" id="ovAssignBtn" style="display:none;font-size:.64rem;padding:.3rem .7rem" onclick="openAssignModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Attribuer une tâche</button>
+          </div>
+          <div class="panel-body flush" id="ovTodoList"></div>
+        </section>
+
+        <div class="ov-grid2" id="ovGrid2">
+          <section class="panel"><div class="panel-head"><h3><span class="pk">//</span> Activité récente</h3>
+              <button class="sm sbtn" onclick="dashTab('historique')">Tout l'historique</button></div>
+            <div class="panel-body" id="ovActivity"></div></section>
+          <section class="panel"><div class="panel-head"><h3><span class="pk">//</span> Raccourcis</h3></div>
+            <div class="panel-body" id="ovShortcuts"></div></section>
+        </div>
+
+        <!-- ZONE 3 : trois colonnes -->
+        <div class="ov-lower">
+          <section class="panel ov-state">
+            <div class="panel-head"><h3><span class="pk">//</span> État de l'unité</h3></div>
+            <div class="panel-body ov-stateb">
+              <div class="ov-kpis">
+                <div class="ov-kpi k-ac" id="ovKpiTotal">
+                  <span class="ov-kpi-l">Effectif</span>
+                  <span class="ov-kpi-v"><b id="ovTotal">0</b><small id="ovTotalMax">/ -</small></span>
+                  <span class="ov-kpi-g"><i id="ovTotalBar"></i></span>
+                </div>
+                <div class="ov-kpi k-ok" id="ovKpiPresent">
+                  <span class="ov-kpi-l">Présents</span>
+                  <span class="ov-kpi-v"><b id="ovPresent">0</b><small id="ovPresentPct"></small></span>
+                  <span class="ov-kpi-g"><i id="ovPresentBar"></i></span>
+                </div>
+                <div class="ov-kpi k-mute" id="ovKpiReserve">
+                  <span class="ov-kpi-l">Réserve</span>
+                  <span class="ov-kpi-v"><b id="ovReserve">0</b><small id="ovReserveNote"></small></span>
+                  <span class="ov-kpi-g"><i id="ovReserveBar"></i></span>
+                </div>
+                <div class="ov-kpi k-ok" id="ovKpiBlames">
+                  <span class="ov-kpi-l">Blâmes actifs</span>
+                  <span class="ov-kpi-v"><b id="ovBlames">0</b><small id="ovBlamesNote"></small></span>
+                  <span class="ov-kpi-g"><i id="ovBlamesBar"></i></span>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="panel"><div class="panel-head"><h3><span class="pk">//</span> Répartition par grade</h3></div><div class="panel-body" id="ovGrades"></div></section>
+          <section class="panel ov-viz">
+            <div class="panel-head"><h3><span class="pk">//</span> Balayage</h3>
+              <span class="tag" id="ovRadarTag"></span>
+            </div>
+            <div class="panel-body ov-vizb">
+              <canvas id="ovRadar" aria-hidden="true"></canvas>
+              <div class="ov-rleg">
+                <span><i style="background:var(--gr)"></i>Présent</span>
+                <span><i style="background:var(--or)"></i>Absent</span>
+                <span><i style="background:var(--dm)"></i>Réserve</span>
+                <span class="ov-rleg-n">centre = commandement</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- CARTES D'ACTION RAPIDE -->
+        <div id="ovQuickActions" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.8rem;margin-bottom:1.2rem"></div>
+      </div>
+
+      <!-- MON ESPACE -->
+      <div class="dash-tab" data-dtc="monespace" style="display:none">
+        <div class="sec-head"><h2>Mon espace</h2><span class="line"></span></div>
+        <div id="monEspaceContent"></div>
+      </div>
+
+      <!-- ROSTER -->
+      <div class="dash-tab" data-dtc="roster" style="display:none">
+        <div class="sec-head"><h2>Effectif</h2><span class="line"></span>
+          <div class="roster-search">
+            <i data-lucide="search"></i>
+            <input type="text" id="rosterSearchInput" placeholder="Rechercher (nom, matricule, grade, régiment…)" oninput="rosterSearchDebounced(this.value)">
+            <button id="rosterSearchClear" style="display:none" onclick="rosterSearchQ='';document.getElementById('rosterSearchInput').value='';renderRoster()" title="Effacer" aria-label="Effacer"><i data-lucide="x"></i></button>
+          </div>
+          <select class="inline-sel" id="rosterFGrade" aria-label="Filtrer par grade" onchange="rosterFilterGrade=this.value;renderRoster()"><option value="">Tous les grades</option><option>CMDM</option><option>CMD</option><option>VCMD</option><option>MAJ</option><option>CPT</option><option>LT</option><option>SGT</option><option>ARC</option></select>
+          <select class="inline-sel" id="rosterFStatus" aria-label="Filtrer par statut" onchange="rosterFilterStatus=this.value;renderRoster()"><option value="">Tous les statuts</option><option value="present">Présents</option><option value="absent">Absents</option><option value="reserve">Réserve</option></select>
+          <span class="tag" id="rosterCount"></span>
+          <button class="sbtn green" onclick="openMemberModal()"><i data-lucide="plus"></i>Ajouter</button>
+        </div>
+        <div class="plc-band" id="rosterPlaces" aria-label="Places par grade"></div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Grade</th><th>Matricule</th><th>Nom</th><th>Régiment</th><th>RCT</th><th>Formations</th><th>Statut</th><th>Dernière promo</th><th>CMD<span class="info-help" tabindex="0" data-tip-title="CMD de mission" data-tip="Points gagnés en commandant une mission.<br><br>Chef de mission : +1 pt<br>Second : +0.5 pt<br><br>Réservé aux officiers LT et plus.">?</span></th><th>Promo<span class="info-help" tabindex="0" data-tip-title="Règles de promotion" data-tip="✅ = éligible, ⛔ = pas encore.<br><br>ARC→SGT : 10j<br>SGT→LT : 17j<br>LT→CPT : 20j + 1.5 CMD<br>CPT→MAJ : 25j + 3 CMD<br>MAJ→VCMD : 30j + 5 CMD<br>VCMD→CMD : 30j + 8 CMD<br>CMD→CMDM : manuel">?</span></th><th class="ta-r">Actions</th></tr></thead>
+            <tbody id="rosterBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- CMD MISSIONS -->
+      <!-- ONGLET JOURNAL (logs) -->
+      <div class="dash-tab" data-dtc="journal" style="display:none">
+        <div class="sec-head"><h2>Journal des modifications</h2><span class="line"></span>
+          <button class="sbtn" onclick="renderJournal()"><i data-lucide="refresh-cw"></i>Rafraîchir</button>
+        </div>
+        <div class="filters" data-filter="#journalBody" data-sel="tr"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher dans le journal…" aria-label="Rechercher dans le journal…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th style="width:180px">Date</th><th>Action</th></tr></thead>
+            <tbody id="journalBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ONGLET FORMATIONS -->
+      <div class="dash-tab" data-dtc="formations" style="display:none">
+        <div class="sec-head"><h2>Formations</h2><span class="line"></span>
+          <div class="roster-search">
+            <i data-lucide="search"></i>
+            <input type="text" id="fmSearchInput" placeholder="Rechercher (formateur, élève, type, statut…)"
+              oninput="fmSearchDebounced(this.value)">
+            <button id="fmSearchClear" style="display:none" title="Effacer"
+              onclick="fmSearchQ='';document.getElementById('fmSearchInput').value='';renderFormations()">✕</button>
+          </div>
+          <span class="tag" id="fmCount"></span>
+          <button class="sbtn green" id="addFormationBtn" onclick="openFormationModal()"><i data-lucide="plus"></i>Nouvelle formation</button>
+        </div>
+        <div class="mb7 grid g4">
+          <div class="stat-card"><div class="stat-v" id="fmStatTotal">0</div><div class="stat-l">Formations</div></div>
+          <div class="stat-card"><div class="stat-v" id="fmStatOk">0</div><div class="stat-l">Validées</div></div>
+          <div class="stat-card"><div class="stat-v" id="fmStatRun">0</div><div class="stat-l">En cours</div></div>
+          <div class="stat-card"><div class="stat-v" id="fmStatKo">0</div><div class="stat-l">Échouées</div></div>
+        </div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Formateur</th><th>Élève</th><th>Formation</th><th>Date</th><th>Statut</th><th class="ta-r">Actions</th></tr></thead>
+            <tbody id="formationsBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ONGLET ENTRAÎNEMENTS -->
+      <div class="dash-tab" data-dtc="entrainements" style="display:none">
+        <div class="sec-head"><h2>Entraînements</h2><span class="line"></span>
+          <select id="actFType" onchange="actFilterType=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none">
+            <option value="">Tous les types</option>
+            <option value="Entraînement">Entraînement</option>
+            <option value="Tâche">Tâche</option>
+          </select>
+          <select id="actFMember" onchange="actFilterMember=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none;max-width:200px"></select>
+          <span class="tag" id="entrainementsCount"></span>
+          <button class="sbtn green" id="addEntrainementBtn" style="display:none" onclick="openEntrainementModal()"><i data-lucide="plus"></i>Nouvelle entrée</button>
+        </div>
+        <div class="mb7 grid g4">
+          <div class="stat-card"><div class="stat-v" id="actStatTot">0</div><div class="stat-l">Séances</div></div>
+          <div class="stat-card"><div class="stat-v" id="actStatMem">0</div><div class="stat-l">Membres concernés</div></div>
+          <div class="stat-card"><div class="stat-v" id="actStat30">0</div><div class="stat-l">Sur 30 jours</div></div>
+          <div class="stat-card"><div class="stat-v" id="actStatLast" style="font-size:1rem">-</div><div class="stat-l">Dernière séance</div></div>
+        </div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Type</th><th>Intitulé</th><th>Membres concernés</th><th>Date</th><th>Validé par</th><th class="ta-r">Actions</th></tr></thead>
+            <tbody id="entrainementsBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ONGLET RECRUTEMENTS -->
+      <div class="dash-tab" data-dtc="recrutements" style="display:none">
+        <div class="sec-head"><h2>Recrutements</h2><span class="line"></span>
+          <span class="tag" id="recSalonTag"></span>
+        </div>
+        <div class="rec-cards">
+          <div class="rec-card">
+            <h4 id="recTrooperTitle">Résultat ARC Trooper</h4>
+            <p id="recTrooperDesc">Compte rendu d'un recrutement ARC Trooper : informations des personnels,
+               sept épreuves notées sur 10, commentaire et numéro d'essai.</p>
+            <div id="recTrooperWarn" class="notice warn" style="display:none"><i data-lucide="alert-triangle"></i> Webhook non configuré - Administration, Webhooks Discord
+            </div>
+            <button class="btn btn-primary" id="recTrooperBtn" onclick="openRecModal('trooper')">Remplir le compte rendu</button>
+          </div>
+          <div class="rec-card">
+            <h4 id="recAlphaTitle">Résultat ARC Alpha</h4>
+            <p id="recAlphaDesc">Compte rendu d'un recrutement ARC Alpha : informations des personnels,
+               onze épreuves dont la théorie sur 35, et commentaire.</p>
+            <div id="recAlphaWarn" class="notice warn" style="display:none"><i data-lucide="alert-triangle"></i> Webhook non configuré - Administration, Webhooks Discord
+            </div>
+            <button class="btn btn-primary" id="recAlphaBtn" onclick="openRecModal('alpha')">Remplir le compte rendu</button>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:1rem"><div class="panel-body">
+          <p style="font-size:.8rem;color:var(--tx2);line-height:1.6">
+            Le compte rendu part dans le salon Discord prévu pour lui. Comme partout ailleurs,
+            rien n'est envoyé automatiquement : un aperçu du message s'affiche et il faut
+            confirmer. Le total des notes est calculé pour toi au fur et à mesure.
+          </p>
+          <p id="recNoRight" style="display:none;font-size:.8rem;color:var(--dm);margin-top:.6rem">
+            Seuls les lieutenants et au-dessus peuvent déposer un compte rendu.
+          </p>
+        </div></div>
+        <div class="panel" id="recEditorPanel" style="display:none;margin-top:1rem">
+          <div class="panel-head"><h3><span class="pk">//</span> Modifier les formulaires</h3>
+            <select id="recEditKind" onchange="recEditorPick(this.value)"
+              style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none">
+              <option value="trooper">ARC Trooper</option>
+              <option value="alpha">ARC Alpha</option>
+            </select>
+          </div>
+          <div class="panel-body">
+            <p class="mb6 card-b">Réservé aux CMD, CMDM et à l'administration.
+              Les questions, leur ordre et leur barème sont libres. Les comptes rendus déjà envoyés
+              sur Discord ne changent pas.</p>
+            <div id="recEditorBox"></div>
+            <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
+              <button class="sbtn green" onclick="saveRecForms()">Enregistrer les formulaires</button>
+              <button class="sbtn" onclick="resetRecForms()">Réinitialiser ce formulaire</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONGLET RÉSERVISTES -->
+      <div class="dash-tab" data-dtc="reserve" style="display:none">
+        <div class="sec-head"><h2>Réservistes</h2><span class="line"></span></div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Grade</th><th>Matricule</th><th>Nom</th><th>Date</th><th>Raison</th><th class="ta-r">Actions</th></tr></thead>
+            <tbody id="reserveBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- ONGLET BLACKLIST -->
+      <div class="dash-tab" data-dtc="blacklist" style="display:none">
+        <div class="sec-head"><h2>Blacklist</h2><span class="line"></span>
+          <button class="sbtn danger" id="blAddBtn" style="display:none" onclick="openMemberModal('blacklist')"><i data-lucide="plus"></i>Ajouter</button>
+        </div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Grade</th><th>Matricule</th><th>Nom</th><th>Date</th><th>Raison</th><th class="ta-r">Actions</th></tr></thead>
+            <tbody id="blacklistBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <div class="dash-tab" data-dtc="cmd" style="display:none">
+        <div class="sec-head"><h2>CMD de Mission</h2><span class="line"></span>
+          <button class="sbtn green" onclick="openCmdModal()"><i data-lucide="plus"></i>Ajouter</button>
+        </div>
+        <p class="card-b" style="margin-bottom:1.2rem">Chef de mission = <strong class="c-ac">+1 point</strong> &nbsp;|&nbsp; Second de mission = <strong class="c-ac">+0.5 point</strong></p>
+        <div class="mb7 grid g4">
+          <div class="stat-card"><div class="stat-v" id="cmdStatMis">0</div><div class="stat-l">Missions</div></div>
+          <div class="stat-card"><div class="stat-v" id="cmdStatPts">0</div><div class="stat-l">Points distribués</div></div>
+          <div class="stat-card"><div class="stat-v" id="cmdStatMem">0</div><div class="stat-l">Membres classés</div></div>
+          <div class="stat-card"><div class="stat-v" id="cmdStatTop" style="font-size:1rem">-</div><div class="stat-l">En tête</div></div>
+        </div>
+        <div class="sec-head"><h2>Classement</h2><span class="line"></span></div>
+        <div class="mb7 panel"><div class="panel-body flush" id="cmdRanking"></div></div>
+        <div class="sec-head"><h2>Historique</h2><span class="line"></span></div>
+        <div class="filters" data-filter="#cmdBody" data-sel="tr"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher un CMD…" aria-label="Rechercher un CMD…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Membre</th><th>Rôle</th><th>Points</th><th>Mission</th><th>Date</th><th class="ta-r">Actions</th></tr></thead>
+            <tbody id="cmdBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- BLAMES -->
+      <div class="dash-tab" data-dtc="blames" style="display:none">
+        <div class="sec-head"><h2>Blâmes</h2><span class="line"></span>
+          <button class="sbtn danger" onclick="openBlameModal()"><i data-lucide="plus"></i>Nouveau blâme</button>
+        </div>
+        <div class="mb7 grid g4">
+          <div class="stat-card"><div class="stat-v" id="blStatAct">0</div><div class="stat-l">Blâmes actifs</div></div>
+          <div class="stat-card"><div class="stat-v" id="blStatRes">0</div><div class="stat-l">Levés</div></div>
+          <div class="stat-card"><div class="stat-v" id="blStatTot">0</div><div class="stat-l">Total</div></div>
+          <div class="stat-card"><div class="stat-v" id="blStatMem">0</div><div class="stat-l">Membres concernés</div></div>
+        </div>
+        <div class="filters" data-filter="#blamesList" data-sel=".ann"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher un blâme…" aria-label="Rechercher un blâme…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+        <div id="blamesList"></div>
+      </div>
+
+      <!-- ABSENCES -->
+      <div class="dash-tab" data-dtc="absences" style="display:none">
+        <div class="sec-head"><h2>Absences</h2><span class="line"></span>
+          <button class="sbtn green" onclick="openAbsModal()"><i data-lucide="plus"></i>Ajouter une absence</button>
+        </div>
+        <div class="mb7 grid g4">
+          <div class="stat-card"><div class="stat-v" id="absTotalAct">0</div><div class="stat-l">Absences en cours</div></div>
+          <div class="stat-card"><div class="stat-v" id="absTotalHist">0</div><div class="stat-l">Historique total</div></div>
+          <div class="stat-card"><div class="stat-v" id="absMostAbs" style="font-size:1.1rem">-</div><div class="stat-l">Plus absent</div></div>
+          <div class="stat-card"><div class="stat-v" id="absCurrent" style="font-size:1rem">-</div><div class="stat-l">Actuellement absent</div></div>
+        </div>
+        <div class="sec-head"><h2>En cours</h2><span class="line"></span></div>
+        <div id="absActiveList"></div>
+        <div class="sec-head" style="margin-top:1.5rem"><h2>Calendrier</h2><span class="line"></span>
+          <button class="sbtn" style="padding:.25rem .6rem;font-size:.65rem" onclick="absCalPrev()" aria-label="Mois précédent"><i data-lucide="chevron-left"></i></button>
+          <span id="absCalLabel" style="font-family:var(--fm);font-size:.72rem;color:var(--tx2);margin:0 .5rem"></span>
+          <button class="sbtn" style="padding:.25rem .6rem;font-size:.65rem" onclick="absCalNext()" aria-label="Mois suivant"><i data-lucide="chevron-right"></i></button>
+        </div>
+        <div class="mb7 panel"><div class="panel-body" id="absCalendar"></div></div>
+        <div class="sec-head" style="margin-top:1.5rem"><h2>Historique</h2><span class="line"></span></div>
+        <div class="filters" data-filter="#absHistBody" data-sel="tr"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher une absence…" aria-label="Rechercher une absence…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Membre</th><th>Début</th><th>Fin</th><th>Motif</th><th>Durée</th><th class="ta-r">Actions</th></tr></thead>
+            <tbody id="absHistBody"></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <!-- RAPPORTS -->
+      <div class="dash-tab" data-dtc="reports" style="display:none">
+        <div class="sec-head"><h2>Rapports hebdomadaires</h2><span class="line"></span><span class="tag" id="repWeekLabel"></span></div>
+        <p class="card-b" style="margin-bottom:1.2rem">Coche le rapport quand un membre l'a soumis. Une formation donnée ou un CMD de mission pendant la semaine compte comme rapport pour le formateur ou le membre concerné. Les grades CPT+ sont dispensés, et une absence dispense si elle couvre au moins 4 jours de la semaine. 48 h après la fin d'une semaine, son historique est figé : une promotion ou une absence modifiée ensuite ne le change plus.</p>
+        <div id="autoReportRow" style="display:none;margin-bottom:1.3rem">
+          <div class="panel"><div class="panel-body" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+            <div>
+              <div style="font-family:var(--fs);font-weight:700;font-size:.8rem;letter-spacing:.04em">Automatisation des rapports</div>
+              <div style="font-size:.8rem;color:var(--tx2);margin-top:.3rem;line-height:1.5">Le dimanche à 23h59, tout membre sans rapport validé reçoit un avertissement et dispose de 48h. Passé ce délai, un blâme automatique est appliqué. Les membres dispensés (grade, dispense, absence d'au moins 4 jours) ou crédités par une formation ou un CMD ne sont pas concernés. L'automatisation s'applique à partir de la semaine où elle est activée, puis aux suivantes, sans jamais rattraper les semaines passées. <span class="c-dm">Réservé VCMD+.</span></div>
+            </div>
+            <div class="toggle" id="autoReportToggle" onclick="toggleAutoReport()"><div class="toggle-track"></div><span class="toggle-lbl" id="autoReportLbl">Automatisation activée</span></div>
+          </div></div>
+        </div>
+        <div class="mb7 grid g4">
+          <div class="stat-card"><div class="stat-v" id="repDone">0</div><div class="stat-l">Rapports soumis</div></div>
+          <div class="stat-card"><div class="stat-v" id="repPending">0</div><div class="stat-l">En attente</div></div>
+          <div class="stat-card"><div class="stat-v" id="repExempt">0</div><div class="stat-l">Dispensés</div></div>
+          <div class="stat-card"><div class="stat-v" id="repRate">-</div><div class="stat-l">Taux de soumission</div></div>
+        </div>
+        <div class="panel"><div class="panel-body flush">
+          <table class="tbl cards">
+            <thead><tr><th>Matricule</th><th>Nom</th><th>Grade</th><th>Statut de la semaine</th><th>Total</th></tr></thead>
+            <tbody id="repBody"></tbody>
+          </table>
+        </div></div>
+        <div style="margin-top:1rem;display:flex;gap:.7rem;flex-wrap:wrap">
+          <button class="sbtn" onclick="prevWeek()">← Semaine précédente</button>
+          <button class="sbtn" onclick="nextWeek()">Semaine suivante →</button>
+          <button class="sbtn danger" onclick="resetWeek()">Reset semaine courante</button>
+        </div>
+      </div>
+
+      <!-- TAB: COMPTES RENDUS (rédaction, validation, publication) -->
+      <div class="dash-tab" data-dtc="rapports" style="display:none">
+        <div class="sec-head"><h2>Comptes rendus</h2><span class="info-help" tabindex="0" data-tip-title="Qui valide ?" data-tip="La validation n'est pas une question de grade seul : elle est réservée aux officiers CPT et plus à qui la tâche &quot;Gérer les rapports&quot; a été attribuée dans l'onglet Tâches.<br><br>Un MAJ et plus peut attribuer cette tâche.<br><br>Les CMD, les CMDM et l'administration voient tous les comptes rendus sans avoir la tâche, mais ne peuvent pas les valider pour autant.">?</span><span class="line"></span><span class="tag" id="rapSalonTag"></span></div>
+
+        <div class="rec-cards" id="rapWriteCards" style="display:none;max-width:640px">
+          <div class="rec-card">
+            <h4>Rédiger un compte rendu</h4>
+            <p>Titre, type d'activité et déroulé. Il est relu par un officier avant toute publication, et tu vois son motif s'il est refusé.</p>
+            <button class="btn btn-primary" onclick="openRapportModal()">Rédiger un compte rendu</button>
+          </div>
+        </div>
+
+        <div id="rapHookWarn" style="display:none;margin-top:1rem;font-family:var(--fm);font-size:.64rem;color:var(--or)">
+          ⚠ Salon des comptes rendus non configuré - Administration, Webhooks Discord
+        </div>
+        <p id="rapNoRight" style="display:none;font-size:.8rem;color:var(--dm);margin-top:.6rem">
+          Ton compte ne rédige pas et ne valide pas de compte rendu.
+        </p>
+
+        <div class="grid g4" id="rapStats" style="display:none;margin:1.3rem 0">
+          <div class="stat-card"><div class="stat-v" id="rapStatPend">0</div><div class="stat-l">En attente</div></div>
+          <div class="stat-card"><div class="stat-v" id="rapStatVal">0</div><div class="stat-l">Validés</div></div>
+          <div class="stat-card"><div class="stat-v" id="rapStatRef">0</div><div class="stat-l">Refusés</div></div>
+          <div class="stat-card"><div class="stat-v" id="rapStatPub">0</div><div class="stat-l">Validés non publiés</div></div>
+        </div>
+
+        <div id="rapQueueSection" style="display:none;margin-top:1.3rem">
+          <div class="sec-head"><h2>À valider</h2><span class="line"></span><span class="tag" id="rapReadOnly" style="display:none">lecture seule</span></div>
+          <div id="rapQueue" class="mb7"></div>
+        </div>
+
+        <div id="rapMineSection" style="display:none;margin-top:1.3rem">
+          <div class="sec-head"><h2>Mes comptes rendus</h2><span class="line"></span></div>
+          <div id="rapMine" class="mb7"></div>
+        </div>
+
+        <div id="rapHistSection" style="display:none;margin-top:1.3rem">
+          <div class="sec-head"><h2>Historique des décisions</h2><span class="line"></span></div>
+          <div class="filters" data-filter="#rapHist" data-sel=".ann"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher un compte rendu…" aria-label="Rechercher un compte rendu…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+          <div id="rapHist"></div>
+        </div>
+
+        <div class="panel" id="rapTaskHint" style="display:none;margin-top:1rem"><div class="panel-body">
+          <p style="font-size:.8rem;color:var(--tx2);line-height:1.6">
+            La validation des comptes rendus dépend des tâches attribuées, pas du grade seul.
+            Pour valider ou refuser, il faut la tâche <strong>« Gérer les rapports »</strong> :
+            un MAJ et plus peut l'attribuer depuis l'onglet Tâches. Les CMD, les CMDM et
+            l'administration gardent la vue complète sans cette tâche, mais en lecture seule.
+          </p>
+        </div></div>
+      </div>
+
+      <!-- ANNONCES -->
+      <div class="dash-tab" data-dtc="announce" style="display:none">
+        <div class="sec-head"><h2>Annonces</h2><span class="line"></span>
+          <button class="sbtn" onclick="openAnnounceModal()"><i data-lucide="plus"></i>Publier</button>
+        </div>
+        <div class="filters" data-filter="#announceList" data-sel=".ann"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher une annonce…" aria-label="Rechercher une annonce…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+        <div id="announceList"></div>
+      </div>
+
+      <!-- TAB: RÈGLEMENT -->
+      <div class="dash-tab" data-dtc="reglement" style="display:none">
+        <div class="sec-head"><h2>Règlement</h2><span class="line"></span>
+          <button class="sbtn" id="reglementEditBtn" style="display:none" onclick="openReglementEditor()">
+            <i data-lucide="pencil"></i>Modifier</button>
+        </div>
+        <div class="panel"><div class="panel-body" id="reglementDisplay" style="font-family:var(--fr);font-size:.85rem;color:var(--tx);line-height:1.8;min-height:80px">
+          <div class="empty"><p>Aucun règlement défini.</p></div>
+        </div></div>
+      </div>
+
+      <div class="dash-tab" data-dtc="personnages" style="display:none">
+        <div class="sec-head"><h2>Personnages connus</h2><span class="line"></span></div>
+        <p class="mb7 card-b">Figures de l'unité - comportement à respecter en RP et contexte essentiel.</p>
+        <div id="persoList" class="perso-grid"></div>
+      </div>
+
+      <!-- TAB: SONDAGES -->
+      <div class="dash-tab" data-dtc="polls" style="display:none">
+        <div class="sec-head"><h2>Sondages</h2><span class="line"></span>
+          <button class="sbtn green" id="addPollBtn" onclick="openPollModal()" style="display:none">
+            <i data-lucide="plus"></i>Créer un sondage</button>
+        </div>
+        <p class="mb7 card-b">Tous les membres peuvent voter. Création réservée aux officiers CPT+.</p>
+        <div class="filters" data-filter="#pollsList" data-sel=".panel"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher un sondage…" aria-label="Rechercher un sondage…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+        <div id="pollsList"></div>
+      </div>
+
+      <!-- TAB: DOCUMENTS -->
+      <!-- TAB: MISSIONS HEBDOMADAIRES -->
+      <div class="dash-tab" data-dtc="missions" style="display:none">
+        <div class="sec-head"><h2>Missions de la semaine</h2><span class="line"></span>
+          <span class="tag" id="misPeriodeTag"></span>
+          <button class="sbtn" id="misGererBtn" style="display:none" onclick="misVersAdmin()">Gérer</button>
+        </div>
+        <div class="mis-note" id="misIntro" style="margin-bottom:1.1rem"></div>
+        <div class="mis-grid" id="misCards"></div>
+        <section class="panel" style="margin-top:1.4rem">
+          <div class="panel-head"><h3><span class="pk">//</span> La semaine prochaine</h3>
+            <span class="tag" id="misNextTag"></span></div>
+          <div class="panel-body">
+            <p class="card-b" style="margin-bottom:.5rem">Aperçu de la prochaine rotation. Il peut encore bouger si la bibliothèque change d'ici là.</p>
+            <div class="mis-next" id="misNext"></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="dash-tab" data-dtc="documents" style="display:none">
+        <div class="sec-head"><h2>Registre des documents</h2><span class="line"></span>
+          <button class="sbtn green" id="addDocBtn" onclick="openDocModal()" style="display:none">
+            <i data-lucide="plus"></i>Ajouter</button>
+        </div>
+        <p class="mb7 card-b">Tous les membres peuvent consulter. Ajout/suppression réservé aux CMD/CMDM/Admin.</p>
+        <div class="filters" data-filter="#docCategories" data-sel=".card"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher un document…" aria-label="Rechercher un document…"></label><select class="inline-sel" data-ffield aria-label="Catégorie"><option value="">Toutes les catégories</option><option>Formation</option><option>Règlement</option><option>Rapports</option><option>Missions</option><option>Divers</option></select><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+        <div id="docCategories"></div>
+      </div>
+
+      <!-- TAB: TÂCHES -->
+      <div class="dash-tab" data-dtc="tasks" style="display:none">
+        <div class="sec-head"><h2>Tâches officiers</h2><span class="line"></span>
+          <button class="sbtn green" id="addTaskBtn" onclick="openTaskModal()">
+            <i data-lucide="plus"></i>Assigner</button>
+        </div>
+        <p class="mb7 card-b">Tâches assignées aux officiers CPT+. Certaines tâches débloquent des droits de modification.<span class="info-help" tabindex="0" data-tip-title="Tâches &amp; permissions" data-tip="Assigner une tâche à un CPT lui débloque des droits qu'il n'aurait pas selon son grade :<br><br>&quot;Gérer l'effectif&quot; → modifier l'effectif (grade, régiment...)<br>&quot;Gérer les présences&quot; → modifier les statuts<br><br>Les autres tâches sont juste informatives.">?</span></p>
+        <div id="myTasksSection" style="display:none">
+          <div class="sec-head"><h2>Mes tâches</h2><span class="line"></span></div>
+          <div id="myTasksList" class="mb7"></div>
+        </div>
+        <div id="allTasksSection" style="display:none">
+          <div class="sec-head"><h2>Toutes les tâches</h2><span class="line"></span></div>
+          <div class="filters" data-filter="#allTasksList" data-sel=".ann"><label class="roster-search"><i data-lucide="search"></i><input type="search" placeholder="Rechercher une tâche…" aria-label="Rechercher une tâche…"></label><button class="sbtn reset" type="button" hidden>Réinitialiser</button><span class="count"></span></div>
+          <div id="allTasksList"></div>
+        </div>
+      </div>
+
+      <!-- CALENDRIER -->
+      <div class="dash-tab" data-dtc="calendrier" style="display:none">
+        <div class="sec-head"><h2>Calendrier</h2><span class="line"></span><span class="tag" id="calTag"></span></div>
+        <p class="mb6 card-b">Absences, échéances des rapports, missions de la semaine et tâches à échéance, sur un seul calendrier. Les données viennent des onglets correspondants : rien n'est saisi ici.</p>
+        <div class="cal-bar">
+          <button class="icon-btn" onclick="calMove(-1)" title="Période précédente" aria-label="Période précédente"><i data-lucide="chevron-left"></i></button>
+          <span class="cal-title" id="calTitle"></span>
+          <button class="icon-btn" onclick="calMove(1)" title="Période suivante" aria-label="Période suivante"><i data-lucide="chevron-right"></i></button>
+          <button class="sbtn" style="padding:.25rem .6rem;font-size:.66rem" onclick="calToday()">Aujourd'hui</button>
+          <div class="seg" role="group" aria-label="Vue">
+            <button type="button" id="calVMonth" class="on" onclick="calSetView('month')">Mois</button>
+            <button type="button" id="calVWeek" onclick="calSetView('week')">Semaine</button>
+            <button type="button" id="calVDay" onclick="calSetView('day')">Jour</button>
+          </div>
+          <div class="cal-legend"><span><i style="background:var(--or)"></i>Absence</span><span><i style="background:var(--rd)"></i>Rapports</span><span><i style="background:var(--ac)"></i>Mission</span><span><i style="background:var(--vi)"></i>Tâche</span><span><i style="background:var(--gr)"></i>Formation</span></div>
+        </div>
+        <div class="panel"><div class="panel-body" id="calBody"></div></div>
+        <div id="calSel" class="cal-sel"></div>
+      </div>
+
+      <!-- STATISTIQUES -->
+      <div class="dash-tab" data-dtc="stats" style="display:none">
+        <div class="sec-head"><h2>Statistiques</h2><span class="line"></span>
+          <select class="inline-sel" id="statsRange" aria-label="Période" onchange="renderStats()"><option value="12">12 dernières semaines</option><option value="26">26 semaines</option><option value="52">52 semaines</option></select>
+          <button class="sbtn" onclick="statsExport()"><i data-lucide="download"></i>Exporter (CSV)</button>
+        </div>
+        <div class="ov-kpi-grid" id="statsKpis"></div>
+        <div class="chart-grid" id="statsCharts"></div>
+      </div>
+
+      <!-- HISTORIQUE -->
+      <div class="dash-tab" data-dtc="historique" style="display:none">
+        <div class="sec-head"><h2>Historique de l'unité</h2><span class="line"></span><span class="tag" id="histTag"></span></div>
+        <div class="filters">
+          <label class="roster-search"><i data-lucide="search"></i><input type="search" id="histQ" placeholder="Rechercher une action…" aria-label="Rechercher une action" oninput="histSearchDebounced(this.value)"></label>
+          <select class="inline-sel" id="histCat" aria-label="Catégorie" onchange="renderHistorique()"><option value="">Toutes les catégories</option></select>
+          <select class="inline-sel" id="histPeriod" aria-label="Période" onchange="renderHistorique()"><option value="7">7 derniers jours</option><option value="30" selected>30 derniers jours</option><option value="90">90 jours</option><option value="0">Tout</option></select>
+          <button class="sbtn reset" type="button" onclick="histReset()">Réinitialiser</button>
+          <span class="count" id="histCount"></span>
+        </div>
+        <div class="panel"><div class="panel-body flush" id="histBody"></div></div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="dash-tab" data-dtc="admin" style="display:none">
+        <div class="sec-head"><h2>Administration</h2><span class="line"></span><span class="tag">ADMIN ONLY</span></div>
+        <div class="grid g2">
+          <div class="panel" id="guidePanel">
+            <div class="panel-head"><h3><span class="pk">//</span> Guide d'utilisation</h3></div>
+            <div class="panel-body">
+              <p class="mb6 card-b">Revoir le tour de présentation du dashboard.</p>
+              <button class="sbtn blue" onclick="startTour()">Revoir le guide</button>
+            </div>
+          </div>
+          <div class="panel" id="navEditorPanel" style="display:none;grid-column:1/-1">
+            <div class="panel-head"><h3><span class="pk">//</span> Organisation des menus</h3></div>
+            <div class="panel-body">
+              <p class="mb6 card-b">Réservé aux CMDM, CMD et Admin. Chaque carte est un groupe de la barre de navigation : renomme-le, change son rang avec <strong>←</strong> et <strong>→</strong>, et ordonne ses onglets avec <strong>↑</strong> et <strong>↓</strong>. Rien n'est appliqué tant que tu n'as pas enregistré.</p>
+              <div id="navEditorGroups"></div>
+              <div id="navEditorOrphans" style="display:none"></div>
+              <div style="display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap">
+                <button class="sbtn green" onclick="saveNavGroups()">Enregistrer l'organisation</button>
+                <button class="sbtn" onclick="sortNavTabs()" title="Range les onglets de chaque groupe dans l'ordre conseillé, sans les changer de groupe">Trier les onglets</button>
+                <button class="sbtn" onclick="addNavGroup()">+ Nouveau groupe</button>
+                <button class="sbtn danger" onclick="resetNavGroups()">Réinitialiser par défaut</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel" id="recruitPanel">
+            <div class="panel-head"><h3><span class="pk">//</span> Recrutement</h3></div>
+            <div class="panel-body">
+              <p class="mb6 card-b">Ouvre ou ferme les candidatures.</p>
+              <div class="toggle" id="recToggle" onclick="toggleRec()"><div class="toggle-track"></div><span class="toggle-lbl" id="recToggleLbl">Recrutement ouvert</span></div>
+            </div>
+          </div>
+          
+          
+          <div class="panel" id="missionPanel" style="grid-column:1/-1">
+            <div class="panel-head"><h3><span class="pk">//</span> Gestion des missions</h3>
+              <span class="tag" id="misLibTag"></span></div>
+            <div class="panel-body">
+              <p class="card-b" style="margin-bottom:.9rem">Bibliothèque des missions et tirage hebdomadaire. Réservé aux MAJ et plus, ou aux officiers portant la tâche « Gérer les missions ».</p>
+              <div class="mis-adm-bar">
+                <button class="sbtn green" onclick="openMissionModal()">Nouvelle mission</button>
+                <button class="sbtn" onclick="misRotationManuelle()">Nouveau tirage</button>
+                <button class="sbtn" id="misSeedBtn" style="display:none" onclick="misChargerDepart()">Charger la bibliothèque de départ</button>
+                <input type="text" id="misSearch" placeholder="Rechercher une mission…" autocomplete="off" oninput="misSearchDebounced(this.value)" style="flex:1;min-width:150px">
+                <select id="misFiltre" onchange="misFiltreV=this.value;renderMissionAdmin()" style="width:auto;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.4rem .5rem;font-family:var(--fm);font-size:.72rem;outline:none">
+                  <option value="">Toutes</option>
+                  <option value="actives">Actives</option>
+                  <option value="off">Désactivées</option>
+                  <option value="exclues">Écartées du tirage</option>
+                </select>
+              </div>
+
+              <div class="mis-adm-cols">
+                <div>
+                  <div class="mis-sec">Tirage de la semaine en cours</div>
+                  <div id="misRotNow"></div>
+                  <div id="misAnnonceEtat" style="font-family:var(--fm);font-size:.6rem;margin-top:.5rem;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap"></div>
+                </div>
+                <div>
+                  <div class="mis-sec">Aperçu de la semaine prochaine</div>
+                  <div id="misRotNext"></div>
+                </div>
+                <div>
+                  <div class="mis-sec">Historique des rotations</div>
+                  <div id="misHist"></div>
+                </div>
+              </div>
+
+              <div class="mis-sec">Bibliothèque</div>
+              <div id="misLibList" class="mis-lib-grid"></div>
+            </div>
+          </div>
+
+          <div class="panel" id="ciblePanel">
+            <div class="panel-head"><h3><span class="pk">//</span> Effectif cible</h3></div>
+            <div class="panel-body">
+              <p class="mb6 card-b">Nombre de membres visé par l'unité. Sert de repère à la jauge de la vue d'ensemble. Réservé aux CMD, CMDM et à l'administration.</p>
+              <div style="display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap">
+                <div class="field" style="margin:0;max-width:140px">
+                  <label for="cibleInput">Effectif visé</label>
+                  <input type="number" id="cibleInput" min="1" max="999" step="1" inputmode="numeric" value="15">
+                </div>
+                <button class="sbtn green" onclick="saveEffectifCible()">Enregistrer</button>
+              </div>
+              <div id="cibleHint" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);margin-top:.7rem"></div>
+            </div>
+          </div>
+
+          <div class="panel" id="maintPanel">
+            <div class="panel-head"><h3><span class="pk">//</span> Maintenance</h3></div>
+            <div class="panel-body">
+              <p class="mb6 card-b">Active le mode maintenance. Les non-admins voient un écran bloquant.</p>
+              <div class="toggle" id="maintToggle" onclick="toggleMaint()"><div class="toggle-track"></div><span class="toggle-lbl" id="maintToggleLbl">Site en ligne</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel" id="discordPanel" style="display:none;margin-bottom:1rem">
+            <div class="panel-head"><h3><span class="pk">//</span> Webhooks Discord</h3></div>
+            <div class="panel-body">
+              <p style="font-size:.8rem;color:var(--tx2);line-height:1.6;margin-bottom:1rem">
+                Colle ici l'URL de chaque webhook. Rien n'est jamais envoyé automatiquement :
+                une fenêtre de confirmation s'affiche à chaque fois, avec l'aperçu du message.
+                Les promotions, les mouvements d'effectif et les CMD de mission partent dans le même salon. Les annonces, les formations et les deux recrutements ont chacun le leur. Laisse un champ vide pour le désactiver.
+              </p>
+              <div class="field">
+                <label>Annonces</label>
+                <input type="password" id="dscAnnonces" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Promotions, mouvements d'effectif et CMD de mission</label>
+                <input type="password" id="dscPromo" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Formations <span class="hint">(salon rapports, garde le nom et l'image de Discord)</span></label>
+                <input type="password" id="dscFormations" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Comptes rendus validés <span class="hint">(rapports écrits, publiés après validation)</span></label>
+                <input type="password" id="dscRapports" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Recrutement ARC Trooper <span class="hint">(comptes rendus d'épreuves)</span></label>
+                <input type="password" id="dscRecrutTrooper" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Recrutement ARC Alpha <span class="hint">(comptes rendus d'épreuves)</span></label>
+                <input type="password" id="dscRecrutAlpha" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Rôles à mentionner (recrutements) <span class="hint">(identifiants séparés par un espace ; vide = les deux rôles par défaut, « aucun » pour ne mentionner personne)</span></label>
+                <input type="text" id="dscRecrutRoles" placeholder="vide = rôles par défaut" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Nom affiché du bot <span class="hint">(annonces et unité, vide = celui de Discord)</span></label>
+                <input type="text" id="dscBotName" placeholder="ARC Alpha" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Avatar du bot <span class="hint">(annonces et unité, URL d'image)</span></label>
+                <input type="text" id="dscBotAvatar" placeholder="https://…/logo.png" autocomplete="off">
+              </div>
+              <div class="field">
+                <label>Style des messages de promotion</label>
+                <select id="dscStyle">
+                  <option value="detaille">Détaillé - encadré avec ancien grade, nouveau grade et régiment</option>
+                  <option value="rp">RP - transmission officielle du Commandement</option>
+                  <option value="compact">Compact - une seule ligne</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">
+                <button class="btn btn-primary" onclick="saveDiscordConfig()">Enregistrer</button>
+                <button class="sbtn" onclick="testDiscord('annonces')">Tester une annonce</button>
+                <button class="sbtn" onclick="testDiscord('promo')">Tester une promotion</button>
+                <button class="sbtn" onclick="testDiscord('mouvements')">Tester un mouvement</button>
+                <button class="sbtn" onclick="testDiscord('cmd')">Tester un CMD</button>
+                <button class="sbtn" onclick="testDiscord('formation')">Tester une formation</button>
+                <button class="sbtn" onclick="testDiscord('recrutTrooper')">Tester un recrutement Trooper</button>
+                <button class="sbtn" onclick="testDiscord('recrutAlpha')">Tester un recrutement Alpha</button>
+                <button class="sbtn" onclick="testDiscord('rapports')">Tester un compte rendu</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel" id="ticketsPanel">
+          <div class="panel-head">
+            <h3><span class="pk">//</span> Tickets - Récupération mot de passe <span id="ticketCount" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
+          </div>
+          <div class="panel-body flush">
+            <table class="tbl cards">
+              <thead><tr><th>Identifiant</th><th>Message</th><th>Statut</th><th class="ta-r">Actions</th></tr></thead>
+              <tbody id="ticketsBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel" id="modChatPanel" style="display:none">
+          <div class="panel-head">
+            <h3><span class="pk">//</span> Surveillance des messages <span style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem">ADMIN · lecture invisible</span></h3>
+            <button class="sbtn" onclick="loadModConvList()"><i data-lucide="refresh-cw"></i>Charger</button>
+          </div>
+          <div class="panel-body">
+            <p class="card-b" style="margin-bottom:.9rem">Lecture des conversations privées entre membres. <strong class="c-or">Totalement invisible</strong> : n'affecte ni le statut « vu », ni les compteurs des personnes concernées.</p>
+            <div id="modConvList"><div class="empty"><p>Clique sur « Charger » pour voir les conversations.</p></div></div>
+          </div>
+        </div>
+        <div class="panel" id="usersPanel">
+          <div class="panel-head">
+            <h3><span class="pk">//</span> Gestion des comptes <span id="userCount" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
+            <div style="display:flex;gap:.5rem">
+              <button class="sbtn" onclick="openUserModal('member')"><i data-lucide="plus"></i>Nouveau compte</button>
+              <button class="sbtn" id="createAdminBtn" style="border-color:rgba(255,138,61,.4);color:var(--or)" onclick="openUserModal('admin')"><i data-lucide="plus"></i>Admin</button>
+            </div>
+          </div>
+          <div class="panel-body flush">
+            <table class="tbl cards"><thead><tr><th>Compte</th><th>Rôle</th><th>Membre lié</th><th class="ta-r">Actions</th></tr></thead><tbody id="usersBody"></tbody></table>
+          </div>
+        </div>
+        <div class="panel" id="debugPanel">
+          <div class="panel-head"><h3><span class="pk">//</span> Tests à faire</h3></div>
+          <div class="panel-body">
+            <p class="mb6 card-b">Les vérifications que Claude te demande de faire sur le site. Raccourci clavier : Ctrl + Shift + D.</p>
+            <button class="sbtn" id="debugOpenBtn" onclick="openDebug()">Ouvrir les tests</button>
+          </div>
+        </div>
+        <div class="panel" id="vitrinePanel">
+          <div class="panel-head"><h3><span class="pk">//</span> Édition de la vitrine</h3></div>
+          <div class="panel-body">
+            <p class="mb6 card-b">Modifie directement les textes des pages publiques.</p>
+            <button class="sbtn" onclick="toggleEditMode()" id="editModeBtn">Activer l'édition</button>
+            <button class="sbtn danger" onclick="resetVitrineTexts()" style="margin-left:.5rem">Restaurer les textes d'origine</button>
+            <p class="card-b" style="margin-top:.7rem;font-size:.7rem;color:var(--dm)">Les textes modifiés ici sont enregistrés et remplacent ceux du fichier. « Restaurer » efface ces modifications pour les sections Missions, Équipement et Membres légendaires.</p>
+          </div>
+        </div>
+      </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="maint-screen">
+<canvas id="maint-bg" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
+<div style="position:absolute;top:8px;left:8px;width:18px;height:18px;border-top:1px solid rgba(0,200,255,.4);border-left:1px solid rgba(0,200,255,.4)"></div>
+<div style="position:absolute;top:8px;right:8px;width:18px;height:18px;border-top:1px solid rgba(0,200,255,.4);border-right:1px solid rgba(0,200,255,.4)"></div>
+<div style="position:absolute;bottom:8px;left:8px;width:18px;height:18px;border-bottom:1px solid rgba(0,200,255,.4);border-left:1px solid rgba(0,200,255,.4)"></div>
+<div style="position:absolute;bottom:8px;right:8px;width:18px;height:18px;border-bottom:1px solid rgba(0,200,255,.4);border-right:1px solid rgba(0,200,255,.4)"></div>
+<div style="position:absolute;top:14px;left:14px;font-family:var(--fm);font-size:9px;letter-spacing:.2em;color:rgba(0,200,255,.25)">// ARC ALPHA v2.4</div>
+<div style="position:absolute;top:14px;right:14px;font-family:var(--fm);font-size:9px;letter-spacing:.2em;color:rgba(0,200,255,.25);text-align:right">STATUS: OFFLINE</div>
+<div style="position:absolute;bottom:14px;left:14px;font-family:var(--fm);font-size:9px;letter-spacing:.2em;color:rgba(0,200,255,.2)">NODE: TIPOCA-01</div>
+<div style="position:absolute;bottom:14px;right:14px;font-family:var(--fm);font-size:9px;letter-spacing:.2em;color:rgba(0,200,255,.2);text-align:right">CLEARANCE: OMEGA</div>
+<div style="position:relative;z-index:5;background:rgba(5,8,16,.78);border:1px solid rgba(0,200,255,.15);padding:36px 48px;display:flex;flex-direction:column;align-items:center;text-align:center;max-width:520px;width:90%">
+  <div style="font-family:var(--fm);font-size:9px;letter-spacing:.3em;color:rgba(0,200,255,.4);margin-bottom:18px">SYSTEM.MAINTENANCE = TRUE</div>
+  <div style="font-family:var(--fs);font-weight:700;font-size:clamp(1.6rem,4vw,2.4rem);letter-spacing:.1em;color:var(--tx);text-transform:uppercase;margin-bottom:6px">ARC <span style="color:#00d4ff">ALPHA</span></div>
+  <div style="font-family:var(--fm);font-size:clamp(.75rem,2vw,1rem);letter-spacing:.22em;color:rgba(0,200,255,.55);margin-bottom:28px;text-transform:uppercase">// MAINTENANCE EN COURS</div>
+  <div style="width:100%;height:1px;background:rgba(0,200,255,.12);margin-bottom:24px"></div>
+  <div id="maint-log" style="font-family:var(--fm);font-size:11px;color:rgba(0,200,255,.4);letter-spacing:.08em;text-align:left;line-height:2.1;min-height:88px;width:100%"></div>
+  <div style="width:100%;height:1px;background:rgba(0,200,255,.12);margin-top:20px;margin-bottom:20px"></div>
+  <div style="font-family:var(--fm);font-size:10px;letter-spacing:.14em;color:rgba(0,200,255,.25)">LE SITE SERA DE RETOUR TRÈS PROCHAINEMENT</div>
+  <div id="maint-admin-note" style="margin-top:16px;font-family:var(--fm);font-size:9px;color:rgba(0,200,255,.3);letter-spacing:.1em;display:none">// Vous êtes admin - accès maintenu</div>
+</div>
+</div>
+<div id="toast" role="status" aria-live="polite"><svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="toastMsg">Message</span></div>
+
+<!-- LOGIN -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal login-modal">
+    <div class="modal-h"><div><span class="k">// ARC ALPHA</span><h3>Connexion</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('loginModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="login-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+      <div class="field"><label>Identifiant</label><input type="text" id="loginUser" placeholder="ex: nepko" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="field"><label>Mot de passe</label><input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="modal-err" id="loginErr">Identifiants incorrects</div>
+      <div style="text-align:center;margin-top:.6rem">
+        <a onclick="openForgotModal()" style="color:var(--ac);font-size:.72rem;cursor:pointer;text-decoration:underline;font-family:var(--fm)">Mot de passe oublié ?</a>
+      </div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('loginModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>doLogin())">Se connecter</button></div>
+  </div>
+</div>
+
+<!-- MOT DE PASSE OUBLIÉ -->
+<div class="modal-bg" id="forgotModal">
+  <div class="modal login-modal">
+    <div class="modal-h"><div><span class="k">// RÉCUPÉRATION</span><h3>Mot de passe oublié</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('forgotModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="login-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg></div>
+      <p class="card-b" style="margin-bottom:1rem;text-align:center">Saisis ton identifiant. Une demande sera envoyée aux administrateurs qui réinitialiseront ton mot de passe.</p>
+      <div class="field"><label>Ton identifiant</label><input type="text" id="forgotUser" placeholder="ex: A-26" onkeydown="if(event.key==='Enter')sendForgotRequest()"></div>
+      <div class="field"><label>Message (optionnel)</label><textarea id="forgotMsg" rows="2" placeholder="Précision pour l'admin..."></textarea></div>
+      <div class="modal-err" id="forgotErr">-</div>
+      <div id="forgotSuccess" style="display:none;color:var(--gr);font-size:.78rem;text-align:center;padding:.6rem;background:rgba(34,217,122,.08);border:1px solid rgba(34,217,122,.3);border-radius:var(--r1)">✓ Demande envoyée. Un administrateur va traiter ta requête.</div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('forgotModal')">Fermer</button><button class="btn btn-primary" id="forgotSendBtn" onclick="occupe(this,()=>sendForgotRequest())">Envoyer la demande</button></div>
+  </div>
+</div>
+
+<!-- RÉINITIALISATION TICKET -->
+<div class="modal-bg" id="resetTicketModal">
+  <div class="modal">
+    <div class="modal-h"><div><span class="k">// RÉINITIALISATION</span><h3>Réinitialiser le mot de passe</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('resetTicketModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="rtTicketId">
+      <p class="mb6 card-b">Compte concerné : <strong id="rtUser" class="c-ac">-</strong></p>
+      <div class="field">
+        <label>Nouveau mot de passe</label>
+        <div style="display:flex;gap:.5rem">
+          <input type="text" id="rtNewPass" placeholder="Saisir ou générer" style="flex:1">
+          <button class="sbtn" style="white-space:nowrap" onclick="generateTempPassword()"><i data-lucide="zap"></i>Générer</button>
+        </div>
+      </div>
+      <p style="font-size:.7rem;color:var(--dm);margin-top:.3rem">Tu pourras communiquer ce mot de passe à l'utilisateur. Il pourra le changer ensuite depuis son profil.</p>
+      <div id="rtErr" style="display:none;color:var(--rd);font-size:.7rem;margin-top:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:var(--r1)"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('resetTicketModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>confirmResetTicket())">Réinitialiser</button></div>
+  </div>
+</div>
+
+<!-- ACCOUNT -->
+<div class="modal-bg" id="accountModal">
+  <div class="modal">
+    <div class="modal-h"><div><span class="k">// COMPTE</span><h3 id="accTitle">Profil</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('accountModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div style="display:flex;align-items:center;gap:1rem;padding:.8rem;background:var(--s2);border:1px solid var(--ln);margin-bottom:1rem">
+        <div class="uc-av" style="width:40px;height:40px;font-size:.85rem" id="accAv">N</div>
+        <div><div class="uc-name" style="font-size:.9rem" id="accName">nepko</div><div class="uc-role admin" id="accRole">ADMIN</div></div>
+      </div>
+      <p class="card-b" id="accDesc">Tu es administrateur.</p>
+
+      <!-- ÉDITION DU PROFIL -->
+      <div style="border-top:1px solid var(--ln);margin-top:1rem;padding-top:1rem">
+        <button class="sbtn" style="width:100%;justify-content:center" onclick="toggleProfileEdit()">
+          <i data-lucide="pencil"></i>
+          Modifier mon profil
+        </button>
+        <div id="profileEditForm" style="display:none;margin-top:1rem">
+          <div class="field"><label>Nouvel identifiant</label><input type="text" id="peUser" placeholder="Laisser vide pour ne pas changer"></div>
+          <div class="field"><label>Nouveau mot de passe</label><input type="password" id="pePass" placeholder="Laisser vide pour ne pas changer"></div>
+          <div class="field"><label>Confirmer le nouveau mot de passe</label><input type="password" id="pePassConf" placeholder="••••••"></div>
+          <div class="field" style="border-top:1px solid var(--ln);padding-top:.8rem;margin-top:.8rem"><label class="c-or">Mot de passe actuel (obligatoire)</label><input type="password" id="peOldPass" placeholder="Vérification de sécurité"></div>
+          <div id="profileEditErr" class="form-err" style="display:none"></div>
+          <button class="btn btn-primary" style="width:100%" onclick="saveProfileEdit()">Enregistrer les modifications</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" style="color:var(--rd);border-color:rgba(255,59,92,.4)" onclick="occupe(this,()=>doLogout())">Se déconnecter</button><button class="btn btn-primary" onclick="closeModal('accountModal')">Fermer</button></div>
+  </div>
+</div>
+
+<!-- MEMBER -->
+<div class="modal-bg" id="memberModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// EFFECTIF</span><h3>Ajouter un membre</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('memberModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="form-row fr2">
+        <div class="field"><label>Matricule</label><input type="text" id="mMat" placeholder="A-XX"></div>
+        <div class="field"><label>Nom RP</label><input type="text" id="mNom" placeholder="ex: Cards"></div>
+      </div>
+      <div class="form-row fr2">
+        <div class="field"><label>Grade</label><select id="mGrade"><option value="CMDM">Commandant-Maréchal</option><option value="CMD">Commandant</option><option value="VCMD">Vice-Commandant</option><option value="MAJ">Major</option><option value="CPT">Capitaine</option><option value="LT">Lieutenant</option><option value="SGT">Sergent</option><option value="ARC" selected>Membre ARC</option></select></div>
+        <div class="field"><label>Statut</label><select id="mStat"><option value="present">Présent</option><option value="absent">Absent</option></select></div>
+      </div>
+      <div class="form-row fr2">
+        <div class="field"><label>Régiment de RCT</label><select id="mRegRct"></select></div>
+        <div class="field"><label>Régiment (interne)</label><input type="text" id="mReg" placeholder="ex: ARC"></div>
+      </div>
+      <div class="form-row fr2">
+        <div class="field"><label>Date d'arrivée</label><input type="date" id="mArrivee"></div>
+        <div class="field"><label>Date de promotion</label><input type="date" id="mPromo"></div>
+      </div>
+      <div class="field">
+        <label style="margin-bottom:.5rem;display:block">Formations validées</label>
+        <div style="display:flex;gap:1.2rem;flex-wrap:wrap">
+          <label class="chk-lbl"><input type="checkbox" id="mFArc" class="chk"> ARC Alpha</label>
+          <label class="chk-lbl"><input type="checkbox" id="mFTrooper" class="chk"> ARC Trooper</label>
+          <label class="chk-lbl"><input type="checkbox" id="mFCmd" class="chk"> CMD de mission</label>
+          <label id="mFNegoLabel" style="display:none;align-items:center;gap:.5rem;cursor:pointer;font-family:var(--fm);font-size:.72rem;color:var(--or)"><input type="checkbox" id="mFNego" style="width:16px;height:16px;cursor:pointer;accent-color:var(--or)"> Négociation</label>
+        </div>
+      </div>
+      <!-- SECTION REMARQUE (CPT+ écriture, BRS lecture) -->
+      <div class="field" id="mRemarqueField" style="border-top:1px solid var(--ln);padding-top:.9rem;margin-top:.3rem">
+        <label class="c-or">Remarques officiers <span style="color:var(--dm);font-weight:400;text-transform:none;letter-spacing:0">(comportement, notes sur l'unité...)</span></label>
+        <textarea id="mRemarque" rows="3" placeholder="Remarques visibles par CPT+, Amirauté et BRS"></textarea>
+      </div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('memberModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveMember())">Ajouter</button></div>
+  </div>
+</div>
+
+<!-- CMD MISSION -->
+<div class="modal-bg" id="cmdModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// CMD MISSION</span><h3>Ajouter un CMD</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('cmdModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Membre</label><select id="cmdMember"><option value="">Sélectionner…</option></select></div>
+      <div class="form-row fr2">
+        <div class="field"><label>Rôle</label>
+          <select id="cmdRole">
+            <option value="1">Chef de mission (+1 point)</option>
+            <option value="0.5">Second de mission (+0.5 point)</option>
+          </select>
+        </div>
+        <div class="field"><label>Date</label><input type="date" id="cmdDate"></div>
+      </div>
+      <div class="field"><label>Nom de la mission (optionnel)</label><input type="text" id="cmdMissionName" placeholder="ex: Extraction sur Jabiim"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('cmdModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveCmdMission())">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- BLAME -->
+<div class="modal-bg" id="blameModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// BLÂME</span><h3>Nouveau blâme</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('blameModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="form-row fr2">
+        <div class="field"><label>Membre</label><select id="bMember" onchange="updateBlameLevelPreview()"><option value="">Sélectionner…</option></select></div>
+        <div class="field"><label>Niveau</label>
+          <div id="bLevelBox" style="display:flex;align-items:center;min-height:38px;padding:.5rem .6rem;background:var(--s2);border:1px solid var(--ln)">
+            <span id="bLevelTxt" style="font-family:var(--fm);font-size:.78rem;color:var(--dm)">Sélectionne un membre</span>
+          </div>
+        </div>
+      </div>
+      <div class="field"><label>Motif</label><textarea id="bReason" placeholder="Motif du blâme…"></textarea></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('blameModal')">Annuler</button><button class="btn btn-primary" style="background:linear-gradient(135deg,var(--rd),#c0203a)" onclick="occupe(this,()=>saveBlame())">Appliquer</button></div>
+  </div>
+</div>
+
+<!-- ABSENCE -->
+<div class="modal-bg" id="absModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// ABSENCES</span><h3>Déclarer une absence</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('absModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Membre</label><select id="absMember"><option value="">Sélectionner…</option></select></div>
+      <div class="form-row fr2">
+        <div class="field"><label>Début</label><input type="date" id="absStart"></div>
+        <div class="field"><label>Fin</label><input type="date" id="absEnd"></div>
+      </div>
+      <div class="field"><label>Motif (optionnel)</label><textarea id="absReason" placeholder="Motif…"></textarea></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('absModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveAbsence())">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- ANNOUNCE -->
+<div class="modal-bg" id="announceModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// ANNONCES</span><h3>Publier une annonce</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('announceModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Titre</label><input type="text" id="anTitle" placeholder="Titre de l'annonce"></div>
+      <div class="field"><label>Contenu</label><textarea id="anContent" placeholder="Contenu…"></textarea></div>
+      <div class="field"><label>Type</label><select id="anType"><option value="normal">Normale</option><option value="pin">Épinglée</option></select></div>
+      <div class="field" id="anDiscordField" style="display:none">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
+          <input type="checkbox" id="anDiscord" checked style="width:auto;margin:0">
+          <span>Envoyer aussi dans #annonces-alpha</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('announceModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveAnnounce())">Publier</button></div>
+  </div>
+</div>
+
+<!-- RÈGLEMENT EDITOR -->
+<!-- PALETTE DE COMMANDES (Ctrl+K) -->
+<div class="cmdk-overlay" id="cmdkOverlay" onclick="if(event.target===this)closeCmdK()">
+  <div class="cmdk-box">
+    <div class="cmdk-search">
+      <i data-lucide="search"></i>
+      <input type="text" id="cmdkInput" placeholder="Aller à un onglet, chercher un membre…" oninput="renderCmdK(this.value)" onkeydown="cmdkKey(event)">
+      <span class="cmdk-hint">ESC</span>
+    </div>
+    <div class="cmdk-results" id="cmdkResults"></div>
+  </div>
+</div>
+
+<!-- MESSAGERIE DIRECTE -->
+<button class="chat-fab" id="chatFab" onclick="toggleChatPanel()" title="Messagerie">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  <span class="chat-unread" id="chatUnreadBadge">0</span>
+</button>
+<div class="chat-panel" id="chatPanel">
+  <div class="chat-head">
+    <button id="chatBackBtn" style="display:none" onclick="chatShowList()" title="Retour" aria-label="Retour"><i data-lucide="arrow-left"></i></button>
+    <div style="flex:1;min-width:0"><span class="k" id="chatKicker">// MESSAGERIE</span><h4 id="chatTitle">Conversations</h4></div>
+    <button id="chatDeleteBtn" style="display:none" onclick="deleteConversation(_chatWith)" title="Supprimer la conversation" aria-label="Supprimer la conversation"><i data-lucide="trash-2"></i></button>
+    <button id="chatSoundBtn" onclick="toggleChatSound()" title="Son" style="font-size:1rem">🔔</button>
+    <button onclick="toggleChatPanel()" title="Fermer" aria-label="Fermer"><i data-lucide="x"></i></button>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-input" id="chatInputRow" style="display:none">
+    <input type="text" id="chatInput" maxlength="500" placeholder="Écris ton message…" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChatMessage();}">
+    <button onclick="sendChatMessage()" title="Envoyer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg></button>
+  </div>
+</div>
+
+<!-- MODÉRATION : lecture conversation (invisible) -->
+<div class="modal-bg" id="modChatModal">
+  <div class="modal wide" style="max-width:560px">
+    <div class="modal-h">
+      <div><span class="k">// SURVEILLANCE - LECTURE INVISIBLE</span><h3 id="modChatTitle">Conversation</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('modChatModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b" id="modChatThread" style="max-height:440px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL (réutilisable) -->
+<div class="modal-bg" id="confirmModal" style="z-index:900">
+  <div class="modal">
+    <div class="modal-h">
+      <div><span class="k" id="confirmKicker">// CONFIRMATION</span><h3 id="confirmTitle">Confirmation</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="confirmResolve(false)"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b" style="display:flex;gap:1rem;align-items:flex-start">
+      <div class="confirm-icon" id="confirmIcon"></div>
+      <div style="flex:1">
+        <div class="confirm-msg" id="confirmMsg"></div>
+        <input type="text" id="confirmInput" style="display:none;width:100%;margin-top:.9rem;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.6rem .8rem;font-family:var(--fr);font-size:.9rem;outline:none" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmResolve(true);}">
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" id="confirmCancelBtn" onclick="occupe(this,()=>confirmResolve(false))">Annuler</button>
+      <button class="btn btn-primary" id="confirmOkBtn" onclick="occupe(this,()=>confirmResolve(true))">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="reglementModal">
+  <div class="modal wide" style="max-width:820px;padding:0">
+    <div class="modal-h" style="padding:1rem 1.5rem"><div><span class="k">// DISCIPLINE</span><h3>Modifier le règlement</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('reglementModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="rte-wrap">
+      <div class="rte-toolbar">
+        <!-- Style de bloc -->
+        <select class="rte-sel" title="Style" onchange="rteExec('formatBlock',this.value);this.blur()" style="width:110px">
+          <option value="p">¶ Normal</option>
+          <option value="h1">H1 - Grand titre</option>
+          <option value="h2">H2 - Titre</option>
+          <option value="h3">H3 - Sous-titre</option>
+        </select>
+        <!-- Police -->
+        <select class="rte-sel" title="Police" onchange="rteExec('fontName',this.value);this.blur()" style="width:130px">
+          <option value="Rajdhani,sans-serif">Rajdhani (défaut)</option>
+          <option value="'Syncopate',sans-serif">Syncopate</option>
+          <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+          <option value="Arial,sans-serif">Arial</option>
+          <option value="Georgia,serif">Georgia</option>
+          <option value="'Times New Roman',serif">Times New Roman</option>
+        </select>
+        <!-- Taille -->
+        <select class="rte-sel" title="Taille de police" onchange="rteFontSize(this.value);this.blur()" style="width:56px">
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13" selected>13</option>
+          <option value="14">14</option>
+          <option value="16">16</option>
+          <option value="18">18</option>
+          <option value="20">20</option>
+          <option value="24">24</option>
+          <option value="28">28</option>
+          <option value="32">32</option>
+        </select>
+        <div class="rte-sep"></div>
+        <!-- Formatage inline -->
+        <button class="rte-btn" onclick="rteExec('bold')" title="Gras (Ctrl+B)"><b style="font-family:Georgia,serif;font-size:.85rem">B</b></button>
+        <button class="rte-btn" onclick="rteExec('italic')" title="Italique (Ctrl+I)"><i style="font-family:Georgia,serif;font-size:.85rem">I</i></button>
+        <button class="rte-btn" onclick="rteExec('underline')" title="Souligner (Ctrl+U)"><span style="text-decoration:underline;font-size:.78rem">U</span></button>
+        <button class="rte-btn" onclick="rteExec('strikeThrough')" title="Barré"><span style="text-decoration:line-through;font-size:.78rem">S</span></button>
+        <div class="rte-sep"></div>
+        <!-- Couleur texte -->
+        <button class="rte-btn rte-clr-wrap" title="Couleur du texte" style="gap:.25rem;width:44px">
+          <svg width="13" height="13" viewBox="0 0 24 24"><text x="1" y="20" font-size="22" font-weight="bold" font-family="Georgia,serif" fill="var(--ac)">A</text></svg>
+          <svg width="10" height="10" viewBox="0 0 10 10"><rect width="10" height="4" y="6" rx="1" id="rteFgBar" fill="#00e5ff"/></svg>
+          <input type="color" id="rteFgColor" value="#00e5ff" oninput="document.getElementById('rteFgBar').setAttribute('fill',this.value);rteColor('foreColor',this.value)" title="Couleur texte">
+        </button>
+        <!-- Surlignage -->
+        <button class="rte-btn rte-clr-wrap" title="Surligner" style="gap:.25rem;width:44px">
+          <svg width="13" height="13" viewBox="0 0 24 24"><text x="1" y="19" font-size="20" font-weight="bold" font-family="Georgia,serif" fill="var(--tx)">A</text><rect x="0" y="20" width="24" height="4" rx="1" id="rteHlBar" fill="#ffd23d"/></svg>
+          <svg width="10" height="10" viewBox="0 0 10 10"></svg>
+          <input type="color" id="rteHlColor" value="#ffd23d" oninput="document.getElementById('rteHlBar').setAttribute('fill',this.value);rteColor('hiliteColor',this.value)" title="Couleur de surlignage">
+        </button>
+        <div class="rte-sep"></div>
+        <!-- Alignement -->
+        <button class="rte-btn" onclick="rteExec('justifyLeft')" title="Aligner à gauche">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+        </button>
+        <button class="rte-btn" onclick="rteExec('justifyCenter')" title="Centrer">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        </button>
+        <button class="rte-btn" onclick="rteExec('justifyRight')" title="Aligner à droite">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="rte-sep"></div>
+        <!-- Listes -->
+        <button class="rte-btn" onclick="rteExec('insertUnorderedList')" title="Liste à puces">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="4" cy="7" r="1.5" fill="currentColor" stroke="none"/><line x1="8" y1="7" x2="21" y2="7"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><line x1="8" y1="12" x2="21" y2="12"/><circle cx="4" cy="17" r="1.5" fill="currentColor" stroke="none"/><line x1="8" y1="17" x2="21" y2="17"/></svg>
+        </button>
+        <button class="rte-btn" onclick="rteExec('insertOrderedList')" title="Liste numérotée">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><text x="1" y="9" font-size="7" fill="currentColor" stroke="none" font-family="monospace">1.</text><line x1="9" y1="7" x2="21" y2="7"/><text x="1" y="14" font-size="7" fill="currentColor" stroke="none" font-family="monospace">2.</text><line x1="9" y1="12" x2="21" y2="12"/><text x="1" y="19" font-size="7" fill="currentColor" stroke="none" font-family="monospace">3.</text><line x1="9" y1="17" x2="21" y2="17"/></svg>
+        </button>
+        <!-- Indentation -->
+        <button class="rte-btn" onclick="rteExec('indent')" title="Indenter">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="16" x2="21" y2="16"/><polyline points="3,12 7,15 3,18"/></svg>
+        </button>
+        <button class="rte-btn" onclick="rteExec('outdent')" title="Désindenter">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="16" x2="21" y2="16"/><polyline points="7,12 3,15 7,18"/></svg>
+        </button>
+        <div class="rte-sep"></div>
+        <!-- Effacer style -->
+        <button class="rte-btn" onclick="rteExec('removeFormat')" title="Effacer le formatage" style="font-size:.65rem;gap:.2rem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19H5l3-4-8-8 4-4 15 15"/><line x1="18" y1="22" x2="22" y2="22"/></svg>
+        </button>
+      </div>
+      <!-- Zone d'édition contenteditable -->
+      <div id="reglementEditor" contenteditable="true" class="rte-editor" data-placeholder="Rédigez le règlement ici… Utilisez la barre d'outils pour formater."></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('reglementModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveReglement())">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- DEBUG MODAL -->
+<div class="modal-bg" id="debugModal">
+  <div class="modal tall" style="max-width:860px">
+    <div class="modal-h"><div><span class="k">// MENU DE DÉBUG</span><h3>Tests à faire</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('debugModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b" id="debugBody"></div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('debugModal')">Fermer</button>
+      <button class="btn btn-primary" onclick="copyDebugReport()">Copier le rapport pour Claude</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORMATION MODAL -->
+<div class="modal-bg" id="formationModal">
+  <div class="modal">
+    <div class="modal-h"><div><span class="k">// FORMATION</span><h3 id="formationModalTitle">Nouvelle formation</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('formationModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="fmId">
+      <div class="form-row fr2">
+        <div class="field"><label>Formateur</label><select id="fmFormateur"></select></div>
+        <div class="field"><label>Élève</label>
+          <input type="text" id="fmEleve" list="fmEleveList" autocomplete="off" placeholder="ex: A-99 ou un nom">
+          <datalist id="fmEleveList"></datalist>
+        </div>
+      </div>
+      <div class="field"><label>Formation</label>
+        <select id="fmFormation"></select>
+      </div>
+      <div class="form-row fr2">
+        <div class="field"><label>Date</label><input type="date" id="fmDate"></div>
+        <div class="field"><label>Statut</label>
+          <select id="fmStatut">
+            <option value="En cours">En cours</option>
+            <option value="Validé">Validé</option>
+            <option value="Échoué">Échoué</option>
+          </select>
+        </div>
+      </div>
+      <div id="formationErr" class="form-err" style="display:none"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('formationModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveFormation())">Enregistrer</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="entrainementModal">
+  <div class="modal tall">
+    <div class="modal-h"><div><span class="k">// ENTRAÎNEMENT</span><h3 id="entrainementModalTitle">Nouvelle entrée</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('entrainementModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="actId">
+      <div class="form-row fr2">
+        <div class="field"><label>Type</label>
+          <select id="actType"></select>
+        </div>
+        <div class="field"><label>Date</label><input type="date" id="actDate"></div>
+      </div>
+      <div class="field"><label>Intitulé</label><input type="text" id="actIntitule" autocomplete="off" placeholder="ex: Entraînement au tir de précision"></div>
+      <div class="field"><label>Membres concernés <span id="actMembersCount" style="color:var(--dm);font-family:var(--fm);font-size:.62rem;text-transform:none;letter-spacing:0"></span></label>
+        <input type="text" id="actMemberSearch" autocomplete="off" placeholder="Filtrer la liste…" oninput="populateActMembers(this.value)" style="margin-bottom:.4rem">
+        <div id="actMembersBox" class="act-mlist"></div>
+      </div>
+      <div class="field"><label>Autres participants <span id="actPartCount" style="color:var(--dm);font-family:var(--fm);font-size:.62rem;text-transform:none;letter-spacing:0"></span></label>
+        <div id="actPartChips" class="act-chips"></div>
+        <input type="text" id="actParticipants" list="actParticipantsList" autocomplete="off" placeholder="Matricule, puis Entrée pour l'ajouter" onkeydown="actPartKey(event)" onblur="actPartAdd()">
+        <datalist id="actParticipantsList"></datalist>
+      </div>
+      </div>
+      <div class="field"><label>Validé par</label><select id="actOfficier"></select></div>
+      <div class="field"><label>Commentaire (facultatif)</label><textarea id="actCommentaire" rows="2" placeholder="Précisions, résultat, remarque"></textarea></div>
+      <div id="entrainementErr" class="form-err" style="display:none"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('entrainementModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveEntrainement())">Enregistrer</button></div>
+  </div>
+</main>
+
+<div class="modal-bg" id="recModal">
+  <div class="modal tall wide">
+    <div class="modal-h"><div><span class="k" id="recKicker">// RECRUTEMENT</span><h3 id="recFormTitle">Compte rendu</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('recModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="recKind">
+      <div id="recBody"></div>
+      <div id="recErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25)"></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('recModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="occupe(this,()=>saveRecrutement())">Envoyer sur Discord</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPTE RENDU : rédaction -->
+<div class="modal-bg" id="rapportModal">
+  <div class="modal tall wide">
+    <div class="modal-h"><div><span class="k">// COMPTE RENDU</span><h3 id="rapModalTitle">Rédiger un compte rendu</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('rapportModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="rapFromId">
+      <div id="rapMotifBack" style="display:none;margin-bottom:.8rem;padding:.5rem .7rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25);font-size:.78rem;color:var(--tx2)"></div>
+      <div class="form-row fr2">
+        <div class="field"><label>Titre</label>
+          <input type="text" id="rapTitre" maxlength="90" autocomplete="off" placeholder="ex: Patrouille du secteur 7"></div>
+        <div class="field"><label>Type</label>
+          <select id="rapType"></select></div>
+      </div>
+      <div class="field"><label>Déroulé</label>
+        <textarea id="rapContenu" rows="11" maxlength="3500" oninput="rapCount()" placeholder="Ce qui s'est passé, qui était présent, le résultat, ce qui doit être signalé au commandement."></textarea>
+        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">
+          <span>Relu par un officier avant publication</span><span id="rapCountLbl">0 / 3500</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="rapPieceUrl">Pièces jointes <span style="color:var(--dm);font-weight:400;text-transform:none;letter-spacing:0">facultatif</span></label>
+        <div id="rapPiecesList" style="margin-bottom:.5rem"></div>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+          <input type="url" id="rapPieceUrl" maxlength="600" autocomplete="off" placeholder="Colle un lien (capture Discord, Imgur…)" style="flex:1;min-width:180px">
+          <input type="text" id="rapPieceNom" maxlength="80" autocomplete="off" placeholder="Nom (facultatif)" style="width:140px">
+          <button type="button" class="sbtn" id="rapPieceAddBtn" onclick="rapPieceAdd()">Joindre le lien</button>
+          <button type="button" class="sbtn" id="rapPieceFileBtn" onclick="document.getElementById('rapPieceFile').click()">Parcourir…</button>
+          <input type="file" id="rapPieceFile" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf" style="display:none" onchange="rapPieceFichier(this)">
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">
+          <span>Images et PDF, 3 Mo au maximum par fichier</span><span id="rapPiecesCount">0 / 5</span>
+        </div>
+        <div id="rapPieceHint" style="display:none;margin-top:.4rem;font-family:var(--fm);font-size:.6rem;color:var(--or)"></div>
+      </div>
+      <div id="rapErr" class="form-err" style="display:none"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('rapportModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveRapport())">Soumettre</button></div>
+  </div>
+</div>
+
+<!-- COMPTE RENDU : lecture et décision -->
+<div class="modal-bg" id="rapportViewModal">
+  <div class="modal tall wide">
+    <div class="modal-h"><div><span class="k">// COMPTE RENDU</span><h3>Lecture</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('rapportViewModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b"><div id="rapViewBody"></div></div>
+    <div class="modal-f" id="rapViewFoot"></div>
+  </div>
+</div>
+
+<!-- MISSION : création et modification -->
+<div class="modal-bg" id="missionModal">
+  <div class="modal tall wide">
+    <div class="modal-h"><div><span class="k">// MISSION</span><h3 id="misModalTitle">Nouvelle mission</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('missionModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="misId">
+      <div class="field"><label for="misNom">Nom de la mission</label>
+        <input type="text" id="misNom" maxlength="90" autocomplete="off" placeholder="ex : Bivouac tactique conjoint"></div>
+      <div class="form-row fr2">
+        <div class="field"><label for="misCat">Type d'activité</label>
+          <select id="misCat"></select></div>
+        <div class="field"><label for="misDif">Difficulté</label>
+          <select id="misDif"></select></div>
+      </div>
+      <div class="field"><label for="misDesc">Description</label>
+        <textarea id="misDesc" rows="4" maxlength="1200" placeholder="Ce que les joueurs vont faire, et ce qui rend la scène intéressante à jouer."></textarea></div>
+      <div class="field"><label for="misObj">Objectifs <span style="color:var(--dm);font-weight:400;text-transform:none;letter-spacing:0">un par ligne</span></label>
+        <textarea id="misObj" rows="4" maxlength="900" placeholder="Installer et sécuriser un camp temporaire&#10;Organiser une patrouille&#10;Effectuer un débriefing RP"></textarea></div>
+      <div class="form-row fr2">
+        <div class="field"><label for="misReg">Régiments concernés</label>
+          <input type="text" id="misReg" maxlength="120" autocomplete="off" placeholder="ex : 41st, 501st  ou  Tous"></div>
+        <div class="field"><label for="misPart">Participants conseillés</label>
+          <input type="text" id="misPart" maxlength="120" autocomplete="off" placeholder="ex : 3 à 5 volontaires"></div>
+      </div>
+      <div class="form-row fr2">
+        <div class="field"><label for="misDuree">Durée estimée</label>
+          <input type="text" id="misDuree" maxlength="60" autocomplete="off" placeholder="ex : 1 h 30"></div>
+        <div class="field"><label for="misTags">Tags</label>
+          <input type="text" id="misTags" maxlength="160" autocomplete="off" placeholder="ex : camp, patrouille"></div>
+      </div>
+      <div class="field"><label for="misCons">Consignes et conditions de réussite</label>
+        <textarea id="misCons" rows="3" maxlength="900" placeholder="Ce qu'il faut annoncer avant de commencer, et ce qui fait qu'une mission est réussie."></textarea></div>
+      <div style="display:flex;gap:1.4rem;flex-wrap:wrap;margin-top:.6rem">
+        <label style="display:flex;align-items:center;gap:.45rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="misActif" checked> Active dans la bibliothèque</label>
+        <label style="display:flex;align-items:center;gap:.45rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="misExclu"> Écarter du prochain tirage</label>
+      </div>
+      <div id="misErr" style="display:none;color:var(--rd);font-size:.7rem;margin-top:.7rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:var(--r1)"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('missionModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveMission())">Enregistrer</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="assignModal">
+  <div class="modal">
+    <div class="modal-h"><div><span class="k">// ATTRIBUTION</span><h3>Attribuer une tâche</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('assignModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Destinataire</label><select id="asgMember"></select></div>
+      <div class="field"><label>Intitulé</label><input type="text" id="asgTitle" maxlength="80" autocomplete="off" placeholder="ex: Préparer la formation CMD de A-41 pour samedi"></div>
+      <div class="field"><label>Détail (facultatif)</label><textarea id="asgDetail" rows="2" placeholder="Précisions utiles"></textarea></div>
+      <div class="form-row fr2">
+        <div class="field"><label>Échéance (facultatif)</label><input type="date" id="asgDue"></div>
+        <div class="field"><label>Priorité</label>
+          <div style="display:flex;gap:1.2rem;align-items:center;padding-top:.45rem">
+            <label style="display:flex;align-items:center;gap:.4rem;text-transform:none;letter-spacing:0;font-family:var(--fr);font-size:.84rem;color:var(--tx);margin:0"><input type="radio" name="asgPrio" id="asgPrioN" checked style="width:15px;height:15px;padding:0;margin:0;accent-color:var(--ac)">Normale</label>
+            <label style="display:flex;align-items:center;gap:.4rem;text-transform:none;letter-spacing:0;font-family:var(--fr);font-size:.84rem;color:var(--tx);margin:0"><input type="radio" name="asgPrio" id="asgPrioH" style="width:15px;height:15px;padding:0;margin:0;accent-color:var(--rd)">Haute</label>
+          </div>
+        </div>
+      </div>
+      <div id="asgErr" class="form-err" style="display:none"></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('assignModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveAssignedTask())">Attribuer</button></div>
+  </div>
+</div>
+
+<!-- CHANGE CATEGORIE MODAL (réserve / blacklist) -->
+<div class="modal-bg" id="catModal">
+  <div class="modal">
+    <div class="modal-h"><div><span class="k" id="catModalKind">// RÉSERVE</span><h3 id="catModalTitle">Passer en réserve</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('catModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="catMemberId">
+      <input type="hidden" id="catTarget">
+      <p class="mb6 card-b" id="catModalDesc">-</p>
+      <div class="field"><label>Date</label><input type="date" id="catDate"></div>
+      <div class="field"><label>Raison</label><textarea id="catRaison" rows="3" placeholder="Motif du changement de statut"></textarea></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('catModal')">Annuler</button><button class="btn btn-primary" id="catConfirmBtn" onclick="occupe(this,()=>saveCategorieChange())">Confirmer</button></div>
+  </div>
+</div>
+
+<!-- EDIT USER -->
+<div class="modal-bg" id="editUserModal">
+  <div class="modal">
+    <div class="modal-h"><div><span class="k">// MODIFIER LE COMPTE</span><h3 id="editUserTitle">Modifier</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('editUserModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <input type="hidden" id="euUserId">
+      <div style="display:flex;align-items:center;gap:1rem;padding:.8rem;background:var(--s2);border:1px solid var(--ln);margin-bottom:1rem">
+        <div class="uc-av" style="width:40px;height:40px;font-size:.85rem" id="euAvatar">?</div>
+        <div><div class="uc-name" style="font-size:.9rem" id="euCurrentName">-</div><div class="uc-role" id="euCurrentRole">-</div></div>
+      </div>
+
+      <div class="field"><label>Identifiant</label><input type="text" id="euUser" placeholder="Nouvel identifiant"></div>
+      <div class="field"><label>Réinitialiser le mot de passe</label><input type="password" id="euPass" placeholder="Laisser vide pour ne pas changer"></div>
+
+      <div class="field" id="euRoleField">
+        <label>Rôle</label>
+        <select id="euRole">
+          <option value="member">Membre ARC</option>
+          <option value="brs">BRS - Renseignement (lecture seule)</option>
+          <option value="amiraute">Amirauté (édition)</option>
+          <option value="admin">Admin (accès total)</option>
+        </select>
+      </div>
+
+      <div class="field" id="euMemberLinkField">
+        <label>Membre lié (effectif)</label>
+        <select id="euMemberLink"></select>
+      </div>
+
+      <div id="editUserErr" class="form-err" style="display:none"></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('editUserModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="occupe(this,()=>saveEditUser())">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW USER -->
+<div class="modal-bg" id="userModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// GESTION DES ACCÈS</span><h3 id="userModalTitle">Nouveau compte</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('userModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.2rem">
+        <button id="roleBtn-member" onclick="selectRoleType('member')" style="padding:.8rem;border:2px solid var(--ac);background:rgba(0,229,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ac)">Membre ARC</span>
+          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Accès + édition selon grade</span>
+        </button>
+        <button id="roleBtn-admin" onclick="selectRoleType('admin')" style="padding:.8rem;border:2px solid var(--ln);background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--or)">Admin</span>
+          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Accès total + gestion</span>
+        </button>
+        <button id="roleBtn-brs" onclick="selectRoleType('brs')" style="padding:.8rem;border:2px solid var(--ln);background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c5cff" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c5cff">BRS</span>
+          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Renseignement · lecture seule</span>
+        </button>
+        <button id="roleBtn-amiraute" onclick="selectRoleType('amiraute')" style="padding:.8rem;border:2px solid var(--ln);background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ye)" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ye)">Amirauté</span>
+          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Accès total · édition</span>
+        </button>
+      </div>
+      <input type="hidden" id="nuRole" value="member">
+      <div class="form-row fr2">
+        <div class="field"><label>Identifiant</label><input type="text" id="nuUser" placeholder="ex: A-44"></div>
+        <div class="field"><label>Mot de passe</label><input type="password" id="nuPass" placeholder="••••••"></div>
+      </div>
+      <div class="field"><label>Confirmer le mot de passe</label><input type="password" id="nuPassConf" placeholder="••••••"></div>
+      <div class="field"><label>Lier à un membre de l'effectif</label>
+        <select id="nuMemberLink">
+          <option value="">Aucun lien</option>
+        </select>
+        <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);margin-top:.3rem;display:block">Le grade du membre s'applique automatiquement au compte</span>
+      </div>
+      <div class="modal-err" id="userModalErr">Les mots de passe ne correspondent pas</div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('userModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveUser())">Créer le compte</button></div>
+  </div>
+</div>
+
+<!-- MODAL: DOCUMENT -->
+<div class="modal-bg" id="docModal">
+  <div class="modal wide">
+    <div class="modal-h">
+      <div><span class="k">// DOCUMENTS</span><h3>Ajouter un document</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('docModal')">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Titre du document</label><input type="text" id="docTitle" placeholder="ex: Guide de formation ARC"></div>
+      <div class="field"><label>Lien (Google Doc, PDF, etc.)</label><input type="url" id="docUrl" placeholder="https://docs.google.com/..."></div>
+      <div class="form-row fr2">
+        <div class="field"><label>Catégorie</label>
+          <select id="docCat">
+            <option value="Formation">Formation</option>
+            <option value="Règlement">Règlement</option>
+            <option value="Rapports">Rapports</option>
+            <option value="Missions">Missions</option>
+            <option value="Divers">Divers</option>
+          </select>
+        </div>
+        <div class="field"><label>Accès minimum</label>
+          <select id="docAccess">
+            <option value="ARC">Tous les membres</option>
+            <option value="SGT">SGT+</option>
+            <option value="LT">LT+</option>
+            <option value="CPT">CPT+</option>
+            <option value="MAJ">MAJ+</option>
+            <option value="CMD">CMD/CMDM/Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Description (optionnel)</label><textarea id="docDesc" placeholder="Description du document…"></textarea></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('docModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="occupe(this,()=>saveDoc())">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TÂCHE -->
+<div class="modal-bg" id="taskModal">
+  <div class="modal wide">
+    <div class="modal-h">
+      <div><span class="k">// TÂCHES</span><h3>Assigner une tâche</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('taskModal')">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Officier (CPT+)</label>
+        <select id="taskAssignee"><option value="">Sélectionner…</option></select>
+      </div>
+      <div class="field"><label>Type de tâche</label>
+        <select id="taskType">
+          <option value="effectif">Gérer l'effectif</option>
+          <option value="presences">Gérer les présences</option>
+          <option value="absences">Gérer les absences</option>
+          <option value="rapports">Gérer les rapports</option>
+          <option value="missions">Gérer les missions</option>
+          <option value="custom">Tâche personnalisée</option>
+        </select>
+      </div>
+      <div class="field"><label>Titre personnalisé (si tâche custom)</label>
+        <input type="text" id="taskCustomTitle" placeholder="ex: Rédiger le rapport mensuel"></div>
+      <div class="field"><label>Description</label>
+        <textarea id="taskDesc" placeholder="Détails de la tâche…"></textarea></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('taskModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="occupe(this,()=>saveTask())">Assigner</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SONDAGE -->
+<div class="modal-bg" id="pollModal">
+  <div class="modal wide">
+    <div class="modal-h">
+      <div><span class="k">// SONDAGES</span><h3>Créer un sondage</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('pollModal')">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label>Question</label><input type="text" id="pollQuestion" placeholder="ex: Date du prochain entraînement ?"></div>
+      <div class="field"><label>Options (une par ligne, 2 à 6)</label>
+        <textarea id="pollOptions" placeholder="Samedi 20h&#10;Dimanche 18h&#10;Mercredi 21h" style="min-height:110px"></textarea>
+      </div>
+      <div class="field"><label>Durée</label>
+        <select id="pollDuration">
+          <option value="1">1 jour</option>
+          <option value="3" selected>3 jours</option>
+          <option value="7">7 jours</option>
+          <option value="0">Illimitée</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('pollModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="occupe(this,()=>savePoll())">Publier</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FICHE MEMBRE -->
+<div class="modal-bg" id="memberProfileModal">
+  <div class="modal wide" style="max-width:680px">
+    <div class="modal-h">
+      <div><span class="k">// FICHE MEMBRE</span><h3 id="mpName">Membre</h3><div id="mpMedalRow" class="medal-row"></div></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('memberProfileModal')">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-b" style="max-height:70vh;overflow-y:auto">
+      <!-- Edition rapide -->
+      <div id="mpEditSection" style="display:none;margin-bottom:1.2rem;padding:1rem;background:var(--s2);border:1px solid var(--ln)">
+        <div style="font-family:var(--fm);font-size:.62rem;color:var(--ac);letter-spacing:.1em;margin-bottom:.8rem">// MODIFIER LA FICHE</div>
+        <div class="form-row fr2">
+          <div class="field"><label>Matricule</label><input type="text" id="mpMat"></div>
+          <div class="field"><label>Nom RP</label><input type="text" id="mpNom"></div>
+        </div>
+        <div class="form-row fr2">
+          <div class="field"><label>Grade</label>
+            <select id="mpGrade">
+              <option value="CMDM">Commandant-Maréchal</option><option value="CMD">Commandant</option>
+              <option value="VCMD">Vice-Commandant</option><option value="MAJ">Major</option>
+              <option value="CPT">Capitaine</option><option value="LT">Lieutenant</option>
+              <option value="SGT">Sergent</option><option value="ARC">Membre ARC</option>
+            </select>
+          </div>
+          <div class="field"><label>Régiment</label><input type="text" id="mpReg"></div>
+        </div>
+        <div class="form-row fr2">
+          <div class="field"><label>Statut</label>
+            <select id="mpStat"><option value="present">Présent</option><option value="absent">Absent</option><option value="reserve">Réserve</option></select>
+          </div>
+          <div class="field"><label>Dernière promotion</label><input type="date" id="mpPromo"></div>
+        </div>
+        <div class="form-row fr2">
+          <div class="field"><label>Régiment de RCT</label><select id="mpRegRct"></select></div>
+          <div class="field"><label>Date d'arrivée</label><input type="date" id="mpArrivee"></div>
+        </div>
+        <div class="field">
+          <label style="margin-bottom:.5rem;display:block">Formations validées</label>
+          <div style="display:flex;gap:1.2rem;flex-wrap:wrap">
+            <label class="chk-lbl"><input type="checkbox" id="mpFArc" class="chk"> ARC Alpha</label>
+            <label class="chk-lbl"><input type="checkbox" id="mpFTrooper" class="chk"> ARC Trooper</label>
+            <label class="chk-lbl"><input type="checkbox" id="mpFCmd" class="chk"> CMD de mission</label>
+            <label id="mpFNegoLabel" style="display:none;align-items:center;gap:.5rem;cursor:pointer;font-family:var(--fm);font-size:.72rem;color:var(--or)"><input type="checkbox" id="mpFNego" style="width:16px;height:16px;cursor:pointer;accent-color:var(--or)"> Négociation</label>
+          </div>
+        </div>
+        <div class="field" id="mpRemarqueField" style="border-top:1px solid var(--ln);padding-top:.9rem">
+          <label class="c-or">Remarques officiers</label>
+          <textarea id="mpRemarque" rows="3" placeholder="Comportement, notes sur l'unité..." style="width:100%;background:var(--s1);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical"></textarea>
+        </div>
+        <div style="display:flex;gap:.6rem;margin-top:.8rem">
+          <button class="btn btn-primary" style="flex:1;padding:.6rem" onclick="saveMemberProfile()">Enregistrer les modifications</button>
+        </div>
+      </div>
+
+      <!-- Stats résumé -->
+      <div class="mb7 grid g4">
+        <div class="stat-card"><div class="stat-v" id="mpCmdTotal">0</div><div class="stat-l">CMD Mission</div></div>
+        <div class="stat-card"><div class="stat-v" id="mpBlameCount">0</div><div class="stat-l">Blâmes</div></div>
+        <div class="stat-card"><div class="stat-v" id="mpAbsCount">0</div><div class="stat-l">Absences</div></div>
+        <div class="stat-card"><div class="stat-v" id="mpEligStatus" style="font-size:1.3rem">-</div><div class="stat-l">Promo</div></div>
+      </div>
+
+      <!-- Statut de formation Bleu : bascule reservee aux LT et plus -->
+      <div id="mpBleuBox" style="display:none;margin-bottom:1.3rem;padding:.9rem 1rem;background:var(--s2);border:1px solid var(--ln);border-left:3px solid #6f9bff">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap">
+          <div style="min-width:0">
+            <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:#6f9bff;text-transform:uppercase">// Formation Bleu</div>
+            <div id="mpBleuState" style="font-size:.95rem;font-weight:600;margin-top:.25rem">-</div>
+            <div id="mpBleuHint" style="font-size:.72rem;color:var(--dm);margin-top:.15rem"></div>
+          </div>
+          <button id="mpBleuBtn" class="sbtn" style="display:none" onclick="toggleBleu()">Marquer forme</button>
+        </div>
+      </div>
+
+      <!-- Barre de progression promotion -->
+      <div id="mpPromoProgress" class="mb7"></div>
+
+      <!-- Informations personnelles (visible à tous, modifiable CPT+) -->
+      <div id="mpInfoView" style="display:none;margin-bottom:1rem;padding:.9rem 1rem;background:var(--s2);border:1px solid var(--ln);border-left:3px solid var(--ac)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+          <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:var(--ac);text-transform:uppercase">// Informations personnelles</div>
+          <button id="mpInfoEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.6rem" onclick="toggleInfoEdit()"><i data-lucide="pencil"></i>Modifier</button>
+        </div>
+        <div id="mpInfoViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">-</div>
+        <div id="mpInfoEditZone" style="display:none">
+          <textarea id="mpInfoInline" rows="3" placeholder="Discord, disponibilités, infos RP..." style="width:100%;background:var(--s1);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical;margin-bottom:.5rem"></textarea>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end">
+            <button class="sm sbtn" onclick="toggleInfoEdit()">Annuler</button>
+            <button class="sm sbtn green" onclick="saveInfoOnly()">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remarques officiers (visible CPT+/Amirauté/BRS, modifiable CPT+/Amirauté) -->
+      <div id="mpRemarqueView" style="display:none;margin-bottom:1.3rem;padding:.9rem 1rem;background:var(--s2);border:1px solid var(--ln);border-left:3px solid var(--or)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+          <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:var(--or);text-transform:uppercase">// Remarques officiers</div>
+          <button id="mpRemarqueEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.6rem" onclick="toggleRemarqueEdit()"><i data-lucide="pencil"></i>Modifier</button>
+        </div>
+        <div id="mpRemarqueViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">-</div>
+        <div id="mpRemarqueEditZone" style="display:none">
+          <textarea id="mpRemarqueInline" rows="3" placeholder="Comportement, notes sur l'unité..." style="width:100%;background:var(--s1);border:1px solid var(--ln);color:var(--tx);padding:.5rem .6rem;font-family:var(--ff);font-size:.8rem;outline:none;resize:vertical;margin-bottom:.5rem"></textarea>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end">
+            <button class="sm sbtn" onclick="toggleRemarqueEdit()">Annuler</button>
+            <button class="sm sbtn green" onclick="saveRemarqueOnly()">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglets internes -->
+      <div style="display:flex;gap:.3rem;border-bottom:1px solid var(--ln);margin-bottom:1rem;flex-wrap:wrap">
+        <button class="nav-tab-sm nav-tab on" data-mpt="missions" onclick="mpTab('missions')">CMD Missions</button>
+        <button class="nav-tab-sm nav-tab" data-mpt="timeline" onclick="mpTab('timeline')">Parcours</button>
+        <button class="nav-tab-sm nav-tab" data-mpt="medals" onclick="mpTab('medals')">Médailles</button>
+        <button class="nav-tab-sm nav-tab" data-mpt="blames" onclick="mpTab('blames')">Blâmes</button>
+        <button class="nav-tab-sm nav-tab" data-mpt="absences" onclick="mpTab('absences')">Absences</button>
+        <button class="nav-tab-sm nav-tab" data-mpt="reports" onclick="mpTab('reports')">Rapports</button>
+      </div>
+      <div id="mpTabMissions" class="mp-tab-content"></div>
+      <div id="mpTabTimeline" class="mp-tab-content" style="display:none"></div>
+      <div id="mpTabMedals" class="mp-tab-content" style="display:none"></div>
+      <div id="mpTabBlames" class="mp-tab-content" style="display:none"></div>
+      <div id="mpTabAbsences" class="mp-tab-content" style="display:none"></div>
+      <div id="mpTabReports" class="mp-tab-content" style="display:none"></div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('memberProfileModal')">Fermer</button>
+      <button class="btn btn-primary" id="mpEditToggleBtn" style="display:none" onclick="toggleMpEdit()">Modifier la fiche</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GMOD CONNECT -->
+<div class="modal-bg" id="gmodModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-h">
+      <div><span class="k">// GARRY'S MOD</span><h3>Rejoindre le serveur</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('gmodModal')">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-b">
+      <p style="color:var(--tx2);font-size:.88rem;line-height:1.6;margin-bottom:1.2rem">
+        Lance <strong style="color:var(--tx)">Garry's Mod</strong>, ouvre la console avec <kbd style="background:var(--s3);border:1px solid var(--ln);padding:.1rem .4rem;border-radius:var(--r1);font-family:var(--fm);font-size:.8rem">F10</kbd> et colle la commande ci-dessous :
+      </p>
+      <div style="display:flex;align-items:center;gap:.5rem;background:var(--s1);border:1px solid var(--ac);padding:.8rem 1rem">
+        <code id="gmodCmd" style="font-family:var(--fm);font-size:.85rem;color:var(--ac);flex:1;user-select:all">connect cw.cosmos-community.fr</code>
+        <button class="sbtn blue" onclick="copyGmodCmd()" id="gmodCopyBtn" style="padding:.3rem .7rem;font-size:.7rem;white-space:nowrap">Copier</button>
+      </div>
+      <p style="color:var(--dm);font-size:.75rem;margin-top:.8rem;font-family:var(--fm)">
+        Astuce : sélectionne le texte et appuie sur Ctrl+C, ou clique sur "Copier".
+      </p>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-ghost" onclick="closeModal('gmodModal')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TOUR DE BIENVENUE -->
+<div class="modal-bg" id="tourModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-h">
+      <div><span class="k">// BIENVENUE</span><h3 id="tourTitle">Bienvenue dans le dashboard ARC Alpha</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeTour()">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+    <div class="modal-b">
+      <div id="tourIcon" style="text-align:center;font-size:2.5rem;margin-bottom:1rem"></div>
+      <p id="tourText" style="font-size:.9rem;line-height:1.6;color:var(--tx2);text-align:center;min-height:80px"></p>
+      <div id="tourDots" style="display:flex;justify-content:center;gap:.5rem;margin-top:1.5rem"></div>
+    </div>
+    <div class="modal-f" style="justify-content:space-between">
+      <button class="btn btn-ghost" onclick="closeTour()">Passer</button>
+      <div style="display:flex;gap:.6rem">
+        <button class="btn btn-ghost" id="tourPrev" onclick="tourStep(-1)" style="display:none">Précédent</button>
+        <button class="btn btn-primary" id="tourNext" onclick="tourStep(1)">Suivant</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TOOLBAR -->
+<div class="edit-toolbar" id="editToolbar">
+  <span class="lbl">// Mode édition actif</span>
+  <button class="sbtn green" onclick="saveEdits()">Sauvegarder</button>
+  <button class="sbtn danger" onclick="toggleEditMode()">Quitter</button>
+  <span class="st" id="editSt"></span>
+</div>
+</div><!-- #app -->
+
+<footer>
+  <div class="foot-in">
+    <div><div class="foot-brand"><span class="foot-logo" role="img" aria-label="ARC Alpha"></span><span><b>ARC</b>&nbsp;ALPHA</span></div><p data-e="foot_desc">Unité d'élite de la Grande Armée de la République. Site officiel - Cosmos Community.</p></div>
+    <div><h4>Navigation</h4><ul><li role="link" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="nav('home')">Accueil</li><li role="link" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="nav('about')">L'unité</li><li role="link" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="nav('recruitment')">Recrutement</li><li role="link" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="nav('dashboard')">Dashboard</li></ul></div>
+    <div><h4>Cosmos Community</h4><ul>
+      <li role="link" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="window.open('https://discord.gg/TURhQkcb9X','_blank')" style="cursor:pointer;display:flex;align-items:center;gap:.5rem">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;color:#5865F2"><path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03z"/></svg>
+        Discord
+      </li>
+      <li role="link" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="openGmodConnect()" style="cursor:pointer;display:flex;align-items:center;gap:.5rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M10 10l2-2 2 2M12 8v5"/></svg>
+        Garry's Mod
+      </li>
+      <li role="link" tabindex="0" onkeydown="if(event.key===\'Enter\')this.click()" onclick="window.open('https://sites.google.com/view/clone-wars-rp-cosmos','_blank')" style="cursor:pointer;display:flex;align-items:center;gap:.5rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        Clone Wars RP
+      </li>
+    </ul></div>
+  </div>
+  <div class="foot-bar"><span>// ARC ALPHA - CLASSIFIED OMEGA</span><span><span class="on-dot"></span>OPÉRATIONNEL</span></div>
+</footer>
+<div id="globalTooltip"></div>
+<script src="js/utils.js"></script>
+<script src="js/data.js"></script>
+<script src="js/state.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/modules/overview.js"></script>
+<script src="js/modules/cmd.js"></script>
+<script src="js/modules/roster.js"></script>
+<script src="js/modules/formations.js"></script>
+<script src="js/modules/entrainements.js"></script>
+<script src="js/modules/blames.js"></script>
+<script src="js/modules/absences.js"></script>
+<script src="js/modules/reports.js"></script>
+<script src="js/modules/rapports.js"></script>
+<script src="js/modules/missions.js"></script>
+<script src="js/modules/announces.js"></script>
+<script src="js/modules/reglement.js"></script>
+<script src="js/modules/documents.js"></script>
+<script src="js/modules/personnages.js"></script>
+<script src="js/modules/tasks.js"></script>
+<script src="js/modules/polls.js"></script>
+<script src="js/modules/chat.js"></script>
+<script src="js/modules/monespace.js"></script>
+<script src="js/modules/admin.js"></script>
+<script src="js/modules/journal.js"></script>
+<script src="js/modules/debug.js"></script>
+<script src="js/modules/discord.js"></script>
+<script src="js/modules/recrutements.js"></script>
+<script src="js/modules/indian.js"></script>
+<script src="js/modules/calendrier.js"></script>
+<script src="js/modules/stats.js"></script>
+<script src="js/modules/historique.js"></script>
+<script src="js/notifications.js"></script>
+<script src="js/app.js"></script>
+</body></html>
