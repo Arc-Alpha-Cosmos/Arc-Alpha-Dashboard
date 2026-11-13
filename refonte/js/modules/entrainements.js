@@ -119,9 +119,9 @@ function renderEntrainements(){
     const shown=labels.slice(0,3).map(esc).join(", ");
     const more=labels.length>3?` <span class="c-dm">+${labels.length-3}</span>`:"";
     const com=a.commentaire?` <span style="color:var(--dm);cursor:help" title="${esc(a.commentaire)}">💬</span>`:"";
-    const pl=actParts(a);const part=pl.length?`<div style="color:var(--dm);font-size:.72rem;margin-top:.15rem">+ ${esc(pl.join(", "))}</div>`:"";
+    const pl=actParts(a);const part=pl.length?`<div style="color:var(--dm);font-size:.74rem;margin-top:.15rem">+ ${esc(pl.join(", "))}</div>`:"";
     return `<tr>
-      <td><span style="font-family:var(--fm);font-size:.68rem;color:${tc};border:1px solid ${tc}44;background:${tc}11;padding:.15rem .5rem;border-radius:var(--r1)">${esc(a.type)||"-"}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.74rem;color:${tc};border:1px solid ${tc}44;background:${tc}11;padding:.15rem .5rem;border-radius:var(--r1)">${esc(a.type)||"-"}</span></td>
       <td><span style="font-size:.82rem;color:var(--tx)">${esc(a.intitule)||"-"}</span>${com}</td>
       <td><span style="font-size:.8rem;color:var(--tx)" title="${esc(labels.join(", "))}">${shown||"-"}${more}</span>${part}</td>
       <td><span class="mono-dm">${a.date?fmtDate(a.date):"-"}</span></td>
@@ -148,7 +148,7 @@ function populateActMembers(q){
   const ql=(q||"").trim().toLowerCase();
   const members=sortMembers((state.members||[]).filter(m=>(m.categorie||"effectif")!=="blacklist"))
     .filter(m=>!ql||[m.nom,m.matricule,m.grade].some(v=>v&&String(v).toLowerCase().includes(ql)));
-  if(!members.length){box.innerHTML='<p style="color:var(--dm);font-size:.72rem;padding:.4rem;margin:0">Aucun membre</p>';actMembersChanged();return;}
+  if(!members.length){box.innerHTML='<p style="color:var(--dm);font-size:.74rem;padding:.4rem;margin:0">Aucun membre</p>';actMembersChanged();return;}
   box.innerHTML=members.map(m=>{
     const on=_actSel.has(String(m.id))?" checked":"";
     return `<label class="act-mrow">

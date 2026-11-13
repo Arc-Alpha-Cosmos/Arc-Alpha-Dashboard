@@ -493,7 +493,7 @@ function renderQuickActions(){
       <svg viewBox="0 0 24 24" fill="none" stroke="${c.color}" stroke-width="2" style="width:26px;height:26px;flex-shrink:0">${c.icon}</svg>
       <div>
         <div style="font-family:var(--fs);font-size:1.6rem;font-weight:700;color:${c.color};line-height:1">${c.count}</div>
-        <div style="font-size:.72rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">${c.label}</div>
+        <div style="font-size:.74rem;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em">${c.label}</div>
       </div>
       <svg viewBox="0 0 24 24" fill="none" stroke="var(--dm)" stroke-width="2" style="width:16px;height:16px;margin-left:auto;flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
     </div>`).join("");
@@ -597,10 +597,10 @@ function renderCmdMode(){
         const elig = getEligibility(m);
         return `<li>
           <span class="cmd-dot" style="background:${stc}"></span>
-          <span style="color:${gc};font-family:var(--fm);font-size:.7rem;font-weight:700;min-width:60px">${esc(m.matricule)}</span>
+          <span style="color:${gc};font-family:var(--fm);font-size:.74rem;font-weight:700;min-width:60px">${esc(m.matricule)}</span>
           <span style="flex:1;color:var(--tx2);font-size:.78rem">${esc(m.nom)||"-"}</span>
           <span class="cmd-tag" style="background:color-mix(in srgb,${gc} 12%,transparent);color:${gc}">${esc(m.grade)}</span>
-          ${elig.eligible===true?`<span style="color:var(--gr);font-size:.7rem" title="Éligible promotion">▲</span>`:""}
+          ${elig.eligible===true?`<span style="color:var(--gr);font-size:.74rem" title="Éligible promotion">▲</span>`:""}
         </li>`;
       }).join("")}
     </ul>
@@ -609,14 +609,14 @@ function renderCmdMode(){
   setBlock("cm-rapports","var(--or)",`
     <div class="cmd-section-title">// RAPPORTS SEMAINE</div>
     ${missing.length===0
-      ? `<div style="color:var(--gr);font-family:var(--fm);font-size:.72rem;padding:.5rem 0">✓ Tous les rapports reçus</div>`
+      ? `<div style="color:var(--gr);font-family:var(--fm);font-size:.74rem;padding:.5rem 0">✓ Tous les rapports reçus</div>`
       : `<ul class="cmd-list">
           ${missing.slice(0,5).map(m=>`<li>
             <span class="cmd-dot" style="background:var(--rd)"></span>
-            <span style="font-family:var(--fm);font-size:.72rem;color:var(--rd)">${esc(m.matricule)}</span>
+            <span style="font-family:var(--fm);font-size:.74rem;color:var(--rd)">${esc(m.matricule)}</span>
             <span style="color:var(--tx2);font-size:.75rem">${esc(m.nom)||"-"}</span>
           </li>`).join("")}
-          ${missing.length>5?`<li style="color:var(--dm);font-size:.7rem">+${missing.length-5} autres…</li>`:""}
+          ${missing.length>5?`<li style="color:var(--dm);font-size:.74rem">+${missing.length-5} autres…</li>`:""}
         </ul>`
     }
   `);
@@ -624,7 +624,7 @@ function renderCmdMode(){
   setBlock("cm-polls","var(--vi)",`
     <div class="cmd-section-title">// SONDAGES ACTIFS</div>
     ${openPolls.length===0
-      ? `<div style="color:var(--dm);font-family:var(--fm);font-size:.72rem;padding:.5rem 0">Aucun sondage en cours</div>`
+      ? `<div style="color:var(--dm);font-family:var(--fm);font-size:.74rem;padding:.5rem 0">Aucun sondage en cours</div>`
       : `<ul class="cmd-list">
           ${openPolls.slice(0,4).map(p=>{
             const votes = getPollVotes(p.id).length;
@@ -644,7 +644,7 @@ function renderCmdMode(){
       ${state.activity.filter(a=>!isSensitiveLog(a.text)).slice(0,6).map(a=>`<li>
         <span class="cmd-dot" style="background:var(--ac);opacity:.5"></span>
         <span style="flex:1;font-size:.75rem;color:var(--tx2)">${escTrunc(a.text,55)}</span>
-        <span style="font-family:var(--fm);font-size:.62rem;color:var(--dm);flex-shrink:0">${fmtDate(a.created_at)}</span>
+        <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);flex-shrink:0">${fmtDate(a.created_at)}</span>
       </li>`).join("") || `<li class="c-dm">Aucune activité</li>`}
     </ul>
   `);
@@ -652,15 +652,15 @@ function renderCmdMode(){
   setBlock("cm-absences","var(--ye)",`
     <div class="cmd-section-title">// ABSENCES EN COURS</div>
     ${absActive.length===0
-      ? `<div style="color:var(--gr);font-family:var(--fm);font-size:.72rem;padding:.5rem 0">✓ Aucune absence signalée</div>`
+      ? `<div style="color:var(--gr);font-family:var(--fm);font-size:.74rem;padding:.5rem 0">✓ Aucune absence signalée</div>`
       : `<ul class="cmd-list">
           ${absActive.slice(0,5).map(a=>`<li>
             <span class="cmd-dot" style="background:var(--ye)"></span>
-            <span style="font-family:var(--fm);font-size:.72rem;color:var(--ye)">${esc(memberLabel(a.member_id,a.member_name).split(" ")[0])}</span>
-            <span style="flex:1;color:var(--tx2);font-size:.73rem">${esc(a.reason)||"-"}</span>
-            <span style="font-family:var(--fm);font-size:.62rem;color:var(--dm)">→ ${fmtDate(a.end_date)}</span>
+            <span style="font-family:var(--fm);font-size:.74rem;color:var(--ye)">${esc(memberLabel(a.member_id,a.member_name).split(" ")[0])}</span>
+            <span style="flex:1;color:var(--tx2);font-size:.74rem">${esc(a.reason)||"-"}</span>
+            <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm)">→ ${fmtDate(a.end_date)}</span>
           </li>`).join("")}
-          ${absActive.length>5?`<li style="color:var(--dm);font-size:.7rem">+${absActive.length-5} autres…</li>`:""}
+          ${absActive.length>5?`<li style="color:var(--dm);font-size:.74rem">+${absActive.length-5} autres…</li>`:""}
         </ul>`
     }
   `);
@@ -716,7 +716,7 @@ function renderOvKpis(){
   const cards=[];
   const kpi=(o)=>cards.push(`<div class="kpi${o.tab?" go":""}" style="--kc:${o.c}" ${o.tab?`role="button" tabindex="0" onclick="dashTab('${escJs(o.tab)}')" onkeydown="if(event.key==='Enter')dashTab('${escJs(o.tab)}')"`:""}>
       <span class="ic">${navIconHtml(o.ic)}</span><span class="v">${o.v}${o.small?`<small>${esc(o.small)}</small>`:""}</span><span class="l">${esc(o.l)}</span><span class="s">${esc(o.s||"")}</span></div>`);
-  kpi({l:"Effectif",v:total,small:"/ "+cible,s:total>=cible?"cible atteinte":(cible-total)+" place"+(cible-total>1?"s":"")+" à pourvoir",c:total>=cible?"var(--gr)":"var(--ac)",ic:"users",tab:"roster"});
+  kpi({l:"Effectif",v:total,small:"/ "+cible,s:(total>=cible?"cible atteinte":(cible-total)+" place"+(cible-total>1?"s":"")+" à pourvoir")+((_res=>_res?" · "+_res+" en réserve":"")((state.members||[]).filter(m=>(m.categorie||"effectif")==="reserve").length)),c:total>=cible?"var(--gr)":"var(--ac)",ic:"users",tab:"roster"});
   kpi({l:"Présents",v:present,small:total?Math.round(present/total*100)+" %":"",s:abs?abs+" absence"+(abs>1?"s":"")+" en cours":"aucune absence en cours",c:!total?"var(--dm)":(present/total>=.7?"var(--gr)":present/total>=.4?"var(--or)":"var(--rd)"),ic:"user-check",tab:"absences"});
   kpi({l:"Rapports de la semaine",v:done,small:"/ "+due,s:due?(due-done?(due-done)+" en attente":"tout est rendu"):"personne n'est attendu",c:due&&done<due?"var(--or)":"var(--gr)",ic:"file-check",tab:"reports"});
   kpi({l:"Blâmes actifs",v:blames,s:blames?"à suivre":"aucun en cours",c:blames?"var(--rd)":"var(--gr)",ic:"alert-triangle",tab:lvl>=GRADE_LEVEL.MAJ?"blames":null});

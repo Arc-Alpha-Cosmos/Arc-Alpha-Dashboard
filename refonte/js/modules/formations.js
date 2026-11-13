@@ -46,9 +46,9 @@ function renderFormations(){
     return `<tr>
       <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.formateur_id,f.formateur,"-"))}</span></td>
       <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.eleve_id,f.eleve,"-"))}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${esc(f.formation)||"-"}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.74rem;color:var(--ac)">${esc(f.formation)||"-"}</span></td>
       <td><span class="mono-dm">${f.date?fmtDate(f.date):"-"}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.68rem;color:${sc};border:1px solid ${sc}44;background:${sc}11;padding:.15rem .5rem;border-radius:var(--r1)">${esc(f.statut)||"-"}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.74rem;color:${sc};border:1px solid ${sc}44;background:${sc}11;padding:.15rem .5rem;border-radius:var(--r1)">${esc(f.statut)||"-"}</span></td>
       <td class="ta-r"><div class="row-end">
         ${canEditF&&canEditFormationType(f.formation)?`<button class="sm sbtn" onclick="openFormationModal('${escJs(f.id)}')">Modifier</button>
 `:""}

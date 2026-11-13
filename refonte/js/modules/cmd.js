@@ -157,7 +157,7 @@ function renderCmd(){
   const cmdEditable=canEdit("cmd");
   tbody.innerHTML=state.cmdmissions.map(c=>`<tr>
     <td class="nm">${esc(memberLabel(c.member_id,c.member_name))}</td>
-    <td><span style="font-family:var(--fm);font-size:.7rem;color:${cmdEstAjust(c)?"var(--or)":(c.points===1?"var(--ac)":"var(--vi)")}">${esc(c.role)||"Chef"}</span></td>
+    <td><span style="font-family:var(--fm);font-size:.74rem;color:${cmdEstAjust(c)?"var(--or)":(c.points===1?"var(--ac)":"var(--vi)")}">${esc(c.role)||"Chef"}</span></td>
     <td style="font-family:var(--fm);font-size:.82rem;color:${cmdEstAjust(c)?"var(--or)":"var(--ac)"}">${cmdEstAjust(c)?esc(cmdSigne(c.points)):(c.points||"-")}</td>
     <td style="color:var(--tx2);font-size:.82rem">${esc(c.mission_name)||"-"}</td>
     <td class="mono-dm">${fmtDate(c.date||c.created_at)}</td>

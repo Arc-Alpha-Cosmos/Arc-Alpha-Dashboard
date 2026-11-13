@@ -49,7 +49,7 @@
   .rec-banner{flex-direction:column;gap:var(--sp6);align-items:flex-start}
   .modal-f{flex-direction:column}.modal-f .btn,.modal-f .sbtn{width:100%;justify-content:center}
   .modal.tall .modal-f{flex-direction:row;gap:var(--sp4);padding:var(--sp4) 4.4rem var(--sp4) var(--sp6)}
-  .modal.tall .modal-f .btn{flex:1 1 40%;width:auto;min-width:0;padding:var(--sp4) var(--sp4);font-size:.64rem}
+  .modal.tall .modal-f .btn{flex:1 1 40%;width:auto;min-width:0;padding:var(--sp4) var(--sp4);font-size:.74rem}
   .modal.tall .modal-h{padding:var(--sp5) var(--sp6)}
   .modal.tall .modal-b{padding:var(--sp5) var(--sp6)}
 }
@@ -130,7 +130,7 @@
   .tbl.cards tbody tr:nth-child(even){background:var(--s1)}
   .tbl.cards tbody td{display:flex;justify-content:space-between;align-items:center;gap:var(--sp4);padding:var(--sp1) 0;
     border:0;text-align:left!important;min-height:26px}
-  .tbl.cards tbody td::before{content:attr(data-label);font-family:var(--fm);font-size:.58rem;letter-spacing:.1em;
+  .tbl.cards tbody td::before{content:attr(data-label);font-family:var(--fm);font-size:.74rem;letter-spacing:.1em;
     text-transform:uppercase;color:var(--dm);flex:0 0 36%}
   .tbl.cards tbody td[data-label=""]::before,.tbl.cards tbody td:not([data-label])::before{content:none}
   .tbl.cards tbody td>div{justify-content:flex-end!important;flex-wrap:wrap}
@@ -154,7 +154,44 @@
   .side-item .pulse,.dash-side{animation:none;transition:none}
 }
 @media(max-width:1180px){#syncLbl{display:none}}
-@media(max-width:560px){.user-chip .uc-info{display:none}.navi{gap:var(--sp4);padding:0 var(--sp5)}.brand-txt{font-size:.7rem}}
+@media(max-width:560px){.user-chip .uc-info{display:none}.navi{gap:var(--sp4);padding:0 var(--sp5)}.brand-txt{font-size:.74rem}}
 @media(max-width:620px){.modal .grid.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* burger des 1180 px : la barre de droite (horloge, cloche, compte) a besoin de la place des onglets */
 @media(max-width:1180px){.nav-tabs{display:none}.nav-burger{display:block}}
+/* v2 : ajustements */
+@media(max-width:980px){
+  .nav-site,.app-mode .cmdk-hint{display:none!important}
+  .dash-main{padding:var(--sp6) var(--sp6) calc(var(--sp10) + 44px)}
+  .dash-tab>.sec-head:first-child h2,.ov-top .sec-head h2{font-size:1.25rem}
+  .sync-wrap{padding:0 var(--sp3)}
+}
+@media(max-width:720px){
+  .tbl.cards tbody td{height:auto;min-height:30px}
+  .tbl.cards tbody tr{border-radius:var(--r2);border:1px solid var(--ln)!important;background:var(--s1)}
+  .tbl.cards tbody td::before{font-family:var(--fr);font-size:.76rem;letter-spacing:0;text-transform:none}
+  #memberProfileModal>.modal{border-radius:0;border-left:0}
+  .ov-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chat-panel{right:var(--sp4);left:var(--sp4);width:auto}
+  .roster-search{min-width:0}
+}
+/* v2.1 */
+@media(max-width:1180px){.sync-wrap{background:none;border:0;padding:0;height:auto}}
+@media(max-width:980px){.ov-lower{grid-template-columns:1fr}}
+/* v2.2 : tablette. Entre 721 et 980 px les tableaux larges passent en cartes
+   sur deux colonnes, au lieu de defiler dans leur panneau. */
+@media(min-width:721px) and (max-width:980px){
+  .tbl.cards{display:block}
+  .tbl.cards thead{display:none}
+  .tbl.cards tbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp5);padding:var(--sp5)}
+  .tbl.cards tbody tr{display:flex;flex-direction:column;gap:var(--sp1);padding:var(--sp5) var(--sp6);border:1px solid var(--ln)!important;
+    background:var(--bg2);border-radius:var(--r2)}
+  .tbl.cards tbody tr:has(td[colspan]){grid-column:1/-1;border:0!important;background:none}
+  .tbl.cards tbody td{display:flex;justify-content:space-between;align-items:center;gap:var(--sp4);padding:var(--sp1) 0;border:0;
+    height:auto;min-height:30px;text-align:left!important}
+  .tbl.cards tbody td::before{content:attr(data-label);font-family:var(--fr);font-size:.76rem;color:var(--dm);flex:0 0 36%}
+  .tbl.cards tbody td[data-label=""]::before,.tbl.cards tbody td:not([data-label])::before{content:none}
+  .tbl.cards tbody td>div{justify-content:flex-end!important;flex-wrap:wrap}
+  .tbl.cards .row-go{display:none}
+}
+@media(max-width:980px){.tbl.cards .fbadges{justify-content:flex-end;min-width:0}}
+@media(max-width:980px){.tbl.cards tbody td:has(>div>.row-go){display:none}}

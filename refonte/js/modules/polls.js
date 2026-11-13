@@ -115,7 +115,7 @@ function renderPolls(){
     return `<div class="mb6 panel">
       <div class="panel-head">
         <h3><span class="pk">//</span> ${esc(poll.question)}</h3>
-        <span style="font-family:var(--fm);font-size:.62rem;color:${closed?"var(--rd)":"var(--gr)"};letter-spacing:.08em">
+        <span style="font-family:var(--fm);font-size:.74rem;color:${closed?"var(--rd)":"var(--gr)"};letter-spacing:.08em">
           ${closed?"● CLOS":"● ACTIF"}
         </span>
       </div>
@@ -140,12 +140,12 @@ function renderPolls(){
           </div>`;
         }).join("")}
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--ln)">
-          <span style="font-family:var(--fm);font-size:.65rem;color:var(--dm)">
+          <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm)">
             ${total} vote${total>1?"s":""} · Par ${esc(userLabel(poll.created_by_id,poll.created_by))}${poll.expires_at?" · Expire le "+fmtDate(poll.expires_at):""}
           </span>
           ${canManage?`<div style="display:flex;gap:.4rem">
-            ${!closed?`<button class="sbtn" style="padding:.2rem .5rem;font-size:.6rem" onclick="closePoll('${escJs(poll.id)}')">Clore</button>`:""}
-            <button class="sbtn danger" style="padding:.2rem .5rem;font-size:.6rem" onclick="deletePoll('${escJs(poll.id)}')">Supprimer</button>
+            ${!closed?`<button class="sbtn" style="padding:.2rem .5rem;font-size:.74rem" onclick="closePoll('${escJs(poll.id)}')">Clore</button>`:""}
+            <button class="sbtn danger" style="padding:.2rem .5rem;font-size:.74rem" onclick="deletePoll('${escJs(poll.id)}')">Supprimer</button>
           </div>`:""}
         </div>
       </div>

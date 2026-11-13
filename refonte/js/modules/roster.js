@@ -78,6 +78,17 @@ async function applyCategorie(memberId,target,date,raison){
 }
 
 let rosterSearchQ="",rosterFilterGrade="",rosterFilterStatus="";
+/* Lecture par defaut : le tableau se lit d'un coup d'oeil et un clic sur une
+   ligne ouvre la fiche. « Modifier » fait apparaitre les champs en ligne et les
+   actions (reserve, blacklist, suppression). Le choix est memorise. */
+let rosterEditMode=!!uiPrefs.get("rosterEdit",false);
+function toggleRosterEdit(){
+  rosterEditMode=!rosterEditMode;uiPrefs.set("rosterEdit",rosterEditMode);renderRoster();
+}
+function rowOpen(ev,id){
+  if(ev&&ev.target&&ev.target.closest("button,a,input,select,textarea,label,.nm-link,.info-help"))return;
+  openMemberProfile(id);
+}
 const rosterSearchDebounced=debounce(v=>{rosterSearchQ=v;renderRoster();},150);
 /* Places par grade, telles que le commandement les a fixees. Confirmees sans
    changement le 2026-10-14 : le corps d'officiers garde ses 8 postes. Les
@@ -167,7 +178,14 @@ function renderRoster(){
   const sorted=sortMembers(list);
   if(!sorted.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty"><p>${filtre?"Aucun membre ne correspond à ces critères":"Aucun membre"}</p></div></td></tr>`;return;}
   const stColors={present:"var(--gr)",absent:"var(--rd)",reserve:"var(--dm)"};
-  const editable=canEdit("roster");
+  const _peutModifier=canEdit("roster")||canMoveCategorie();
+  const _eb=document.getElementById("rosterEditBtn");
+  if(_eb){
+    _eb.style.display=_peutModifier?"":"none";
+    _eb.classList.toggle("on",rosterEditMode&&_peutModifier);
+    _eb.innerHTML=navIconHtml(rosterEditMode?"check":"pencil")+(rosterEditMode?"Terminer":"Modifier");
+  }
+  const editable=canEdit("roster")&&rosterEditMode;
   const _todayR=new Date().toISOString().slice(0,10);
   const absNowBy=new Map();
   (state.absences||[]).forEach(a=>{
@@ -190,12 +208,12 @@ function renderRoster(){
       : `<span style="color:var(--tx2);font-size:.82rem">${esc(m.regiment||"-")}</span>`;
 
     const rctCol=m.regiment_rct?(REGIMENT_COLORS[m.regiment_rct]||"var(--ac)"):"var(--dm)";
-    const rctCell=`<span style="font-family:var(--fm);font-size:.72rem;font-weight:${m.regiment_rct?"700":"400"};color:${rctCol}">${esc(m.regiment_rct||"-")}</span>`;
+    const rctCell=`<span style="font-family:var(--fm);font-size:.74rem;font-weight:${m.regiment_rct?"700":"400"};color:${rctCol}">${esc(m.regiment_rct||"-")}</span>`;
 
-    const formBadge=(on,label,color)=>on?`<span style="display:inline-flex;align-items:center;padding:1px 6px;border-radius:var(--r3);font-family:var(--fm);font-size:.6rem;font-weight:600;letter-spacing:.02em;white-space:nowrap;background:${color}1f;color:${color};border:1px solid ${color}55">${label}</span>`:"";
+    const formBadge=(on,label,color)=>on?`<span class="fbadge" style="--c:${color}">${label}</span>`:"";
     const _isCpt=(GRADE_LEVEL[m.grade]||0)>=3;
     const _forms=`${formBadge(m.f_arc_alpha,"Alpha",FORMATION_COLORS.alpha)}${formBadge(m.f_arc_trooper,"Trooper",FORMATION_COLORS.trooper)}${formBadge(m.f_cmd_mission,"CMD",FORMATION_COLORS.cmd)}${formBadge(m.f_bleu,"Bleu",FORMATION_COLORS.bleu)}${_isCpt?formBadge(m.f_negociation,"Négo",FORMATION_COLORS.nego):""}`;
-    const formCell=`<div style="display:flex;gap:3px;flex-wrap:wrap;align-items:center">${_forms||'<span style="color:var(--dm);font-size:.6rem">-</span>'}</div>`;
+    const formCell=`<div class="fbadges">${_forms||'<span class="c-dm">-</span>'}</div>`;
 
     const _absNow=absNowBy.get(String(m.id));
     const statCell=_absNow
@@ -210,14 +228,14 @@ function renderRoster(){
       : `<span class="st-badge st-${esc(m.status||"present")}"><span class="d"></span>${esc(stLabel(m.status))}</span>`;
 
     const promoCell=editable
-      ? `<input type="date" class="inline-inp" value="${esc(m.date_promo||"")}" style="width:105px;font-family:var(--fm);font-size:.7rem"
+      ? `<input type="date" class="inline-inp" value="${esc(m.date_promo||"")}" style="width:105px;font-family:var(--fm);font-size:.74rem"
           onchange="savePromoDate('${escJs(m.id)}',this.value)" title="${daysSince!==null?daysSince+" j depuis la dernière promo":""}">`
       : `<span class="mono-dm">${m.date_promo?fmtDate(m.date_promo):"-"}</span>`;
 
-    const canMove=canMoveCategorie();
+    const canMove=canMoveCategorie()&&rosterEditMode;
     const moveBtns=canMove
-      ? `<button class="sbtn" style="padding:.18rem .45rem;font-size:.6rem" onclick="openCatModal('${escJs(m.id)}','reserve')" title="Passer en réserve"><i data-lucide="shield"></i> Réserve</button>
-         <button class="sbtn" style="padding:.18rem .45rem;font-size:.6rem;border-color:rgba(255,59,92,.4);color:var(--rd)" onclick="openCatModal('${escJs(m.id)}','blacklist')" title="Passer en blacklist"><i data-lucide="ban"></i> BL</button>`
+      ? `<button class="sbtn" style="padding:.18rem .45rem;font-size:.74rem" onclick="openCatModal('${escJs(m.id)}','reserve')" title="Passer en réserve"><i data-lucide="shield"></i> Réserve</button>
+         <button class="sbtn" style="padding:.18rem .45rem;font-size:.74rem;border-color:rgba(255,59,92,.4);color:var(--rd)" onclick="openCatModal('${escJs(m.id)}','blacklist')" title="Passer en blacklist"><i data-lucide="ban"></i> BL</button>`
       : "";
     const delBtn=editable
       ? `<button class="icon-btn del" onclick="deleteMember('${escJs(m.id)}')" title="Supprimer" aria-label="Supprimer">
@@ -225,7 +243,7 @@ function renderRoster(){
       : "";
     const delCell=moveBtns+delBtn;
 
-    return `<tr>
+    return `<tr class="row-link" onclick="rowOpen(event,'${escJs(m.id)}')">
       <td>${gradeCell}</td>
       <td><div style="display:flex;align-items:center;gap:.6rem">
         <span class="grade-avatar" style="--gc:${GRADE_COLORS[m.grade||'ARC']}">${(m.matricule||'?').replace(/[^A-Z0-9]/gi,'').slice(-2).toUpperCase()}</span>
@@ -238,8 +256,8 @@ function renderRoster(){
       <td>${statCell}</td>
       <td>${promoCell}</td>
       <td style="font-family:var(--fm);font-size:.82rem;color:var(--ac);text-align:center" title="${cmdTotal} CMD de mission">${cmdTotal}</td>
-      <td style="text-align:center;font-size:1rem" title="${esc(elig.reason)}">${elig.eligible===null?"-":elig.eligible?"✅":"⛔"}</td>
-      <td class="ta-r"><div style="display:flex;justify-content:flex-end;gap:.3rem;align-items:center;flex-wrap:nowrap">${delCell}</div></td>
+      <td title="${esc(elig.reason)}">${elig.eligible===null?'<span class="c-dm">-</span>':elig.eligible?'<span class="badge ok">Éligible</span>':`<span class="badge">${(p=>!p?"En cours":(p.days<p.needDays?(p.needDays-p.days)+" j":(p.hasCmd&&p.cmd<p.needCmd?(Math.round((p.needCmd-p.cmd)*10)/10)+" CMD":"En cours")))(elig.progress)}</span>`}</td>
+      <td class="ta-r"><div style="display:flex;justify-content:flex-end;gap:.3rem;align-items:center;flex-wrap:nowrap">${delCell||`<span class="row-go">${navIconHtml("chevron-right")}</span>`}</div></td>
     </tr>`;
   }).join("");
 }
@@ -915,15 +933,15 @@ function renderPromoProgress(m, elig){
 
   let bars=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
-      <span style="font-family:var(--fm);font-size:.7rem;color:var(--dm);letter-spacing:.08em">PROGRESSION VERS</span>
+      <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);letter-spacing:.08em">PROGRESSION VERS</span>
       <span class="grade-pill" style="color:${nextColor};font-family:var(--fs);font-weight:700;font-size:.8rem;letter-spacing:.05em">${p.nextGrade}</span>
     </div>`;
 
   bars+=`
     <div style="margin-bottom:.6rem">
       <div style="display:flex;justify-content:space-between;margin-bottom:.3rem">
-        <span style="font-size:.72rem;color:var(--tx2)">Temps de service</span>
-        <span style="font-family:var(--fm);font-size:.72rem;color:${daysColor}">${p.days}/${p.needDays} j ${p.daysPct>=100?"✓":""}</span>
+        <span style="font-size:.74rem;color:var(--tx2)">Temps de service</span>
+        <span style="font-family:var(--fm);font-size:.74rem;color:${daysColor}">${p.days}/${p.needDays} j ${p.daysPct>=100?"✓":""}</span>
       </div>
       <div style="height:8px;background:var(--s3);border-radius:var(--r1);overflow:hidden;position:relative">
         <div class="promo-bar-fill" style="height:100%;width:100%;background:${daysColor};border-radius:var(--r1);transform-origin:left center;transform:scaleX(0);transition:transform var(--t4) var(--e-io)" data-target="${p.daysPct}"></div>
@@ -934,10 +952,10 @@ function renderPromoProgress(m, elig){
     bars+=`
     <div style="margin-bottom:.3rem">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:var(--sp2);margin-bottom:.3rem">
-        <span style="font-size:.72rem;color:var(--tx2)">Points CMD de mission</span>
+        <span style="font-size:.74rem;color:var(--tx2)">Points CMD de mission</span>
         <span style="display:inline-flex;align-items:center;gap:var(--sp3)">
-          <span style="font-family:var(--fm);font-size:.72rem;color:${cmdColor}">${p.cmd}/${p.needCmd} ${p.cmdPct>=100?"✓":""}</span>
-          ${canAjusterCmd()?`<button class="sbtn" style="padding:var(--sp1) var(--sp3);font-size:.6rem"
+          <span style="font-family:var(--fm);font-size:.74rem;color:${cmdColor}">${p.cmd}/${p.needCmd} ${p.cmdPct>=100?"✓":""}</span>
+          ${canAjusterCmd()?`<button class="sbtn" style="padding:var(--sp1) var(--sp3);font-size:.74rem"
             title="Corriger le total sans supprimer de mission"
             onclick="ajusterCmdPoints('${escJs(m.id)}')">Ajuster</button>`:""}
         </span>

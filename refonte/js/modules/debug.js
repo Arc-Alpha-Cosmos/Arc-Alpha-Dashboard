@@ -162,19 +162,19 @@ function renderManualTests(){
   const list=MANUAL_TESTS.map(def=>Object.assign({def},manualTestState(def)))
     .sort((a,b)=>rank[a.status]-rank[b.status]||String(b.def.date).localeCompare(String(a.def.date)));
   const c=manualTestCounts();
-  const small="padding:.26rem .55rem;font-size:.6rem";
+  const small="padding:.26rem .55rem;font-size:.74rem";
   const item=x=>{
     const d=x.def,st=MANUAL_STATUS[x.status],r=x.r;
     const btn=(s,label,cls)=>x.status===s?"":
       `<button class="sbtn${cls?" "+cls:""}" style="${small}" onclick="setManualTest('${escJs(d.id)}','${s}')">${label}</button>`;
     const noteLine=r&&r.status==="ko"&&r.note
-      ?`<div style="margin-top:.35rem;font-size:.7rem;color:${x.stale?"var(--dm)":"var(--rd)"};word-break:break-word">${x.stale?"Ancienne note":"Ta note"} : ${esc(r.note)}</div>`:"";
+      ?`<div style="margin-top:.35rem;font-size:.74rem;color:${x.stale?"var(--dm)":"var(--rd)"};word-break:break-word">${x.stale?"Ancienne note":"Ta note"} : ${esc(r.note)}</div>`:"";
     const who=r&&r.at?` · ${esc(r.by||"?")}, ${fmtDate(r.at)}`:"";
     return `<div style="padding:.5rem .65rem;margin-bottom:.4rem;border:1px solid var(--ln);border-left:2px solid ${st.color};background:var(--s2)">
       <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap">
         <div style="flex:1 1 260px;min-width:0">
-          <div style="font-size:.78rem;font-weight:600;color:var(--tx)">${x.fresh?'<span style="font-family:var(--fm);font-size:.6rem;letter-spacing:.08em;color:var(--bg,#050810);background:var(--ac);padding:.08rem .35rem;margin-right:.4rem;vertical-align:middle">NOUVEAU</span>':""}${esc(d.titre)}</div>
-          <div style="font-family:var(--fm);font-size:.6rem;color:var(--dm);margin-top:.1rem">${esc(d.zone)} · ajouté le ${fmtDate(d.date)} · <span style="color:${st.color}">${st.label}${x.stale?", à retester":""}</span>${x.status!=="todo"?who:""}</div>
+          <div style="font-size:.78rem;font-weight:600;color:var(--tx)">${x.fresh?'<span style="font-family:var(--fm);font-size:.74rem;letter-spacing:.08em;color:var(--bg,#050810);background:var(--ac);padding:.08rem .35rem;margin-right:.4rem;vertical-align:middle">NOUVEAU</span>':""}${esc(d.titre)}</div>
+          <div style="font-family:var(--fm);font-size:.74rem;color:var(--dm);margin-top:.1rem">${esc(d.zone)} · ajouté le ${fmtDate(d.date)} · <span style="color:${st.color}">${st.label}${x.stale?", à retester":""}</span>${x.status!=="todo"?who:""}</div>
         </div>
         <div style="display:flex;gap:.3rem;flex-wrap:wrap">
           ${btn("ok","Ça marche","green")}${x.status==="ko"
@@ -183,9 +183,9 @@ function renderManualTests(){
         </div>
       </div>
       <details data-k="how-${d.id}" style="margin-top:.3rem">
-        <summary style="cursor:pointer;font-size:.66rem;color:var(--ac)">Comment tester</summary>
-        <ol style="margin:.35rem 0 .3rem 1.1rem;padding:0;font-size:.72rem;color:var(--tx2);line-height:1.55">${d.etapes.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>
-        <div style="font-size:.72rem;color:var(--tx2);line-height:1.5"><span style="color:var(--gr);font-weight:600">Résultat attendu :</span> ${esc(d.attendu)}</div>
+        <summary style="cursor:pointer;font-size:.74rem;color:var(--ac)">Comment tester</summary>
+        <ol style="margin:.35rem 0 .3rem 1.1rem;padding:0;font-size:.74rem;color:var(--tx2);line-height:1.55">${d.etapes.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>
+        <div style="font-size:.74rem;color:var(--tx2);line-height:1.5"><span style="color:var(--gr);font-weight:600">Résultat attendu :</span> ${esc(d.attendu)}</div>
       </details>
       ${noteLine}
     </div>`;
@@ -196,8 +196,8 @@ function renderManualTests(){
   const todo=list.filter(x=>x.status==="todo"&&!x.fresh);
   const failed=list.filter(x=>x.status==="ko");
   const done=list.filter(x=>x.status==="ok");
-  const title=(t,color)=>`<div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:${color};margin:1.1rem 0 .45rem">${t}</div>`;
-  const hint=t=>`<div style="font-size:.72rem;color:var(--tx2);margin:-.2rem 0 .5rem">${t}</div>`;
+  const title=(t,color)=>`<div style="font-family:var(--fm);font-size:.74rem;letter-spacing:.12em;color:${color};margin:1.1rem 0 .45rem">${t}</div>`;
+  const hint=t=>`<div style="font-size:.74rem;color:var(--tx2);margin:-.2rem 0 .5rem">${t}</div>`;
   const chip=(n,label,color)=>`<div style="flex:1 1 130px;padding:.45rem .7rem;border:1px solid var(--ln);border-left:2px solid ${color};background:var(--s2)">
     <div style="font-weight:700;font-size:1.05rem;color:${color}">${n}</div>
     <div class="mono-xs">${label}</div></div>`;
@@ -211,7 +211,7 @@ function renderManualTests(){
     +hint("Claude doit corriger ces points. Il te redemandera le test une fois la correction faite.")+failed.map(item).join("");
   if(!fresh.length&&!todo.length&&!failed.length)
     html+=`<div style="margin-top:1rem;font-size:.8rem;color:var(--gr)">Rien à tester pour l'instant. Les prochaines vérifications apparaîtront ici.</div>`;
-  if(done.length)html+=`<details data-k="tests-done" style="margin-top:1.1rem"><summary style="cursor:pointer;font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:var(--gr)">// DÉJÀ VALIDÉS (${done.length})</summary><div style="margin-top:.45rem;opacity:.75">${done.map(item).join("")}</div></details>`;
+  if(done.length)html+=`<details data-k="tests-done" style="margin-top:1.1rem"><summary style="cursor:pointer;font-family:var(--fm);font-size:.74rem;letter-spacing:.12em;color:var(--gr)">// DÉJÀ VALIDÉS (${done.length})</summary><div style="margin-top:.45rem;opacity:.75">${done.map(item).join("")}</div></details>`;
   return html;
 }
 
@@ -341,7 +341,7 @@ function renderDebug(){
   const openKeys=new Set([...el.querySelectorAll("details[data-k][open]")].map(d=>d.dataset.k));
   const closedKeys=new Set([...el.querySelectorAll("details[data-k]:not([open])")].map(d=>d.dataset.k));
   el.innerHTML=renderManualTests()+
-    `<pre id="dbgReportPre" style="display:none;white-space:pre-wrap;word-break:break-word;margin-top:1rem;padding:.7rem;background:var(--s2);border:1px solid var(--ln);font-family:var(--fm);font-size:.64rem;color:var(--tx2);max-height:240px;overflow:auto"></pre>`;
+    `<pre id="dbgReportPre" style="display:none;white-space:pre-wrap;word-break:break-word;margin-top:1rem;padding:.7rem;background:var(--s2);border:1px solid var(--ln);font-family:var(--fm);font-size:.74rem;color:var(--tx2);max-height:240px;overflow:auto"></pre>`;
   el.querySelectorAll("details[data-k]").forEach(d=>{
     if(openKeys.has(d.dataset.k))d.open=true;
     else if(closedKeys.has(d.dataset.k))d.open=false;

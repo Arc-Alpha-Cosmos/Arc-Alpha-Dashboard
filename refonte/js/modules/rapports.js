@@ -86,7 +86,7 @@ function rapPiecesHtml(r){
     return `<a class="rap-pj-doc" href="${lien}" target="_blank" rel="noopener noreferrer" title="${nom}"><span class="rap-pj-t">${p.t==="fichier"?"fichier":"lien"}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${nom}</span>${p.taille?`<span class="rap-pj-s">${esc(rapTaille(p.taille))}</span>`:""}</a>`;
   }).join("");
   return `<div style="margin-top:.9rem">
-      <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dm);margin-bottom:.45rem">Pièces jointes (${ps.length})</div>
+      <div style="font-family:var(--fm);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dm);margin-bottom:.45rem">Pièces jointes (${ps.length})</div>
       <div class="rap-pj-grid">${items}</div>
     </div>`;
 }
@@ -515,7 +515,7 @@ function discordRapportPayload(r,validateur){
 const RAP_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
 function rapPill(r){
   const e=rapEtat(r);
-  return `<span style="font-family:var(--fm);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.12rem .45rem;border:1px solid ${e.color};color:${e.color}">${esc(e.label)}</span>`;
+  return `<span class="badge" style="color:${e.color};background:color-mix(in srgb,${e.color} 13%,transparent)">${esc(e.label)}</span>`;
 }
 async function rapDelete(id){
   const r=rapById(id);
@@ -590,15 +590,15 @@ function openRapportView(id){
   const b=document.getElementById("rapViewBody");
   if(b){
     b.innerHTML=`<div style="display:flex;align-items:center;gap:.55rem;flex-wrap:wrap;margin-bottom:.7rem">
-        ${rapPill(r)}<span style="font-family:var(--fm);font-size:.62rem;color:var(--dm)">${esc(r.type||"Autre")}</span>
-        ${r.published_at?`<span style="font-family:var(--fm);font-size:.62rem;color:var(--gr)">publié sur Discord</span>`:""}
+        ${rapPill(r)}<span style="font-family:var(--fm);font-size:.74rem;color:var(--dm)">${esc(r.type||"Autre")}</span>
+        ${r.published_at?`<span style="font-family:var(--fm);font-size:.74rem;color:var(--gr)">publié sur Discord</span>`:""}
       </div>
       <div style="font-family:var(--fs);font-size:1rem;font-weight:700;margin-bottom:.25rem">${escTrunc(r.titre,RAP_TITRE_MAX)}</div>
-      <div style="font-family:var(--fm);font-size:.62rem;color:var(--dm);margin-bottom:.9rem">${esc(r.author_name||"?")}${r.author_grade?" · "+esc(r.author_grade):""} · ${fmtDate(r.created_at)}</div>
+      <div style="font-family:var(--fm);font-size:.74rem;color:var(--dm);margin-bottom:.9rem">${esc(r.author_name||"?")}${r.author_grade?" · "+esc(r.author_grade):""} · ${fmtDate(r.created_at)}</div>
       <div style="white-space:pre-wrap;font-size:.86rem;color:var(--tx);line-height:1.7;background:var(--s2);border:1px solid var(--ln);padding:.9rem 1rem">${esc(r.contenu||"")}</div>
       ${rapPiecesHtml(r)}
       ${(st==="refuse"&&r.refus_motif)?`<div style="margin-top:.8rem;padding:.6rem .8rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25);font-size:.82rem"><b style="color:var(--rd)">Motif du refus :</b> ${escTrunc(r.refus_motif,RAP_MOTIF_MAX)}</div>`:""}
-      ${r.reviewed_at?`<div style="margin-top:.6rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">${st==="valide"?"Validé":"Refusé"} par ${esc(r.reviewer_name||"?")} le ${fmtDate(r.reviewed_at)}</div>`:""}`;
+      ${r.reviewed_at?`<div style="margin-top:.6rem;font-family:var(--fm);font-size:.74rem;color:var(--dm)">${st==="valide"?"Validé":"Refusé"} par ${esc(r.reviewer_name||"?")} le ${fmtDate(r.reviewed_at)}</div>`:""}`;
   }
   const f=document.getElementById("rapViewFoot");
   if(f){

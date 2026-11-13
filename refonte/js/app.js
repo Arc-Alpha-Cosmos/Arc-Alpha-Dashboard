@@ -562,3 +562,16 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&typeof _notifOpen!=
 
 /* Bandeau hors ligne : suit l'indicateur de synchronisation. */
 function offlineBar(on){const b=document.getElementById("offlineBar");if(b)b.classList.toggle("show",!!on&&!!session);}
+
+/* Raccourci « / » : place le curseur dans la recherche de l'onglet affiche,
+   ou ouvre la recherche globale s'il n'en a pas. */
+document.addEventListener("keydown",e=>{
+  if(e.key!=="/"||e.ctrlKey||e.metaKey||e.altKey||!session)return;
+  const t=e.target;
+  if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"||t.tagName==="SELECT"||t.isContentEditable))return;
+  if(document.querySelector(".modal-bg.show"))return;
+  const tab=document.querySelector('.dash-tab[data-dtc="'+_activeTab+'"]');
+  const inp=tab&&[...tab.querySelectorAll(".roster-search input")].find(x=>x.offsetParent!==null);
+  e.preventDefault();
+  if(inp)inp.focus();else openCmdK();
+});

@@ -85,14 +85,14 @@ function renderUsers(){
     const rc=ROLE_COLORS[u.role]||"var(--ac)";
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:.7rem">
-        <div style="width:28px;height:28px;border-radius:var(--r1);background:linear-gradient(135deg,var(--ac),var(--vi));display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-weight:700;font-size:.62rem;color:var(--bg)">${esc((u.display||"?")[0].toUpperCase())}</div>
+        <div style="width:28px;height:28px;border-radius:var(--r1);background:linear-gradient(135deg,var(--ac),var(--vi));display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-weight:700;font-size:.74rem;color:var(--bg)">${esc((u.display||"?")[0].toUpperCase())}</div>
         <div class="nm" style="font-size:.88rem">${esc(u.display)||"?"} ${isMe?'<span class="mono-xs">(vous)</span>':""}</div>
       </div></td>
-      <td><span style="font-family:var(--fm);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:${rc};padding:.2rem .55rem;border:1px solid ${rc}44;background:${rc}11">${ROLE_BADGES[u.role]||"● MEMBRE"}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:${rc};padding:.2rem .55rem;border:1px solid ${rc}44;background:${rc}11">${ROLE_BADGES[u.role]||"● MEMBRE"}</span></td>
       <td>${(()=>{
         const lm=u.member_id?state.members.find(m=>m.id==u.member_id):null;
-        if(lm)return `<div style="display:flex;align-items:center;gap:.5rem"><span style="font-family:var(--fm);font-size:.6rem;color:var(--ac);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);padding:.12rem .4rem;border-radius:var(--r1)">${esc(lm.grade)||"?"}</span><span style="font-size:.78rem;color:var(--tx)">${esc(lm.matricule)}${lm.nom?" - "+esc(lm.nom):""}</span></div>`;
-        return `<span style="font-size:.72rem;color:var(--dm);font-style:italic">Non lié</span>`;
+        if(lm)return `<div style="display:flex;align-items:center;gap:.5rem"><span style="font-family:var(--fm);font-size:.74rem;color:var(--ac);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);padding:.12rem .4rem;border-radius:var(--r1)">${esc(lm.grade)||"?"}</span><span style="font-size:.78rem;color:var(--tx)">${esc(lm.matricule)}${lm.nom?" - "+esc(lm.nom):""}</span></div>`;
+        return `<span style="font-size:.74rem;color:var(--dm);font-style:italic">Non lié</span>`;
       })()}</td>
       <td class="ta-r"><div class="row-end">
         <button class="sm sbtn" onclick="openEditUser('${escJs(u.id)}')"><i data-lucide="pencil"></i>Modifier</button>
@@ -451,9 +451,9 @@ function renderTickets(){
     const isOpen=t.status==="open";
     const notFound=t.account_exists===false;
     return `<tr style="${isOpen?"":"opacity:.5"}">
-      <td><span style="font-family:var(--fm);font-size:.8rem;color:var(--tx)">${esc(t.user_ident)||"?"}</span>${notFound?'<span style="color:var(--rd);font-size:.6rem;margin-left:.4rem">compte introuvable</span>':''}</td>
+      <td><span style="font-family:var(--fm);font-size:.8rem;color:var(--tx)">${esc(t.user_ident)||"?"}</span>${notFound?'<span style="color:var(--rd);font-size:.74rem;margin-left:.4rem">compte introuvable</span>':''}</td>
       <td><span style="font-size:.78rem;color:var(--tx2)">${esc(t.message)||"-"}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.68rem;color:${isOpen?"var(--ye)":"var(--gr)"}">${isOpen?"⏳ En attente":"✓ Traité"}</span><br><span class="mono-xs">${fmtDT(t.created_at)}</span></td>
+      <td><span style="font-family:var(--fm);font-size:.74rem;color:${isOpen?"var(--ye)":"var(--gr)"}">${isOpen?"⏳ En attente":"✓ Traité"}</span><br><span class="mono-xs">${fmtDT(t.created_at)}</span></td>
       <td class="ta-r"><div class="row-end">
         ${isOpen&&!notFound?`<button class="sm sbtn green" onclick="openResetTicket('${escJs(t.id)}')">Réinitialiser</button>`:""}
         ${isOpen?`<button class="sm sbtn" onclick="dismissTicket('${escJs(t.id)}')">Ignorer</button>`:""}
@@ -568,7 +568,7 @@ async function loadModConvList(){
       const prev=(p.last||"").length>32?(p.last.slice(0,32)+"…"):(p.last||"");
       return`<tr class="ptr" onclick="openModThread('${escJs(p.a)}','${p.b}')">
         <td style="font-weight:600">${esc(na.name)} <span class="c-dm">↔</span> ${esc(nb.name)}</td>
-        <td style="color:var(--tx2);font-size:.82rem">${esc(prev)}<div style="font-family:var(--fm);font-size:.6rem;color:var(--dm);margin-top:.15rem">${t}</div></td>
+        <td style="color:var(--tx2);font-size:.82rem">${esc(prev)}<div style="font-family:var(--fm);font-size:.74rem;color:var(--dm);margin-top:.15rem">${t}</div></td>
         <td style="text-align:right;font-family:var(--fm);color:var(--dm)">${p.count}</td>
       </tr>`;
     }).join("")+'</tbody></table></div>';

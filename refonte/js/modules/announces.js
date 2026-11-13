@@ -17,7 +17,7 @@ function renderAnnounces(){
         <div class="ann-t">${esc(a.title)||"Sans titre"}${a.pinned?'<span class="ann-pinbadge">ÉPINGLÉ</span>':""}</div>
         <div class="ann-d">${esc(a.content)||""}</div>
         <div class="ann-meta">${fmtDate(a.created_at)}
-          ${canDel?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteAnnounce('${escJs(a.id)}')">Supprimer</button>`:""}
+          ${canDel?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.74rem" onclick="deleteAnnounce('${escJs(a.id)}')">Supprimer</button>`:""}
         </div>
       </div>
     </div>`).join("");

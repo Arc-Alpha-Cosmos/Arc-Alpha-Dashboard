@@ -169,17 +169,17 @@ function renderReports(){
       <td class="nm nm-link" tabindex="0" role="button" onkeydown="if(event.key==='Enter')this.click()" onclick="openMemberProfile('${escJs(m.id)}')" title="Voir la fiche complète">${esc(m.nom)||"-"}</td>
       <td><span class="grade-pill gp-${esc((m.grade||"arc").toLowerCase())}" style="color:${GRADE_COLORS[m.grade||"ARC"]}">${esc(m.grade||"ARC")}</span></td>
       <td><div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">${isEx?
-        `<span style="font-family:var(--fm);font-size:.68rem;color:${exColor}"${exTitle?` title="${esc(exTitle)}"`:""}>${exLabel}</span>
+        `<span style="font-family:var(--fm);font-size:.74rem;color:${exColor}"${exTitle?` title="${esc(exTitle)}"`:""}>${exLabel}</span>
          ${manEx&&canEx?`<button class="sm sbtn" onclick="liftReportExempt('${escJs(m.id)}')">Rétablir</button>`:""}`:
-        creditOnly?`<span style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid var(--gr);background:rgba(34,217,122,.12);color:var(--gr);font-family:var(--fm);font-size:.72rem" title="Compté automatiquement : ${CREDIT_LONG[s.credit]||"activité"} pendant cette semaine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>${creditLbl}</span>`:
+        creditOnly?`<span style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid var(--gr);background:rgba(34,217,122,.12);color:var(--gr);font-family:var(--fm);font-size:.74rem" title="Compté automatiquement : ${CREDIT_LONG[s.credit]||"activité"} pendant cette semaine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>${creditLbl}</span>`:
         `<button onclick="toggleReport('${escJs(m.id)}','${wk}')"
           style="display:inline-flex;align-items:center;gap:.5rem;padding:.38rem .8rem;border:1px solid ${hasDone?"var(--gr)":"var(--ln)"};
           background:${hasDone?"rgba(34,217,122,.12)":"transparent"};color:${hasDone?"var(--gr)":"var(--dm)"};
-          font-family:var(--fm);font-size:.72rem;cursor:pointer;transition:all .2s">
+          font-family:var(--fm);font-size:.74rem;cursor:pointer;transition:all .2s">
           ${hasDone?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>Validé':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>À valider'}
         </button>
         ${canEx?`<button class="sm sbtn" onclick="exemptReport('${escJs(m.id)}')" title="Dispenser durablement de rapport hebdomadaire">Dispenser</button>`:""}`}</div></td>
-      <td style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${hist}</td>
+      <td style="font-family:var(--fm);font-size:.74rem;color:var(--ac)">${hist}</td>
     </tr>`;
   }).join("");
 }
@@ -356,5 +356,7 @@ function applyAutoReportUI(){
 function updateNavPulses(){
   document.querySelectorAll(".side-item[data-tab]").forEach(b=>{
     const p=b.querySelector(".pulse");if(p)p.classList.toggle("show",tabPulse(b.dataset.tab));
+    const c=b.querySelector(".cnt"),v=tabCount(b.dataset.tab);
+    if(c){c.hidden=!v;c.textContent=v?v.n:"";c.classList.toggle("hot",!!(v&&v.hot));}
   });
 }

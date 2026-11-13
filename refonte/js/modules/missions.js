@@ -727,7 +727,7 @@ function renderMissionAdmin(){
     const l=misSemaine(wk), r=misRotDe(wk);
     now.innerHTML=l.length
       ? l.map(m=>`<div class="mis-row"><div class="n">${esc(m.nom||"?")}<small>${esc(m.categorie||"")}</small></div></div>`).join("")
-        +`<div style="font-family:var(--fm);font-size:.6rem;color:var(--dm);margin-top:.3rem">${
+        +`<div style="font-family:var(--fm);font-size:.74rem;color:var(--dm);margin-top:.3rem">${
             r?("figée en base"+(r.manuelle?" · tirage manuel":"")+" · "+esc(misPeriode(wk)))
              :("calculée, pas encore figée · "+esc(misPeriode(wk)))}</div>`
       : '<div class="empty"><p>Aucune mission tirable</p></div>';
@@ -742,7 +742,7 @@ function renderMissionAdmin(){
             ? '<span class="mis-tag t-dif">annonce en attente</span> <span class="c-dm">elle partira au prochain passage d\'un officier</span>'
             : '<span class="mis-tag t-fin">annonce prévue</span> <span class="c-dm">lundi à '
               +MIS_ANNONCE_HEURE+" h</span>"))
-        +' <button class="sbtn" style="padding:.14rem .45rem;font-size:.6rem;margin-left:.3rem" onclick="misAnnonceManuelle()">'
+        +' <button class="sbtn" style="padding:.14rem .45rem;font-size:.74rem;margin-left:.3rem" onclick="misAnnonceManuelle()">'
         +(faite?"Renvoyer":"Envoyer maintenant")+"</button>";
     }
   }

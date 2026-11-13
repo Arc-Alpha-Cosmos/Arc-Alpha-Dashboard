@@ -4,7 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ARC ALPHA - Centre de Commandement</title>
 <link rel="icon" type="image/png" href="img/logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
@@ -30,6 +31,7 @@
 <nav class="top-nav" aria-label="Navigation principale">
   <div class="navi">
     <button class="brand" onclick="nav('home')"><span class="brand-logo" role="img" aria-label="ARC Alpha"></span><span class="brand-txt">ARC <b>ALPHA</b></span></button>
+    <button class="nav-site" onclick="nav('home')" title="Retour au site public"><i data-lucide="arrow-left"></i>Site</button>
     <div class="nav-tabs" id="navTabs">
       <button class="nav-tab on" data-v="home" onclick="nav('home')"><i data-lucide="home" class="ti"></i>Accueil</button>
       <button class="nav-tab" data-v="about" onclick="nav('about')"><i data-lucide="info" class="ti"></i>L'unité</button>
@@ -40,7 +42,7 @@
     <div class="nav-right">
       <button class="cmdk-hint" id="cmdkHint" onclick="openCmdK()" title="Rechercher un onglet ou un membre">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Rechercher <kbd>Ctrl</kbd><kbd>K</kbd>
+        <span>Rechercher…</span><kbd>Ctrl</kbd><kbd>K</kbd>
       </button>
       <div class="hdr-clock" id="hdrClock" aria-live="off"><b id="hdrTime">--:--</b><span id="hdrDate"></span></div>
       <span class="sync-wrap" id="syncWrap" title="À jour - les modifications apparaissent automatiquement"><span class="sync-dot" id="syncDot" aria-hidden="true"></span><span id="syncLbl" class="sr-only">En ligne</span></span>
@@ -64,7 +66,7 @@
 </div>
 <div class="mob-ov" id="mobOv" onclick="closeMob()"></div>
 <div class="mob-menu" id="mobMenu">
-  <button class="mob-item on" onclick="nav('home');closeMob()">Accueil</button>
+  <button class="mob-item" onclick="nav('home');closeMob()">Accueil</button>
   <button class="mob-item" onclick="nav('about');closeMob()">L'unité</button>
   <button class="mob-item" onclick="nav('recruitment');closeMob()">Recrutement</button>
   <button class="mob-item" onclick="nav('fichecdm');closeMob()">Fiche CDM</button>
@@ -78,7 +80,7 @@
     <button class="icon-btn" onclick="toggleNotifPanel()" title="Fermer" aria-label="Fermer"><i data-lucide="x"></i></button>
   </div>
   <div class="notif-body" id="notifBody"></div>
-  <div class="notif-foot"><span style="font-family:var(--fm);font-size:.62rem;color:var(--dm)" id="notifFootTxt"></span></div>
+  <div class="notif-foot"><span style="font-family:var(--fm);font-size:.74rem;color:var(--dm)" id="notifFootTxt"></span></div>
 </div>
 <main id="app" tabindex="-1">
 
@@ -515,7 +517,7 @@
     <span class="sec-kicker">// Module 05</span>
     <div class="sec-head"><h2>Mise en situation</h2><span class="line"></span><span class="tag">Évaluation</span></div>
     <p class="lead">Le cas pratique se fait uniquement pendant la formation, avec un formateur. Il n'est pas détaillé ici pour garder l'évaluation intacte.</p>
-    <div class="box card"><h4><span class="k" style="font-family:var(--fm);font-weight:500;font-size:.6rem;color:var(--ac)">//</span>Ce qui compte le jour J</h4><ul>
+    <div class="box card"><h4><span class="k" style="font-family:var(--fm);font-weight:500;font-size:.74rem;color:var(--ac)">//</span>Ce qui compte le jour J</h4><ul>
       <li>Utiliser tous les régiments disponibles, BOS comprise.</li>
       <li>Placer ses troupes avec logique.</li>
       <li>Garder une radio propre.</li>
@@ -537,7 +539,7 @@
         <div class="side-head"><span class="side-title">Centre de commandement</span>
           <button class="icon-btn" id="sideCollapseBtn" onclick="toggleSidebar()" title="Réduire le menu" aria-label="Réduire le menu"><i data-lucide="panel-left-close"></i></button></div>
         <nav id="dashNav"></nav>
-        <div class="side-foot">// ARC ALPHA</div>
+        <div class="side-user" id="sideUser"></div>
       </aside>
       <div class="dash-main" id="dashMain">
       <nav class="crumbs" id="dashCrumbs" aria-label="Fil d'Ariane"></nav>
@@ -590,7 +592,7 @@
         <section class="panel todo" id="ovTodo" hidden>
           <div class="panel-head">
             <h3><span class="pk">//</span> À traiter <span class="tag" id="ovTodoCount" style="margin-left:.5rem"></span></h3>
-            <button class="sbtn green" id="ovAssignBtn" style="display:none;font-size:.64rem;padding:.3rem .7rem" onclick="openAssignModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Attribuer une tâche</button>
+            <button class="sbtn green" id="ovAssignBtn" style="display:none;font-size:.74rem;padding:.3rem .7rem" onclick="openAssignModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Attribuer une tâche</button>
           </div>
           <div class="panel-body flush" id="ovTodoList"></div>
         </section>
@@ -670,6 +672,7 @@
           <select class="inline-sel" id="rosterFGrade" aria-label="Filtrer par grade" onchange="rosterFilterGrade=this.value;renderRoster()"><option value="">Tous les grades</option><option>CMDM</option><option>CMD</option><option>VCMD</option><option>MAJ</option><option>CPT</option><option>LT</option><option>SGT</option><option>ARC</option></select>
           <select class="inline-sel" id="rosterFStatus" aria-label="Filtrer par statut" onchange="rosterFilterStatus=this.value;renderRoster()"><option value="">Tous les statuts</option><option value="present">Présents</option><option value="absent">Absents</option><option value="reserve">Réserve</option></select>
           <span class="tag" id="rosterCount"></span>
+          <button class="sbtn" id="rosterEditBtn" onclick="toggleRosterEdit()" style="display:none" title="Afficher les champs modifiables et les actions">Modifier</button>
           <button class="sbtn green" onclick="openMemberModal()"><i data-lucide="plus"></i>Ajouter</button>
         </div>
         <div class="plc-band" id="rosterPlaces" aria-label="Places par grade"></div>
@@ -726,12 +729,12 @@
       <!-- ONGLET ENTRAÎNEMENTS -->
       <div class="dash-tab" data-dtc="entrainements" style="display:none">
         <div class="sec-head"><h2>Entraînements</h2><span class="line"></span>
-          <select id="actFType" onchange="actFilterType=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none">
+          <select id="actFType" onchange="actFilterType=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.74rem;outline:none">
             <option value="">Tous les types</option>
             <option value="Entraînement">Entraînement</option>
             <option value="Tâche">Tâche</option>
           </select>
-          <select id="actFMember" onchange="actFilterMember=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none;max-width:200px"></select>
+          <select id="actFMember" onchange="actFilterMember=this.value;renderEntrainements()" style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.74rem;outline:none;max-width:200px"></select>
           <span class="tag" id="entrainementsCount"></span>
           <button class="sbtn green" id="addEntrainementBtn" style="display:none" onclick="openEntrainementModal()"><i data-lucide="plus"></i>Nouvelle entrée</button>
         </div>
@@ -785,7 +788,7 @@
         <div class="panel" id="recEditorPanel" style="display:none;margin-top:1rem">
           <div class="panel-head"><h3><span class="pk">//</span> Modifier les formulaires</h3>
             <select id="recEditKind" onchange="recEditorPick(this.value)"
-              style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.68rem;outline:none">
+              style="background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.3rem .5rem;font-family:var(--fm);font-size:.74rem;outline:none">
               <option value="trooper">ARC Trooper</option>
               <option value="alpha">ARC Alpha</option>
             </select>
@@ -879,9 +882,9 @@
         <div class="sec-head"><h2>En cours</h2><span class="line"></span></div>
         <div id="absActiveList"></div>
         <div class="sec-head" style="margin-top:1.5rem"><h2>Calendrier</h2><span class="line"></span>
-          <button class="sbtn" style="padding:.25rem .6rem;font-size:.65rem" onclick="absCalPrev()" aria-label="Mois précédent"><i data-lucide="chevron-left"></i></button>
-          <span id="absCalLabel" style="font-family:var(--fm);font-size:.72rem;color:var(--tx2);margin:0 .5rem"></span>
-          <button class="sbtn" style="padding:.25rem .6rem;font-size:.65rem" onclick="absCalNext()" aria-label="Mois suivant"><i data-lucide="chevron-right"></i></button>
+          <button class="sbtn" style="padding:.25rem .6rem;font-size:.74rem" onclick="absCalPrev()" aria-label="Mois précédent"><i data-lucide="chevron-left"></i></button>
+          <span id="absCalLabel" style="font-family:var(--fm);font-size:.74rem;color:var(--tx2);margin:0 .5rem"></span>
+          <button class="sbtn" style="padding:.25rem .6rem;font-size:.74rem" onclick="absCalNext()" aria-label="Mois suivant"><i data-lucide="chevron-right"></i></button>
         </div>
         <div class="mb7 panel"><div class="panel-body" id="absCalendar"></div></div>
         <div class="sec-head" style="margin-top:1.5rem"><h2>Historique</h2><span class="line"></span></div>
@@ -938,8 +941,7 @@
           </div>
         </div>
 
-        <div id="rapHookWarn" style="display:none;margin-top:1rem;font-family:var(--fm);font-size:.64rem;color:var(--or)">
-          ⚠ Salon des comptes rendus non configuré - Administration, Webhooks Discord
+        <div id="rapHookWarn" class="notice warn" style="display:none"><i data-lucide="alert-triangle"></i> Salon des comptes rendus non configuré - Administration, Webhooks Discord
         </div>
         <p id="rapNoRight" style="display:none;font-size:.8rem;color:var(--dm);margin-top:.6rem">
           Ton compte ne rédige pas et ne valide pas de compte rendu.
@@ -1070,7 +1072,7 @@
           <button class="icon-btn" onclick="calMove(-1)" title="Période précédente" aria-label="Période précédente"><i data-lucide="chevron-left"></i></button>
           <span class="cal-title" id="calTitle"></span>
           <button class="icon-btn" onclick="calMove(1)" title="Période suivante" aria-label="Période suivante"><i data-lucide="chevron-right"></i></button>
-          <button class="sbtn" style="padding:.25rem .6rem;font-size:.66rem" onclick="calToday()">Aujourd'hui</button>
+          <button class="sbtn" style="padding:.25rem .6rem;font-size:.74rem" onclick="calToday()">Aujourd'hui</button>
           <div class="seg" role="group" aria-label="Vue">
             <button type="button" id="calVMonth" class="on" onclick="calSetView('month')">Mois</button>
             <button type="button" id="calVWeek" onclick="calSetView('week')">Semaine</button>
@@ -1149,7 +1151,7 @@
                 <button class="sbtn" onclick="misRotationManuelle()">Nouveau tirage</button>
                 <button class="sbtn" id="misSeedBtn" style="display:none" onclick="misChargerDepart()">Charger la bibliothèque de départ</button>
                 <input type="text" id="misSearch" placeholder="Rechercher une mission…" autocomplete="off" oninput="misSearchDebounced(this.value)" style="flex:1;min-width:150px">
-                <select id="misFiltre" onchange="misFiltreV=this.value;renderMissionAdmin()" style="width:auto;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.4rem .5rem;font-family:var(--fm);font-size:.72rem;outline:none">
+                <select id="misFiltre" onchange="misFiltreV=this.value;renderMissionAdmin()" style="width:auto;background:var(--s2);border:1px solid var(--ln);color:var(--tx);padding:.4rem .5rem;font-family:var(--fm);font-size:.74rem;outline:none">
                   <option value="">Toutes</option>
                   <option value="actives">Actives</option>
                   <option value="off">Désactivées</option>
@@ -1161,7 +1163,7 @@
                 <div>
                   <div class="mis-sec">Tirage de la semaine en cours</div>
                   <div id="misRotNow"></div>
-                  <div id="misAnnonceEtat" style="font-family:var(--fm);font-size:.6rem;margin-top:.5rem;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap"></div>
+                  <div id="misAnnonceEtat" style="font-family:var(--fm);font-size:.74rem;margin-top:.5rem;display:flex;align-items:center;gap:.3rem;flex-wrap:wrap"></div>
                 </div>
                 <div>
                   <div class="mis-sec">Aperçu de la semaine prochaine</div>
@@ -1189,7 +1191,7 @@
                 </div>
                 <button class="sbtn green" onclick="saveEffectifCible()">Enregistrer</button>
               </div>
-              <div id="cibleHint" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);margin-top:.7rem"></div>
+              <div id="cibleHint" style="font-family:var(--fm);font-size:.74rem;color:var(--dm);margin-top:.7rem"></div>
             </div>
           </div>
 
@@ -1268,7 +1270,7 @@
           </div>
           <div class="panel" id="ticketsPanel">
           <div class="panel-head">
-            <h3><span class="pk">//</span> Tickets - Récupération mot de passe <span id="ticketCount" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
+            <h3><span class="pk">//</span> Tickets - Récupération mot de passe <span id="ticketCount" style="font-family:var(--fm);font-size:.74rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
           </div>
           <div class="panel-body flush">
             <table class="tbl cards">
@@ -1279,7 +1281,7 @@
         </div>
         <div class="panel" id="modChatPanel" style="display:none">
           <div class="panel-head">
-            <h3><span class="pk">//</span> Surveillance des messages <span style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem">ADMIN · lecture invisible</span></h3>
+            <h3><span class="pk">//</span> Surveillance des messages <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);font-weight:400;margin-left:.5rem">ADMIN · lecture invisible</span></h3>
             <button class="sbtn" onclick="loadModConvList()"><i data-lucide="refresh-cw"></i>Charger</button>
           </div>
           <div class="panel-body">
@@ -1289,7 +1291,7 @@
         </div>
         <div class="panel" id="usersPanel">
           <div class="panel-head">
-            <h3><span class="pk">//</span> Gestion des comptes <span id="userCount" style="font-family:var(--fm);font-size:.62rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
+            <h3><span class="pk">//</span> Gestion des comptes <span id="userCount" style="font-family:var(--fm);font-size:.74rem;color:var(--dm);font-weight:400;margin-left:.5rem"></span></h3>
             <div style="display:flex;gap:.5rem">
               <button class="sbtn" onclick="openUserModal('member')"><i data-lucide="plus"></i>Nouveau compte</button>
               <button class="sbtn" id="createAdminBtn" style="border-color:rgba(255,138,61,.4);color:var(--or)" onclick="openUserModal('admin')"><i data-lucide="plus"></i>Admin</button>
@@ -1312,7 +1314,7 @@
             <p class="mb6 card-b">Modifie directement les textes des pages publiques.</p>
             <button class="sbtn" onclick="toggleEditMode()" id="editModeBtn">Activer l'édition</button>
             <button class="sbtn danger" onclick="resetVitrineTexts()" style="margin-left:.5rem">Restaurer les textes d'origine</button>
-            <p class="card-b" style="margin-top:.7rem;font-size:.7rem;color:var(--dm)">Les textes modifiés ici sont enregistrés et remplacent ceux du fichier. « Restaurer » efface ces modifications pour les sections Missions, Équipement et Membres légendaires.</p>
+            <p class="card-b" style="margin-top:.7rem;font-size:.74rem;color:var(--dm)">Les textes modifiés ici sont enregistrés et remplacent ceux du fichier. « Restaurer » efface ces modifications pour les sections Missions, Équipement et Membres légendaires.</p>
           </div>
         </div>
       </div>
@@ -1357,7 +1359,7 @@
       <div class="field"><label>Mot de passe</label><input type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
       <div class="modal-err" id="loginErr">Identifiants incorrects</div>
       <div style="text-align:center;margin-top:.6rem">
-        <a onclick="openForgotModal()" style="color:var(--ac);font-size:.72rem;cursor:pointer;text-decoration:underline;font-family:var(--fm)">Mot de passe oublié ?</a>
+        <a onclick="openForgotModal()" style="color:var(--ac);font-size:.74rem;cursor:pointer;text-decoration:underline;font-family:var(--fm)">Mot de passe oublié ?</a>
       </div>
     </div>
     <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('loginModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>doLogin())">Se connecter</button></div>
@@ -1398,8 +1400,8 @@
           <button class="sbtn" style="white-space:nowrap" onclick="generateTempPassword()"><i data-lucide="zap"></i>Générer</button>
         </div>
       </div>
-      <p style="font-size:.7rem;color:var(--dm);margin-top:.3rem">Tu pourras communiquer ce mot de passe à l'utilisateur. Il pourra le changer ensuite depuis son profil.</p>
-      <div id="rtErr" style="display:none;color:var(--rd);font-size:.7rem;margin-top:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:var(--r1)"></div>
+      <p style="font-size:.74rem;color:var(--dm);margin-top:.3rem">Tu pourras communiquer ce mot de passe à l'utilisateur. Il pourra le changer ensuite depuis son profil.</p>
+      <div id="rtErr" style="display:none;color:var(--rd);font-size:.74rem;margin-top:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:var(--r1)"></div>
     </div>
     <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('resetTicketModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>confirmResetTicket())">Réinitialiser</button></div>
   </div>
@@ -1467,7 +1469,7 @@
           <label class="chk-lbl"><input type="checkbox" id="mFArc" class="chk"> ARC Alpha</label>
           <label class="chk-lbl"><input type="checkbox" id="mFTrooper" class="chk"> ARC Trooper</label>
           <label class="chk-lbl"><input type="checkbox" id="mFCmd" class="chk"> CMD de mission</label>
-          <label id="mFNegoLabel" style="display:none;align-items:center;gap:.5rem;cursor:pointer;font-family:var(--fm);font-size:.72rem;color:var(--or)"><input type="checkbox" id="mFNego" style="width:16px;height:16px;cursor:pointer;accent-color:var(--or)"> Négociation</label>
+          <label id="mFNegoLabel" style="display:none;align-items:center;gap:.5rem;cursor:pointer;font-family:var(--fm);font-size:.74rem;color:var(--or)"><input type="checkbox" id="mFNego" style="width:16px;height:16px;cursor:pointer;accent-color:var(--or)"> Négociation</label>
         </div>
       </div>
       <!-- SECTION REMARQUE (CPT+ écriture, BRS lecture) -->
@@ -1711,7 +1713,7 @@
         </button>
         <div class="rte-sep"></div>
         <!-- Effacer style -->
-        <button class="rte-btn" onclick="rteExec('removeFormat')" title="Effacer le formatage" style="font-size:.65rem;gap:.2rem">
+        <button class="rte-btn" onclick="rteExec('removeFormat')" title="Effacer le formatage" style="font-size:.74rem;gap:.2rem">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19H5l3-4-8-8 4-4 15 15"/><line x1="18" y1="22" x2="22" y2="22"/></svg>
         </button>
       </div>
@@ -1784,11 +1786,11 @@
         <div class="field"><label>Date</label><input type="date" id="actDate"></div>
       </div>
       <div class="field"><label>Intitulé</label><input type="text" id="actIntitule" autocomplete="off" placeholder="ex: Entraînement au tir de précision"></div>
-      <div class="field"><label>Membres concernés <span id="actMembersCount" style="color:var(--dm);font-family:var(--fm);font-size:.62rem;text-transform:none;letter-spacing:0"></span></label>
+      <div class="field"><label>Membres concernés <span id="actMembersCount" style="color:var(--dm);font-family:var(--fm);font-size:.74rem;text-transform:none;letter-spacing:0"></span></label>
         <input type="text" id="actMemberSearch" autocomplete="off" placeholder="Filtrer la liste…" oninput="populateActMembers(this.value)" style="margin-bottom:.4rem">
         <div id="actMembersBox" class="act-mlist"></div>
       </div>
-      <div class="field"><label>Autres participants <span id="actPartCount" style="color:var(--dm);font-family:var(--fm);font-size:.62rem;text-transform:none;letter-spacing:0"></span></label>
+      <div class="field"><label>Autres participants <span id="actPartCount" style="color:var(--dm);font-family:var(--fm);font-size:.74rem;text-transform:none;letter-spacing:0"></span></label>
         <div id="actPartChips" class="act-chips"></div>
         <input type="text" id="actParticipants" list="actParticipantsList" autocomplete="off" placeholder="Matricule, puis Entrée pour l'ajouter" onkeydown="actPartKey(event)" onblur="actPartAdd()">
         <datalist id="actParticipantsList"></datalist>
@@ -1810,7 +1812,7 @@
     <div class="modal-b">
       <input type="hidden" id="recKind">
       <div id="recBody"></div>
-      <div id="recErr" style="display:none;color:var(--rd);font-size:.7rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25)"></div>
+      <div id="recErr" style="display:none;color:var(--rd);font-size:.74rem;margin-bottom:.5rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.25)"></div>
     </div>
     <div class="modal-f">
       <button class="btn btn-ghost" onclick="closeModal('recModal')">Annuler</button>
@@ -1836,7 +1838,7 @@
       </div>
       <div class="field"><label>Déroulé</label>
         <textarea id="rapContenu" rows="11" maxlength="3500" oninput="rapCount()" placeholder="Ce qui s'est passé, qui était présent, le résultat, ce qui doit être signalé au commandement."></textarea>
-        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">
+        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.74rem;color:var(--dm)">
           <span>Relu par un officier avant publication</span><span id="rapCountLbl">0 / 3500</span>
         </div>
       </div>
@@ -1850,10 +1852,10 @@
           <button type="button" class="sbtn" id="rapPieceFileBtn" onclick="document.getElementById('rapPieceFile').click()">Parcourir…</button>
           <input type="file" id="rapPieceFile" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf" style="display:none" onchange="rapPieceFichier(this)">
         </div>
-        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.6rem;color:var(--dm)">
+        <div style="display:flex;justify-content:space-between;gap:.6rem;margin-top:.3rem;font-family:var(--fm);font-size:.74rem;color:var(--dm)">
           <span>Images et PDF, 3 Mo au maximum par fichier</span><span id="rapPiecesCount">0 / 5</span>
         </div>
-        <div id="rapPieceHint" style="display:none;margin-top:.4rem;font-family:var(--fm);font-size:.6rem;color:var(--or)"></div>
+        <div id="rapPieceHint" style="display:none;margin-top:.4rem;font-family:var(--fm);font-size:.74rem;color:var(--or)"></div>
       </div>
       <div id="rapErr" class="form-err" style="display:none"></div>
     </div>
@@ -1910,7 +1912,7 @@
         <label style="display:flex;align-items:center;gap:.45rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="misActif" checked> Active dans la bibliothèque</label>
         <label style="display:flex;align-items:center;gap:.45rem;font-size:.8rem;cursor:pointer"><input type="checkbox" id="misExclu"> Écarter du prochain tirage</label>
       </div>
-      <div id="misErr" style="display:none;color:var(--rd);font-size:.7rem;margin-top:.7rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:var(--r1)"></div>
+      <div id="misErr" style="display:none;color:var(--rd);font-size:.74rem;margin-top:.7rem;padding:.4rem .6rem;background:rgba(255,59,92,.08);border:1px solid rgba(255,59,92,.3);border-radius:var(--r1)"></div>
     </div>
     <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('missionModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>saveMission())">Enregistrer</button></div>
   </div>
@@ -2007,23 +2009,23 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:1.2rem">
         <button id="roleBtn-member" onclick="selectRoleType('member')" style="padding:.8rem;border:2px solid var(--ac);background:rgba(0,229,255,.08);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ac)">Membre ARC</span>
-          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Accès + édition selon grade</span>
+          <span style="font-family:var(--fs);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ac)">Membre ARC</span>
+          <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);text-align:center">Accès + édition selon grade</span>
         </button>
         <button id="roleBtn-admin" onclick="selectRoleType('admin')" style="padding:.8rem;border:2px solid var(--ln);background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--or)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--or)">Admin</span>
-          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Accès total + gestion</span>
+          <span style="font-family:var(--fs);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--or)">Admin</span>
+          <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);text-align:center">Accès total + gestion</span>
         </button>
         <button id="roleBtn-brs" onclick="selectRoleType('brs')" style="padding:.8rem;border:2px solid var(--ln);background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c5cff" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c5cff">BRS</span>
-          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Renseignement · lecture seule</span>
+          <span style="font-family:var(--fs);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7c5cff">BRS</span>
+          <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);text-align:center">Renseignement · lecture seule</span>
         </button>
         <button id="roleBtn-amiraute" onclick="selectRoleType('amiraute')" style="padding:.8rem;border:2px solid var(--ln);background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:.35rem;transition:all .25s">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ye)" stroke-width="2"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
-          <span style="font-family:var(--fs);font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ye)">Amirauté</span>
-          <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);text-align:center">Accès total · édition</span>
+          <span style="font-family:var(--fs);font-size:.74rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ye)">Amirauté</span>
+          <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);text-align:center">Accès total · édition</span>
         </button>
       </div>
       <input type="hidden" id="nuRole" value="member">
@@ -2036,7 +2038,7 @@
         <select id="nuMemberLink">
           <option value="">Aucun lien</option>
         </select>
-        <span style="font-family:var(--fm);font-size:.6rem;color:var(--dm);margin-top:.3rem;display:block">Le grade du membre s'applique automatiquement au compte</span>
+        <span style="font-family:var(--fm);font-size:.74rem;color:var(--dm);margin-top:.3rem;display:block">Le grade du membre s'applique automatiquement au compte</span>
       </div>
       <div class="modal-err" id="userModalErr">Les mots de passe ne correspondent pas</div>
     </div>
@@ -2163,7 +2165,7 @@
     <div class="modal-b" style="max-height:70vh;overflow-y:auto">
       <!-- Edition rapide -->
       <div id="mpEditSection" style="display:none;margin-bottom:1.2rem;padding:1rem;background:var(--s2);border:1px solid var(--ln)">
-        <div style="font-family:var(--fm);font-size:.62rem;color:var(--ac);letter-spacing:.1em;margin-bottom:.8rem">// MODIFIER LA FICHE</div>
+        <div class="sub-h" style="color:var(--ac);margin-bottom:var(--sp5)">Modifier la fiche</div>
         <div class="form-row fr2">
           <div class="field"><label>Matricule</label><input type="text" id="mpMat"></div>
           <div class="field"><label>Nom RP</label><input type="text" id="mpNom"></div>
@@ -2195,7 +2197,7 @@
             <label class="chk-lbl"><input type="checkbox" id="mpFArc" class="chk"> ARC Alpha</label>
             <label class="chk-lbl"><input type="checkbox" id="mpFTrooper" class="chk"> ARC Trooper</label>
             <label class="chk-lbl"><input type="checkbox" id="mpFCmd" class="chk"> CMD de mission</label>
-            <label id="mpFNegoLabel" style="display:none;align-items:center;gap:.5rem;cursor:pointer;font-family:var(--fm);font-size:.72rem;color:var(--or)"><input type="checkbox" id="mpFNego" style="width:16px;height:16px;cursor:pointer;accent-color:var(--or)"> Négociation</label>
+            <label id="mpFNegoLabel" style="display:none;align-items:center;gap:.5rem;cursor:pointer;font-family:var(--fm);font-size:.74rem;color:var(--or)"><input type="checkbox" id="mpFNego" style="width:16px;height:16px;cursor:pointer;accent-color:var(--or)"> Négociation</label>
           </div>
         </div>
         <div class="field" id="mpRemarqueField" style="border-top:1px solid var(--ln);padding-top:.9rem">
@@ -2219,9 +2221,9 @@
       <div id="mpBleuBox" style="display:none;margin-bottom:1.3rem;padding:.9rem 1rem;background:var(--s2);border:1px solid var(--ln);border-left:3px solid #6f9bff">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap">
           <div style="min-width:0">
-            <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:#6f9bff;text-transform:uppercase">// Formation Bleu</div>
+            <div class="sub-h" style="color:#6f9bff">Formation Bleu</div>
             <div id="mpBleuState" style="font-size:.95rem;font-weight:600;margin-top:.25rem">-</div>
-            <div id="mpBleuHint" style="font-size:.72rem;color:var(--dm);margin-top:.15rem"></div>
+            <div id="mpBleuHint" style="font-size:.74rem;color:var(--dm);margin-top:.15rem"></div>
           </div>
           <button id="mpBleuBtn" class="sbtn" style="display:none" onclick="toggleBleu()">Marquer forme</button>
         </div>
@@ -2233,8 +2235,8 @@
       <!-- Informations personnelles (visible à tous, modifiable CPT+) -->
       <div id="mpInfoView" style="display:none;margin-bottom:1rem;padding:.9rem 1rem;background:var(--s2);border:1px solid var(--ln);border-left:3px solid var(--ac)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-          <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:var(--ac);text-transform:uppercase">// Informations personnelles</div>
-          <button id="mpInfoEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.6rem" onclick="toggleInfoEdit()"><i data-lucide="pencil"></i>Modifier</button>
+          <div class="sub-h" style="color:var(--ac)">Informations personnelles</div>
+          <button id="mpInfoEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.74rem" onclick="toggleInfoEdit()"><i data-lucide="pencil"></i>Modifier</button>
         </div>
         <div id="mpInfoViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">-</div>
         <div id="mpInfoEditZone" style="display:none">
@@ -2249,8 +2251,8 @@
       <!-- Remarques officiers (visible CPT+/Amirauté/BRS, modifiable CPT+/Amirauté) -->
       <div id="mpRemarqueView" style="display:none;margin-bottom:1.3rem;padding:.9rem 1rem;background:var(--s2);border:1px solid var(--ln);border-left:3px solid var(--or)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
-          <div style="font-family:var(--fm);font-size:.6rem;letter-spacing:.12em;color:var(--or);text-transform:uppercase">// Remarques officiers</div>
-          <button id="mpRemarqueEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.6rem" onclick="toggleRemarqueEdit()"><i data-lucide="pencil"></i>Modifier</button>
+          <div class="sub-h" style="color:var(--or)">Remarques officiers</div>
+          <button id="mpRemarqueEditBtn" class="sbtn" style="display:none;padding:.15rem .5rem;font-size:.74rem" onclick="toggleRemarqueEdit()"><i data-lucide="pencil"></i>Modifier</button>
         </div>
         <div id="mpRemarqueViewText" style="font-size:.82rem;color:var(--tx2);white-space:pre-wrap;line-height:1.5">-</div>
         <div id="mpRemarqueEditZone" style="display:none">
@@ -2300,7 +2302,7 @@
       </p>
       <div style="display:flex;align-items:center;gap:.5rem;background:var(--s1);border:1px solid var(--ac);padding:.8rem 1rem">
         <code id="gmodCmd" style="font-family:var(--fm);font-size:.85rem;color:var(--ac);flex:1;user-select:all">connect cw.cosmos-community.fr</code>
-        <button class="sbtn blue" onclick="copyGmodCmd()" id="gmodCopyBtn" style="padding:.3rem .7rem;font-size:.7rem;white-space:nowrap">Copier</button>
+        <button class="sbtn blue" onclick="copyGmodCmd()" id="gmodCopyBtn" style="padding:.3rem .7rem;font-size:.74rem;white-space:nowrap">Copier</button>
       </div>
       <p style="color:var(--dm);font-size:.75rem;margin-top:.8rem;font-family:var(--fm)">
         Astuce : sélectionne le texte et appuie sur Ctrl+C, ou clique sur "Copier".

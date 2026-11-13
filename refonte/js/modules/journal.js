@@ -11,7 +11,7 @@ function renderJournal(){
     }catch{return iso;}
   };
   tbody.innerHTML=logs.map(l=>`<tr>
-    <td><span style="font-family:var(--fm);font-size:.7rem;color:var(--dm)">${fmtDateTime(l.created_at)}</span></td>
+    <td><span style="font-family:var(--fm);font-size:.74rem;color:var(--dm)">${fmtDateTime(l.created_at)}</span></td>
     <td><span style="font-size:.82rem;color:var(--tx2)">${esc(l.text)||"-"}</span></td>
   </tr>`).join("");
 }

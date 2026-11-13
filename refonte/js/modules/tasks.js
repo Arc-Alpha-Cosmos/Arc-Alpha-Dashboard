@@ -80,8 +80,8 @@ function renderTasks(){
               <div class="ann-t">${esc(t.title)} ${!t.active?"<span style='color:var(--dm);font-size:.75rem'>(terminée)</span>":""}</div>
               <div class="ann-d">${esc(t.description)}</div>
               <div class="ann-meta">${fmtDate(t.created_at)}
-                ${t.active?`<button class="sbtn" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="completeTask('${escJs(t.id)}')">Terminer</button>`:""}
-                <button class="sbtn danger" style="margin-left:.4rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteTask('${escJs(t.id)}')">Supprimer</button>
+                ${t.active?`<button class="sbtn" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.74rem" onclick="completeTask('${escJs(t.id)}')">Terminer</button>`:""}
+                <button class="sbtn danger" style="margin-left:.4rem;padding:.2rem .5rem;font-size:.74rem" onclick="deleteTask('${escJs(t.id)}')">Supprimer</button>
               </div>
             </div></div>`).join("")}
         </div>`).join("");

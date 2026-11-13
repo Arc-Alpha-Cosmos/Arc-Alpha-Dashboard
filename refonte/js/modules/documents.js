@@ -59,7 +59,7 @@ function renderDocuments(){
           <div class="card-t" style="font-size:.82rem">${esc(d.title)}</div>
           ${d.description?`<div class="card-b" style="font-size:.8rem;margin-top:.3rem">${esc(d.description)}</div>`:""}
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--ln)">
-            <span style="font-family:var(--fm);font-size:.62rem;color:var(--ac)">↗ Ouvrir</span>
+            <span style="font-family:var(--fm);font-size:.74rem;color:var(--ac)">↗ Ouvrir</span>
             ${canEdit("documents")?`<button class="icon-btn del" onclick="event.stopPropagation();deleteDoc('${escJs(d.id)}')" title="Supprimer" aria-label="Supprimer" style="width:24px;height:24px"><i data-lucide="trash-2"></i></button>`:""}
           </div>
         </div>`).join("")}

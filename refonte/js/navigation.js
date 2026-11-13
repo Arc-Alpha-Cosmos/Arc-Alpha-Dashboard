@@ -5,6 +5,7 @@ function nav(view){
   const el=document.getElementById(`v-${view}`);if(el)el.classList.add("on");
   window.scrollTo({top:0,behavior:"instant"});
   if(view==="dashboard")renderDashboard();
+  syncAppMode();
 }
 
 function cdmTab(id){
@@ -373,12 +374,30 @@ function tabPulse(t){
   return false;
 }
 
+/* Compteur discret a droite d'un onglet : ce qui attend, pour le compte
+   connecte et selon ses droits. null = rien a afficher. */
+function tabCount(t){
+  try{
+    if(!Auth.ok())return null;
+    const lvl=(session.role==="admin"||session.role==="amiraute")?99:gradeLevel(getSessionGrade());
+    const one=(n,hot)=>n?{n:n>99?"99+":n,hot:!!hot}:null;
+    if(t==="rapports")return one(rapBadgeCount(),true);
+    if(t==="reports"&&lvl>=GRADE_LEVEL.CPT&&session.role!=="brs")return one(countRapportsAVerifier());
+    if(t==="tasks"){const me=sessionMember();if(!me)return null;
+      return one((state.tasks||[]).filter(x=>x.active&&x.assignee_member_id!=null&&String(x.assignee_member_id)===String(me.id)).length,true);}
+    if(t==="polls")return one((state.polls||[]).filter(p=>p.active&&!isPollExpired(p)&&getMyVote(p.id)===null).length);
+    if(t==="absences"){const d=ymdLocal(new Date());return one((state.absences||[]).filter(a=>a.start_date<=d&&d<=a.end_date).length);}
+    if(t==="blames"&&lvl>=GRADE_LEVEL.MAJ)return one((state.blames||[]).filter(b=>!b.resolved).length);
+    if(t==="admin"&&session.role==="admin")return one((state.tickets||[]).filter(x=>x.status==="open").length,true);
+  }catch(e){}
+  return null;
+}
 function sideItemHtml(t,fav){
   const meta=TAB_META[t]||{label:t,icon:""};
   const lock=canEditNav()?(canEdit(t)?"":`<span class="lock" title="Lecture seule pour la plupart des grades">${navIconHtml("lock")}</span>`):"";
   return `<button class="side-item${t===_activeTab?" on":""}" data-tab="${esc(t)}" onclick="dashTab('${escJs(t)}')" title="${esc(meta.label)}" ${t===_activeTab?'aria-current="page"':""}>
       <span class="ico">${tabIcon(t)}</span><span class="lbl">${esc(meta.label)}</span>${lock}
-      <span class="pulse${tabPulse(t)?" show":""}" id="${meta.badge?esc(meta.badge):""}"></span>
+      <span class="pulse${tabPulse(t)?" show":""}"></span>${(c=>`<span class="cnt${c&&c.hot?" hot":""}"${c?"":" hidden"}>${c?c.n:""}</span>`)(tabCount(t))}
       <span class="fav${fav?" on":""}" role="button" tabindex="0" title="${fav?"Retirer des favoris":"Ajouter aux favoris"}" aria-label="${fav?"Retirer des favoris":"Ajouter aux favoris"}" onclick="toggleFav('${escJs(t)}',event)" onkeydown="if(event.key==='Enter'||event.key===' ')toggleFav('${escJs(t)}',event)">${navIconHtml("star")}</span>
     </button>`;
 }
@@ -421,6 +440,17 @@ function renderNav(){
     md.innerHTML=session?visibleGroups.map(g=>`<div class="mob-sec">${esc(g.label)}</div>`+
       g.tabs.filter(t=>canViewTab(t)).map(t=>`<button class="mob-item sub${t===_activeTab?" on":""}" onclick="goToTab('${escJs(t)}');closeMob()"><span class="ico">${tabIcon(t)}</span>${esc(TAB_META[t].label)}</button>`).join("")).join(""):"";
   }
+  /* carte du compte, en pied de barre laterale */
+  const su=document.getElementById("sideUser");
+  if(su&&session){
+    const m=sessionMember();
+    const role={admin:"Administrateur",brs:"BRS",amiraute:"Amirauté"}[session.role]||(m?gradeLabel(m.grade):"Membre");
+    su.innerHTML=`<button class="av" style="background:${roleAvatarColor(session.role,m&&m.grade)}" onclick="openAccount()" title="Mon compte" aria-label="Mon compte">${esc((session.user[0]||"?").toUpperCase())}</button>
+      <div class="w"><div class="n">${esc(session.user)}</div><div class="r">${esc(role)}${m&&m.matricule?" · "+esc(m.matricule):""}</div></div>
+      <button class="icon-btn" onclick="dashTab('monespace')" title="Mon espace" aria-label="Mon espace">${navIconHtml("user")}</button>
+      <button class="icon-btn del" onclick="doLogout()" title="Se déconnecter" aria-label="Se déconnecter">${navIconHtml("log-out")}</button>`;
+    lucideRefresh(su);
+  }
   renderCrumbs();
   lucideRefresh(navEl);
   checkMyReportStatus();
@@ -462,7 +492,14 @@ function dashTab(tab){
   try{if(window.scrollY>200)window.scrollTo({top:0,behavior:"instant"});}catch(e){}
 }
 
+/* Mode application : dans le tableau de bord, la barre du haut devient une
+   barre d'outils et le decor de la vitrine se retire. */
+function syncAppMode(){
+  const v=document.getElementById("v-dashboard");
+  document.body.classList.toggle("app-mode",!!session&&!!v&&v.classList.contains("on"));
+}
 function updateNavUI(){
+  try{syncAppMode();}catch(e){}
   const lb=document.getElementById("loginBtn"),uc=document.getElementById("userChip");
   const dl=document.getElementById("dashLock");
   if(session){

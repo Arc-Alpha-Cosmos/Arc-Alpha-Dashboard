@@ -63,11 +63,11 @@ function renderBlames(){
       <div class="ann-ico" style="color:${lc[b.level]||"var(--rd)"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
       <div class="ann-c">
         <div class="ann-t">${esc(memberLabel(b.member_id,b.member_name))} - ${esc(blameLevelLabel(b.level||1))}</div>
-        <div class="ann-d">${esc(b.reason)||"Aucun motif"}</div>
+        <div class="ann-d">${blameReasonHtml(b)}</div>
         ${b.resolved&&b.resolve_reason?`<div class="ann-d" style="color:var(--gr);font-size:.76rem;margin-top:.25rem">↳ Levé : ${esc(b.resolve_reason)}${b.resolved_by?` - par ${esc(userLabel(b.resolved_by_id,b.resolved_by))}`:""}${b.resolved_at?` le ${fmtDate(b.resolved_at)}`:""}</div>`:""}
         <div class="ann-meta">${fmtDate(b.created_at)}${b.resolved?" · Levé":""}
-          ${canManageBlames&&!b.resolved?`<button class="sbtn green" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="resolveBlame('${escJs(b.id)}')">Résoudre</button>`:""}
-          ${canManageBlames?`<button class="sbtn danger" style="margin-left:.5rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteBlame('${escJs(b.id)}')">Supprimer</button>`:""}
+          ${canManageBlames&&!b.resolved?`<button class="sbtn green" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.74rem" onclick="resolveBlame('${escJs(b.id)}')">Résoudre</button>`:""}
+          ${canManageBlames?`<button class="sbtn danger" style="margin-left:.5rem;padding:.2rem .5rem;font-size:.74rem" onclick="deleteBlame('${escJs(b.id)}')">Supprimer</button>`:""}
         </div>
       </div>
     </div>`).join("");
@@ -137,4 +137,13 @@ async function deleteBlame(id){
   if(supaOK)await supaDelete(T.blames,`id=eq.${id}`);
   state.blames=state.blames.filter(b=>b.id!=id);if(!supaOK)saveLS();
   renderBlames();renderOverview();toast("Blâme supprimé","info");
+}
+
+/* Le marqueur [AUTO-RAPPORT semaine] sert au dedoublonnage : il reste dans la
+   donnee, mais a l'ecran il devient une pastille « Automatique ». */
+function blameReasonHtml(b){
+  const r=String((b&&b.reason)||"");
+  const m=r.match(/^\[AUTO-RAPPORT [^\]]*\]\s*/);
+  if(!m)return esc(r)||"Aucun motif";
+  return `<span class="badge warn" style="margin-right:var(--sp3)">Automatique</span>${esc(r.slice(m[0].length))}`;
 }

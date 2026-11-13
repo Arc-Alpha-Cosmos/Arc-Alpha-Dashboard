@@ -100,7 +100,7 @@ function renderAbsences(){
         <div class="c-or ann-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="ann-c"><div class="ann-t">${esc(memberLabel(a.member_id,a.member_name))}</div><div class="ann-d">${esc(a.reason)||"-"}</div>
           <div class="ann-meta">Du <strong>${fmtDate(a.start_date)}</strong> au <strong>${fmtDate(a.end_date)}</strong> - <span class="c-or">${dl} j restant(s)</span>
-          ${absEditable?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.62rem" onclick="deleteAbsence('${escJs(a.id)}')">Supprimer</button>`:""}</div>
+          ${absEditable?`<button class="sbtn danger" style="margin-left:.8rem;padding:.2rem .5rem;font-size:.74rem" onclick="deleteAbsence('${escJs(a.id)}')">Supprimer</button>`:""}</div>
         </div></div>`;
     }).join("");
   }
@@ -108,10 +108,10 @@ function renderAbsences(){
   if(!state.absences.length){tbody.innerHTML='<tr><td colspan="6"><div class="empty"><p>Aucune absence</p></div></td></tr>';return;}
   tbody.innerHTML=state.absences.map(a=>`<tr>
     <td class="nm">${esc(memberLabel(a.member_id,a.member_name))}</td>
-    <td style="font-family:var(--fm);font-size:.72rem">${fmtDate(a.start_date)}</td>
-    <td style="font-family:var(--fm);font-size:.72rem">${fmtDate(a.end_date)}</td>
+    <td style="font-family:var(--fm);font-size:.74rem">${fmtDate(a.start_date)}</td>
+    <td style="font-family:var(--fm);font-size:.74rem">${fmtDate(a.end_date)}</td>
     <td style="color:var(--tx2);font-size:.82rem">${esc(a.reason)||"-"}</td>
-    <td style="font-family:var(--fm);font-size:.72rem;color:var(--ac)">${esc(a.duration_days||"?")} j</td>
+    <td style="font-family:var(--fm);font-size:.74rem;color:var(--ac)">${esc(a.duration_days||"?")} j</td>
     <td class="ta-r">${absEditable?`<button class="icon-btn del" onclick="deleteAbsence('${escJs(a.id)}')" title="Supprimer" aria-label="Supprimer">
       <i data-lucide="trash-2"></i></button>`:""}</td>
   </tr>`).join("");
@@ -176,7 +176,7 @@ function renderAbsCalendar(){
 
   let html='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;margin-bottom:.5rem">';
   ["L","M","M","J","V","S","D"].forEach(d=>{
-    html+=`<div style="text-align:center;font-family:var(--fm);font-size:.62rem;color:var(--dm);padding:.3rem 0">${d}</div>`;
+    html+=`<div style="text-align:center;font-family:var(--fm);font-size:.74rem;color:var(--dm);padding:.3rem 0">${d}</div>`;
   });
   html+="</div>";
   html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem">';
@@ -190,8 +190,8 @@ function renderAbsCalendar(){
       style="min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;
       border:1px solid ${isSel?"var(--ye)":isToday?"var(--ac)":"var(--ln)"};background:${isSel?"rgba(255,210,61,.12)":has?"rgba(255,59,92,.08)":"var(--s2)"};
       cursor:${has?"pointer":"default"};position:relative;padding:.2rem">
-      <span style="font-family:var(--fm);font-size:.7rem;color:${isToday?"var(--ac)":has?"var(--rd)":"var(--tx2)"}">${day}</span>
-      ${has?`<span style="font-size:.6rem;color:var(--rd);font-family:var(--fm)">${names.length}</span>`:""}
+      <span style="font-family:var(--fm);font-size:.74rem;color:${isToday?"var(--ac)":has?"var(--rd)":"var(--tx2)"}">${day}</span>
+      ${has?`<span style="font-size:.74rem;color:var(--rd);font-family:var(--fm)">${names.length}</span>`:""}
     </div>`;
   }
   html+="</div>";
