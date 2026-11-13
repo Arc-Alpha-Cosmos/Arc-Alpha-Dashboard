@@ -354,12 +354,14 @@ function tableApplySort(tbl){
   };
   const num=v=>{const n=parseFloat(String(v).replace(",",".").replace(/[^\d.-]/g,""));return isNaN(n)?null:n;};
   const allNum=rows.every(r=>num(val(r))!==null);
-  rows.sort((a,b)=>{
+  const sorted=rows.slice().sort((a,b)=>{
     const va=val(a),vb=val(b);
     let c=allNum?(num(va)-num(vb)):va.localeCompare(vb,"fr",{numeric:true,sensitivity:"base"});
     return s.dir==="asc"?c:-c;
   });
-  rows.forEach(r=>tb.appendChild(r));
+  /* on ne deplace les lignes que si l'ordre change : sinon chaque passage
+     relancerait l'observateur, qui relancerait le tri, sans fin */
+  if(sorted.some((r,i)=>r!==rows[i]))sorted.forEach(r=>tb.appendChild(r));
 }
 
 /* Barres de filtres generiques : <div class="filters" data-filter="#cible"

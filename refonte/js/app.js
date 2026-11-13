@@ -519,7 +519,7 @@ renderClock();setInterval(renderClock,30000);
         let real=false;
         m.addedNodes.forEach(n=>{if(n.nodeType===1&&n.tagName!=="svg"&&n.tagName!=="SVG"&&n.tagName!=="path")real=true;});
         if(!real)continue;
-        pending=true;requestAnimationFrame(run);return;
+        pending=true;requestAnimationFrame(run);setTimeout(()=>{if(pending)run();},90);return; /* filet : rAF ne tourne pas dans un onglet masque */
       }
     }
   });

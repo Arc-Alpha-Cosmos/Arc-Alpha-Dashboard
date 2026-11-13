@@ -88,7 +88,7 @@ function renderUsers(){
         <div style="width:28px;height:28px;border-radius:var(--r1);background:linear-gradient(135deg,var(--ac),var(--vi));display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-weight:700;font-size:.74rem;color:var(--bg)">${esc((u.display||"?")[0].toUpperCase())}</div>
         <div class="nm" style="font-size:.88rem">${esc(u.display)||"?"} ${isMe?'<span class="mono-xs">(vous)</span>':""}</div>
       </div></td>
-      <td><span style="font-family:var(--fm);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:${rc};padding:.2rem .55rem;border:1px solid ${rc}44;background:${rc}11">${ROLE_BADGES[u.role]||"● MEMBRE"}</span></td>
+      <td><span class="fbadge" style="--c:${rc}">${ROLE_BADGES[u.role]||"● MEMBRE"}</span></td>
       <td>${(()=>{
         const lm=u.member_id?state.members.find(m=>m.id==u.member_id):null;
         if(lm)return `<div style="display:flex;align-items:center;gap:.5rem"><span style="font-family:var(--fm);font-size:.74rem;color:var(--ac);background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.25);padding:.12rem .4rem;border-radius:var(--r1)">${esc(lm.grade)||"?"}</span><span style="font-size:.78rem;color:var(--tx)">${esc(lm.matricule)}${lm.nom?" - "+esc(lm.nom):""}</span></div>`;

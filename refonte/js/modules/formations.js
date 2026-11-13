@@ -46,9 +46,9 @@ function renderFormations(){
     return `<tr>
       <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.formateur_id,f.formateur,"-"))}</span></td>
       <td><span style="font-size:.82rem;color:var(--tx)">${esc(memberLabel(f.eleve_id,f.eleve,"-"))}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.74rem;color:var(--ac)">${esc(f.formation)||"-"}</span></td>
+      <td><span class="fbadge" style="--c:${FORMATION_TYPE_COLORS[f.formation]||"var(--ac)"}">${esc(f.formation)||"-"}</span></td>
       <td><span class="mono-dm">${f.date?fmtDate(f.date):"-"}</span></td>
-      <td><span style="font-family:var(--fm);font-size:.74rem;color:${sc};border:1px solid ${sc}44;background:${sc}11;padding:.15rem .5rem;border-radius:var(--r1)">${esc(f.statut)||"-"}</span></td>
+      <td><span class="fbadge" style="--c:${sc}">${esc(f.statut)||"-"}</span></td>
       <td class="ta-r"><div class="row-end">
         ${canEditF&&canEditFormationType(f.formation)?`<button class="sm sbtn" onclick="openFormationModal('${escJs(f.id)}')">Modifier</button>
 `:""}
@@ -238,3 +238,7 @@ async function deleteFormation(id){
   toast("Formation supprimée","info");
   await logActivity(`Formation supprimée (${memberLabel(_delF?.formateur_id,_delF?.formateur)} → ${memberLabel(_delF?.eleve_id,_delF?.eleve)}) par ${session?.user}`);
 }
+
+/* Memes couleurs que les qualifications de l'onglet Effectif. */
+const FORMATION_TYPE_COLORS={"ARC Alpha":FORMATION_COLORS.alpha,"ARC Trooper":FORMATION_COLORS.trooper,
+  "CMD de mission":FORMATION_COLORS.cmd,"Bleu":FORMATION_COLORS.bleu,"Négociation":FORMATION_COLORS.nego};

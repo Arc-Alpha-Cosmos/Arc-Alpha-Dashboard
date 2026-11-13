@@ -121,7 +121,7 @@ function renderEntrainements(){
     const com=a.commentaire?` <span style="color:var(--dm);cursor:help" title="${esc(a.commentaire)}">💬</span>`:"";
     const pl=actParts(a);const part=pl.length?`<div style="color:var(--dm);font-size:.74rem;margin-top:.15rem">+ ${esc(pl.join(", "))}</div>`:"";
     return `<tr>
-      <td><span style="font-family:var(--fm);font-size:.74rem;color:${tc};border:1px solid ${tc}44;background:${tc}11;padding:.15rem .5rem;border-radius:var(--r1)">${esc(a.type)||"-"}</span></td>
+      <td><span class="fbadge" style="--c:${tc}">${esc(a.type)||"-"}</span></td>
       <td><span style="font-size:.82rem;color:var(--tx)">${esc(a.intitule)||"-"}</span>${com}</td>
       <td><span style="font-size:.8rem;color:var(--tx)" title="${esc(labels.join(", "))}">${shown||"-"}${more}</span>${part}</td>
       <td><span class="mono-dm">${a.date?fmtDate(a.date):"-"}</span></td>
