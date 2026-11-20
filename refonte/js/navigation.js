@@ -208,7 +208,7 @@ const DEFAULT_NAV_GROUPS = [
   {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","entrainements","recrutements","reserve","blacklist","absences","reports","rapports"]},
   {id:"activite", label:"Activité", icon:"◈", tabs:["missions","cmd","polls","calendrier","stats"]},
   {id:"discipline", label:"Discipline", icon:"⚑", tabs:["blames","announce","reglement"]},
-  {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","personnages","tasks","historique","journal"]},
+  {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","pantheon","personnages","tasks","historique","journal"]},
   {id:"admin", label:"Admin", icon:"⚙", tabs:["admin"]}
 ];
 
@@ -230,6 +230,7 @@ const TAB_META = {
   blames:{label:"Blâmes", icon:""},
   announce:{label:"Annonces", icon:""},
   reglement:{label:"Règlement", icon:"📋"},
+  pantheon:{label:"Panthéon", icon:"landmark"},
   personnages:{label:"Personnages connus", icon:"🎭"},
   documents:{label:"Documents", icon:"📁"},
   tasks:{label:"Tâches", icon:"✅"},
@@ -321,7 +322,7 @@ function canViewTab(tab){
 const TAB_ICONS={overview:"layout-dashboard",monespace:"user",roster:"users",formations:"graduation-cap",
   entrainements:"target",recrutements:"file-pen-line",reserve:"shield",blacklist:"ban",absences:"clock",
   reports:"file-check",rapports:"file-text",missions:"swords",cmd:"radio",polls:"vote",blames:"alert-triangle",
-  announce:"megaphone",reglement:"clipboard-list",personnages:"drama",documents:"folder",tasks:"check-square",
+  announce:"megaphone",reglement:"clipboard-list",personnages:"drama",pantheon:"landmark",documents:"folder",tasks:"check-square",
   journal:"scroll-text",admin:"settings",calendrier:"calendar",stats:"bar-chart-3",historique:"history"};
 const GROUP_ICONS={accueil:"home",gestion:"layout-list",activite:"activity",discipline:"flag",ressources:"library",admin:"settings"};
 function tabIcon(t){
@@ -580,6 +581,7 @@ const TAB_RENDER={
   announce  :{fn:"renderAnnounces", on:["announces"]},
   reglement :{fn:"renderReglement", on:["config"]},
   personnages:{fn:"renderPersonnages", on:[]},
+  pantheon  :{fn:"renderPantheon",  on:["config","members"]},
   documents :{fn:"renderDocuments", on:["documents"]},
   tasks     :{fn:"renderTasks",     on:["tasks","members"]},
   journal   :{fn:"renderJournal",   on:["activity"]},

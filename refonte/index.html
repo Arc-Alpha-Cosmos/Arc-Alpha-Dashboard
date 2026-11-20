@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/responsive.css">
 <link rel="stylesheet" href="css/glass.css">
+<link rel="stylesheet" href="css/pantheon.css">
 <script>/* apparence posee avant le premier affichage, pour eviter un flash mat puis verre */
 try{var _lk=JSON.parse(localStorage.getItem("arcui_look")||'"glass"');var _rt=window.matchMedia&&matchMedia("(prefers-reduced-transparency: reduce)").matches;
 if(_lk!=="mat"&&!_rt)document.documentElement.classList.add("glass-on");}catch(e){document.documentElement.classList.add("glass-on");}</script>
@@ -561,6 +562,7 @@ if(_lk!=="mat"&&!_rt)document.documentElement.classList.add("glass-on");}catch(e
           </div>
           <span id="cmdModeBtn" hidden></span>
         </div>
+        <div id="ovCmdm"></div>
         <div class="ov-kpi-grid" id="ovKpis"></div>
 
         <!-- MODE COMMANDANT -->
@@ -1002,6 +1004,14 @@ if(_lk!=="mat"&&!_rt)document.documentElement.classList.add("glass-on");}catch(e
         <div class="panel"><div class="panel-body" id="reglementDisplay" style="font-family:var(--fr);font-size:.85rem;color:var(--tx);line-height:1.8;min-height:80px">
           <div class="empty"><p>Aucun règlement défini.</p></div>
         </div></div>
+      </div>
+
+      <!-- PANTHEON -->
+      <div class="dash-tab" data-dtc="pantheon" style="display:none">
+        <div class="sec-head"><h2>Panthéon</h2><span class="line"></span>
+          <button class="sbtn" id="panAddBtn" style="display:none" onclick="openPantheonModal()"><i data-lucide="plus"></i>Inscrire</button>
+        </div>
+        <div id="pantheonBody"></div>
       </div>
 
       <div class="dash-tab" data-dtc="personnages" style="display:none">
@@ -2327,6 +2337,32 @@ if(_lk!=="mat"&&!_rt)document.documentElement.classList.add("glass-on");}catch(e
   </div>
 </div>
 
+<!-- MODAL: PANTHEON -->
+<div class="modal-bg" id="pantheonModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// PANTHÉON</span><h3 id="panModalTitle">Inscrire au panthéon</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('pantheonModal')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label for="panMember">Membre de l'effectif <span class="hint">facultatif, remplit le nom et le matricule</span></label>
+        <select id="panMember" onchange="panMemberPick(this.value)"></select></div>
+      <div class="form-row fr2">
+        <div class="field"><label for="panMat">Matricule</label><input type="text" id="panMat" maxlength="20" autocomplete="off" placeholder="ex : A-17"></div>
+        <div class="field"><label for="panNom">Nom RP</label><input type="text" id="panNom" maxlength="60" autocomplete="off" placeholder="ex : Alpha"></div>
+      </div>
+      <div class="form-row fr2">
+        <div class="field"><label for="panDebut">Prise de poste</label><input type="date" id="panDebut"></div>
+        <div class="field"><label for="panFin">Départ <span class="hint">vide = toujours en fonction</span></label><input type="date" id="panFin"></div>
+      </div>
+      <div class="field"><label for="panDiscord">Discord</label><input type="text" id="panDiscord" maxlength="40" autocomplete="off" placeholder="ex : alpha.cmdm"></div>
+      <div class="field"><label for="panComment">Commentaire</label>
+        <textarea id="panComment" rows="4" maxlength="500" oninput="panCount()" placeholder="Ce que l'unité retient de son commandement."></textarea>
+        <div class="mono-xs" id="panCommentCount" style="text-align:right;margin-top:var(--sp2)">0 / 500</div></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('pantheonModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>savePantheonEntry())">Enregistrer</button></div>
+  </div>
+</div>
+
 <!-- MODAL: TOUR DE BIENVENUE -->
 <div class="modal-bg" id="tourModal">
   <div class="modal" style="max-width:520px">
@@ -2413,6 +2449,7 @@ if(_lk!=="mat"&&!_rt)document.documentElement.classList.add("glass-on");}catch(e
 <script src="js/modules/calendrier.js"></script>
 <script src="js/modules/stats.js"></script>
 <script src="js/modules/historique.js"></script>
+<script src="js/modules/pantheon.js"></script>
 <script src="js/notifications.js"></script>
 <script src="js/app.js"></script>
 </body></html>

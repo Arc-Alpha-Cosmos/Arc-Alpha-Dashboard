@@ -482,6 +482,10 @@ async function loadAll(){
     if(row.key==="reglement"){
       state.reglement=row.value;
     }
+    if(row.key==="pantheon"){
+      const pp=JSON.parse(row.value);
+      if(pp&&typeof pp==="object")state.pantheon=pp;
+    }
   }catch(e){console.warn("config: clé illisible",row.key,e);};});
   renderContent();
 }
@@ -584,6 +588,13 @@ async function pollRealtime(){
           }
           if(row.key==="reglement"){
             if(row.value!==state.reglement){ state.reglement=row.value; cfgChanged=true; }
+          }
+          if(row.key==="pantheon"){
+            const pp=JSON.parse(row.value);
+            if(pp&&typeof pp==="object"&&JSON.stringify(pp)!==JSON.stringify(state.pantheon||{})){
+              state.pantheon=pp; cfgChanged=true;
+              try{ if(_activeTab==="overview")renderOvCmdm(); }catch(e){}
+            }
           }
           if(row.key==="content"){
             const _raw=JSON.parse(row.value);

@@ -1,6 +1,6 @@
 /* ARC ALPHA - Module overview. */
 function renderOverview(){
-  if(_cmdMode){ renderCmdMode(); try{renderOvKpis();}catch(e){} return; }
+  if(_cmdMode){ renderCmdMode(); try{renderOvCmdm();renderOvKpis();}catch(e){} return; }
   const effectif=state.members.filter(m=>(m.categorie||"effectif")==="effectif");
   const present=effectif.filter(m=>m.status==="present");
   const reserve=state.members.filter(m=>(m.categorie||"effectif")==="reserve");
@@ -58,7 +58,7 @@ function renderOverview(){
       </div>`).join("");
   }
   renderQuickActions();
-  try{renderOvKpis();renderOvActivity();renderOvShortcuts();}catch(e){console.warn("overview refonte",e);}
+  try{renderOvCmdm();renderOvKpis();renderOvActivity();renderOvShortcuts();}catch(e){console.warn("overview refonte",e);}
   const rt=ge("ovRadarTag");
   if(rt)rt.textContent=total+(total>1?" unités":" unité");
   renderTodo();ovRenderDeadline();ovInitRadar();
@@ -511,7 +511,7 @@ function toggleCmdMode(){
   if(_cmdMode){
     if(btn){ btn.classList.add("active"); }
     if(normal) normal.style.display = "block";
-    document.querySelectorAll("[data-dtc='overview'] > :not(#cmdModeView):not(.ov-top):not(#ovKpis)").forEach(el=>{
+    document.querySelectorAll("[data-dtc='overview'] > :not(#cmdModeView):not(.ov-top):not(#ovKpis):not(#ovCmdm)").forEach(el=>{
       el.dataset.wasVisible = "1";
       el.style.display = "none";
     });

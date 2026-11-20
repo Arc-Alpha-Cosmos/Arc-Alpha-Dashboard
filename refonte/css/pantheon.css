@@ -1,0 +1,146 @@
+/* ARC ALPHA - Pantheon des Commandants-Marechaux (2026-11).
+   Registre or et nuit, a part du cyan du reste du tableau de bord : c'est la
+   seule page solennelle du site. Couronnes de laurier en SVG (js), rayons de
+   lumiere et degrades d'or en CSS, aucune image externe. Une seule animation :
+   l'entree des plaques a l'ouverture de l'onglet, coupee si le systeme demande
+   moins d'animations. */
+
+:root{
+  --au1:#fff1b8;--au2:#e8b923;--au3:#8a6512;
+  --au-txt:#f3d27a;
+  --au-s:rgba(232,185,35,.12);--au-line:rgba(232,185,35,.28);
+  --au-grad:linear-gradient(135deg,var(--au1) 0%,var(--au2) 45%,var(--au3) 100%);
+}
+.pan-mat{font-family:var(--fm);font-size:.72em;font-weight:600;color:var(--au-txt);letter-spacing:.04em;margin-right:.55em;
+  padding:.1em .45em;border-radius:6px;background:var(--au-s);vertical-align:.15em}
+.pan-meta,.pan-ov-meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp3) var(--sp6);font-size:.86rem;color:var(--tx2)}
+.pan-meta>span,.pan-ov-meta>span{display:inline-flex;align-items:center;gap:var(--sp3)}
+.pan-meta svg,.pan-ov-meta>span>svg{width:15px;height:15px;color:var(--au2);flex:none}
+.pan-arrow{color:var(--au2);margin:0 .2em}
+.pan-chip{padding:2px 9px;border-radius:999px;background:var(--au-s);color:var(--au-txt);font-size:.78rem;font-weight:600}
+.pan-discord{display:inline-flex;align-items:center;gap:var(--sp3);height:28px;padding:0 var(--sp4);border-radius:999px;cursor:pointer;
+  background:rgba(88,101,242,.12);border:1px solid rgba(88,101,242,.3);color:#c9cdfb;font-size:.82rem;font-weight:500;
+  transition:background var(--t1),border-color var(--t1)}
+.pan-discord:hover{background:rgba(88,101,242,.22);border-color:rgba(88,101,242,.5)}
+.pan-discord svg{width:14px;height:14px}
+.pan-discord svg:last-child{opacity:.6}
+.pan-quote{margin:var(--sp5) 0 0;padding:var(--sp3) 0 var(--sp3) var(--sp6);border-left:2px solid var(--au2);
+  font-family:var(--fs);font-style:italic;font-size:.98rem;line-height:1.6;color:var(--tx)}
+.pan-laurel{display:block;filter:drop-shadow(0 0 10px rgba(232,185,35,.25))}
+
+/* ---------- Vue d'ensemble : bandeau du CMDM en fonction ---------- */
+.pan-ov{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--sp7);
+  margin-bottom:var(--sp6);padding:var(--sp6) var(--sp7);border-radius:var(--r3);overflow:hidden;
+  background:radial-gradient(120% 160% at 0% 50%,rgba(232,185,35,.16),transparent 55%),var(--s1) padding-box,
+    linear-gradient(120deg,rgba(255,241,184,.55),rgba(232,185,35,.25) 35%,rgba(255,255,255,.06) 70%) border-box;
+  border:1px solid transparent;box-shadow:inset 0 1px 0 rgba(255,241,184,.14)}
+.pan-ov-crest{position:relative;width:84px;height:84px;flex:0 0 auto}
+.pan-ov-ini,.pan-current-ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fb);font-weight:700;letter-spacing:.06em;background:var(--au-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pan-ov-ini{font-size:1.15rem;padding-bottom:4px}
+.pan-ov-k{display:inline-flex;align-items:center;gap:var(--sp3);font-size:.76rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--au-txt)}
+.pan-ov-k svg{width:15px;height:15px}
+.pan-ov-name{font-family:var(--fs);font-size:1.5rem;font-weight:600;letter-spacing:-.015em;color:var(--tx);margin:var(--sp2) 0 var(--sp3)}
+.pan-ov-quote{margin:var(--sp4) 0 0;font-family:var(--fs);font-style:italic;font-size:.92rem;color:var(--tx2);
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pan-ov-act{display:flex;flex-direction:column;gap:var(--sp3);align-items:flex-end}
+.pan-ov-empty{display:flex;align-items:center;gap:var(--sp6);flex-wrap:wrap;grid-template-columns:none;color:var(--tx2);font-size:.9rem}
+
+/* ---------- En-tete du pantheon ---------- */
+.pan-hero{position:relative;text-align:center;padding:var(--sp9) var(--sp6) var(--sp8);margin-bottom:var(--sp7);border-radius:20px;overflow:hidden;
+  background:radial-gradient(70% 90% at 50% 0%,rgba(232,185,35,.18),transparent 70%),
+    radial-gradient(40% 60% at 50% 100%,rgba(0,224,251,.06),transparent 70%),var(--bg2);
+  border:1px solid var(--au-line);box-shadow:inset 0 1px 0 rgba(255,241,184,.12)}
+/* rayons de lumiere, fixes, qui partent de la couronne */
+.pan-hero::before{content:"";position:absolute;left:50%;top:-60%;width:180%;aspect-ratio:1;transform:translateX(-50%);pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(232,185,35,.07) 0deg 4deg,transparent 4deg 14deg);
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 0%,transparent 45%);mask-image:radial-gradient(circle at 50% 50%,#000 0%,transparent 45%)}
+.pan-hero>*{position:relative}
+.pan-hero-crest{position:relative;width:150px;height:150px;margin:0 auto var(--sp5)}
+.pan-hero-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--au2);padding-bottom:6px}
+.pan-hero-ico svg{width:46px;height:46px;stroke-width:1.5;filter:drop-shadow(0 0 12px rgba(232,185,35,.45))}
+.pan-hero-k{font-family:var(--fm);font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;color:var(--au-txt);opacity:.85}
+.pan-hero-t{margin:var(--sp4) auto var(--sp4);max-width:22ch;font-family:var(--fb);font-weight:700;font-size:clamp(1.3rem,3.2vw,2.1rem);
+  line-height:1.25;letter-spacing:.06em;text-transform:uppercase;background:var(--au-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pan-hero-s{max-width:56ch;margin:0 auto;color:var(--tx2);font-size:.95rem;line-height:1.6}
+.pan-hero-stats{display:flex;justify-content:center;flex-wrap:wrap;gap:var(--sp7) var(--sp9);margin-top:var(--sp7);padding-top:var(--sp6);
+  border-top:1px solid var(--au-line);max-width:640px;margin-left:auto;margin-right:auto}
+.pan-hero-stats div{display:flex;flex-direction:column;gap:var(--sp1)}
+.pan-hero-stats b{font-family:var(--fs);font-size:1.5rem;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+.pan-hero-stats span{font-size:.8rem;color:var(--dm)}
+
+/* ---------- Le CMDM en fonction ---------- */
+.pan-current{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--sp8);
+  padding:var(--sp8);margin-bottom:var(--sp8);border-radius:20px;
+  background:radial-gradient(90% 140% at 0% 0%,rgba(232,185,35,.15),transparent 60%),var(--s1) padding-box,
+    var(--au-grad) border-box;border:1px solid transparent;
+  box-shadow:0 0 0 6px rgba(232,185,35,.04),0 24px 60px rgba(0,0,0,.4),0 0 80px rgba(232,185,35,.08)}
+.pan-current-badge{position:absolute;top:var(--sp6);right:var(--sp6);display:inline-flex;align-items:center;gap:var(--sp3);
+  padding:4px 12px;border-radius:999px;background:var(--au-grad);color:#2a1d02;font-size:.78rem;font-weight:700;letter-spacing:.04em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 14px rgba(232,185,35,.3)}
+.pan-current-badge svg{width:14px;height:14px}
+.pan-current-crest{position:relative;width:132px;height:132px}
+.pan-current-ini{font-size:1.75rem;padding-bottom:6px}
+.pan-rank{font-family:var(--fm);font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--au-txt)}
+.pan-current-name{font-family:var(--fs);font-size:clamp(1.5rem,3vw,2.1rem);font-weight:600;letter-spacing:-.02em;margin:var(--sp3) 0 var(--sp5);color:var(--tx)}
+.pan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp4);margin-top:var(--sp6)}
+
+/* ---------- Separateur ---------- */
+.pan-sec{display:flex;align-items:center;gap:var(--sp6);margin:0 0 var(--sp7)}
+.pan-sec h3{font-family:var(--fb);font-size:.82rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--au-txt);white-space:nowrap}
+.pan-sec-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--au-line))}
+.pan-sec-line:last-child{background:linear-gradient(90deg,var(--au-line),transparent)}
+
+/* ---------- Les anciens : plaques sur une ligne d'or ---------- */
+.pan-list{list-style:none;margin:0;padding:0 0 0 34px;position:relative;display:flex;flex-direction:column;gap:var(--sp6)}
+.pan-list::before{content:"";position:absolute;left:21px;top:20px;bottom:20px;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,var(--au2),rgba(232,185,35,.15))}
+.pan-plaque{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp5);
+  padding:var(--sp7) var(--sp7) var(--sp7) calc(var(--sp7) + 22px);border-radius:var(--r3);
+  background:linear-gradient(135deg,rgba(232,185,35,.07),transparent 40%),var(--s1);border:1px solid rgba(232,185,35,.18);
+  box-shadow:inset 0 1px 0 rgba(255,241,184,.08);transition:border-color var(--t1),transform var(--t2) var(--e-out),box-shadow var(--t2);
+  animation:panIn .5s var(--e-out) backwards;animation-delay:calc(var(--i,0) * 70ms)}
+.pan-plaque:hover{border-color:rgba(232,185,35,.42);transform:translateX(3px);box-shadow:inset 0 1px 0 rgba(255,241,184,.12),0 14px 36px rgba(0,0,0,.35)}
+.pan-plaque-num{position:absolute;left:-34px;top:50%;transform:translate(0,-50%);width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:var(--fb);font-weight:700;font-size:.74rem;letter-spacing:.02em;color:#2a1d02;
+  background:var(--au-grad);box-shadow:0 0 0 4px var(--bg),0 0 0 5px rgba(232,185,35,.35),0 6px 18px rgba(232,185,35,.25)}
+.pan-plaque-name{font-family:var(--fs);font-size:1.3rem;font-weight:600;letter-spacing:-.01em;color:var(--tx);margin-bottom:var(--sp4)}
+.pan-plaque-act{display:flex;gap:var(--sp2);align-self:start}
+.pan-empty{display:flex;flex-direction:column;align-items:center;gap:var(--sp4);text-align:center;padding:var(--sp9) var(--sp6);
+  border-radius:var(--r3);border:1px dashed var(--au-line);color:var(--dm)}
+.pan-empty p{font-family:var(--fs);font-size:1.15rem;color:var(--au-txt);margin:var(--sp3) 0 0}
+.pan-empty span{max-width:46ch;font-size:.9rem}
+.pan-empty .btn{margin-top:var(--sp4)}
+@keyframes panIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- Apparence verre ---------- */
+html.glass-on .pan-ov{background:radial-gradient(120% 160% at 0% 50%,rgba(232,185,35,.18),transparent 55%),rgba(14,19,28,.58) padding-box,
+    linear-gradient(120deg,rgba(255,241,184,.55),rgba(232,185,35,.25) 35%,rgba(255,255,255,.08) 70%) border-box;
+  -webkit-backdrop-filter:blur(22px) saturate(170%);backdrop-filter:blur(22px) saturate(170%)}
+html.glass-on .pan-hero{background:radial-gradient(70% 90% at 50% 0%,rgba(232,185,35,.2),transparent 70%),rgba(10,14,21,.5);
+  -webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%)}
+html.glass-on .pan-current{background:radial-gradient(90% 140% at 0% 0%,rgba(232,185,35,.17),transparent 60%),rgba(14,19,28,.62) padding-box,
+    var(--au-grad) border-box;-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%)}
+html.glass-on .pan-plaque{background:linear-gradient(135deg,rgba(232,185,35,.08),transparent 40%),rgba(14,19,28,.56);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
+
+/* ---------- Petits ecrans ---------- */
+@media(max-width:820px){
+  .pan-ov{grid-template-columns:auto minmax(0,1fr);gap:var(--sp5);padding:var(--sp6)}
+  .pan-ov-crest{width:64px;height:64px}
+  .pan-ov-crest .pan-laurel{width:64px;height:64px}
+  .pan-ov-ini{font-size:.9rem}
+  .pan-ov-name{font-size:1.2rem}
+  .pan-ov-act{grid-column:1/-1;flex-direction:row;align-items:center;flex-wrap:wrap}
+  .pan-current{grid-template-columns:1fr;justify-items:center;text-align:center;padding:var(--sp9) var(--sp6) var(--sp7);gap:var(--sp5)}
+  .pan-current .pan-meta,.pan-actions{justify-content:center}
+  .pan-current .pan-quote{text-align:left}
+  .pan-current-badge{left:50%;right:auto;transform:translateX(-50%)}
+  .pan-plaque{grid-template-columns:1fr;padding:var(--sp6) var(--sp6) var(--sp6) calc(var(--sp6) + 20px)}
+  .pan-plaque-act{justify-self:end}
+  .pan-hero{padding:var(--sp8) var(--sp5) var(--sp7)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pan-plaque{animation:none}
+  .pan-plaque:hover{transform:none}
+}
