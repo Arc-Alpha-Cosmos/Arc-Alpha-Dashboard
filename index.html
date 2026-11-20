@@ -1584,6 +1584,13 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 .pan-current-badge svg{width:14px;height:14px}
 .pan-current-crest{position:relative;width:132px;height:132px}
 .pan-current-ini{font-size:1.75rem;padding-bottom:6px}
+.pan-crest-mat{font-family:var(--fm);font-weight:700;letter-spacing:-.02em;font-size:.86rem;line-height:1}
+.pan-crest-mat.long{font-size:.74rem}
+.pan-current-ini .pan-crest-mat{font-size:1.3rem}
+.pan-current-ini .pan-crest-mat.long{font-size:1.1rem}
+.pan-crest-ico{display:flex}
+.pan-crest-ico svg{width:26px;height:26px;color:var(--au2);filter:drop-shadow(0 0 8px rgba(232,185,35,.45))}
+.pan-current-ini .pan-crest-ico svg{width:40px;height:40px}
 .pan-rank{font-family:var(--fm);font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--au-txt)}
 .pan-current-name{font-family:var(--fr);font-size:clamp(1.7rem,3.4vw,2.4rem);font-weight:600;letter-spacing:-.02em;margin:var(--sp3) 0 var(--sp5);color:var(--tx)}
 .pan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp4);margin-top:var(--sp6)}
@@ -1622,6 +1629,9 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   .pan-ov-crest{width:64px;height:64px}
   .pan-ov-crest .pan-laurel{width:64px;height:64px}
   .pan-ov-ini{font-size:.9rem}
+  .pan-ov-ini .pan-crest-mat{font-size:.68rem}
+  .pan-ov-ini .pan-crest-mat.long{font-size:.58rem}
+  .pan-ov-ini .pan-crest-ico svg{width:20px;height:20px}
   .pan-ov-name{font-size:1.2rem}
   .pan-ov-act{grid-column:1/-1;flex-direction:row;align-items:center;flex-wrap:wrap}
   .pan-current{grid-template-columns:1fr;justify-items:center;text-align:center;padding:var(--sp9) var(--sp6) var(--sp7);gap:var(--sp5)}
@@ -10285,10 +10295,13 @@ function panDuree(a,b){
   const ans=Math.floor(mois/12),r=mois%12;
   return ans+(ans>1?" ans":" an")+(r?" et "+r+" mois":"");
 }
-function panInitiales(e){
-  const n=panName(e);
-  const src=(n.nom||n.mat||"?").replace(/[^A-Za-zÀ-ÿ0-9 ]/g," ").trim().split(/\s+/);
-  return ((src[0]||"?")[0]+(src[1]?src[1][0]:"")).toUpperCase();
+/* Au centre de la couronne : le matricule s'il est de la forme A-chiffres,
+   sinon une couronne. Pas d'initiales : un nom vide les fabriquait a partir
+   du matricule (« A-92 » devenait « A9 »). */
+function panCrest(e){
+  const n=panName(e), mm=/^A\s*-?\s*(\d{1,4})$/i.exec(String(n.mat||"").trim());
+  if(mm)return `<span class="pan-crest-mat${mm[1].length>2?" long":""}">A-${mm[1]}</span>`;
+  return `<span class="pan-crest-ico">${panIco("crown")}</span>`;
 }
 /* Couronne de laurier dessinee en SVG : deux branches de feuilles en arc,
    degrade dore. Aucune image externe. */
@@ -10347,10 +10360,10 @@ function renderOvCmdm(){
   const n=panName(c), today=ymdLocal(new Date());
   const depuis=c.debut?panDuree(c.debut,today):"";
   el.innerHTML=`<section class="pan-ov" aria-label="Commandant-Maréchal en fonction">
-    <div class="pan-ov-crest">${panLaurel(84,"ov")}<span class="pan-ov-ini">${esc(panInitiales(c))}</span></div>
+    <div class="pan-ov-crest">${panLaurel(84,"ov")}<span class="pan-ov-ini">${panCrest(c)}</span></div>
     <div class="pan-ov-main">
       <span class="pan-ov-k">${panIco("crown")} Commandant-Maréchal en fonction</span>
-      <div class="pan-ov-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+      <div class="pan-ov-name">${n.mat?`<span class="pan-mat">${esc(n.mat)}</span>`:""}${esc(n.nom)}</div>
       <div class="pan-ov-meta">
         ${c.debut?`<span>${panIco("calendar")}En poste depuis le ${esc(fmtDate(c.debut))}${depuis?` · ${esc(depuis)}`:""}</span>`:""}
         ${panDiscordHtml(c.discord)}
@@ -10395,10 +10408,10 @@ function renderPantheon(){
     const n=panName(cur);
     h+=`<section class="pan-current" aria-label="En fonction">
       <div class="pan-current-badge">${panIco("crown")}En fonction</div>
-      <div class="pan-current-crest">${panLaurel(132,"cur")}<span class="pan-current-ini">${esc(panInitiales(cur))}</span></div>
+      <div class="pan-current-crest">${panLaurel(132,"cur")}<span class="pan-current-ini">${panCrest(cur)}</span></div>
       <div class="pan-current-body">
         <div class="pan-rank">${cur.source==="pantheon"?panRoman(rang(cur))+" · ":""}Commandant-Maréchal</div>
-        <div class="pan-current-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+        <div class="pan-current-name">${n.mat?`<span class="pan-mat">${esc(n.mat)}</span>`:""}${esc(n.nom)}</div>
         <div class="pan-meta">
           ${cur.debut?`<span>${panIco("calendar")}Depuis le ${esc(fmtDate(cur.debut))} · ${esc(panDuree(cur.debut,today)||"aujourd'hui")}</span>`:""}
           ${panDiscordHtml(cur.discord)}
@@ -10424,7 +10437,7 @@ function renderPantheon(){
       return `<li class="pan-plaque" style="--i:${Math.min(i,8)}">
         <div class="pan-plaque-num" aria-label="Rang ${rang(e)}">${panRoman(rang(e))}</div>
         <div class="pan-plaque-body">
-          <div class="pan-plaque-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+          <div class="pan-plaque-name">${n.mat?`<span class="pan-mat">${esc(n.mat)}</span>`:""}${esc(n.nom)}</div>
           <div class="pan-meta">
             <span>${panIco("calendar")}${e.debut?esc(fmtDate(e.debut)):"?"} <span class="pan-arrow">→</span> ${esc(fmtDate(e.fin))}</span>
             ${panDuree(e.debut,e.fin)?`<span class="pan-chip">${esc(panDuree(e.debut,e.fin))} de commandement</span>`:""}

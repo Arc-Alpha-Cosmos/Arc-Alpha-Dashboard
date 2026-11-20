@@ -64,10 +64,13 @@ function panDuree(a,b){
   const ans=Math.floor(mois/12),r=mois%12;
   return ans+(ans>1?" ans":" an")+(r?" et "+r+" mois":"");
 }
-function panInitiales(e){
-  const n=panName(e);
-  const src=(n.nom||n.mat||"?").replace(/[^A-Za-zÀ-ÿ0-9 ]/g," ").trim().split(/\s+/);
-  return ((src[0]||"?")[0]+(src[1]?src[1][0]:"")).toUpperCase();
+/* Au centre de la couronne : le matricule s'il est de la forme A-chiffres,
+   sinon une couronne. Pas d'initiales : un nom vide les fabriquait a partir
+   du matricule (« A-92 » devenait « A9 »). */
+function panCrest(e){
+  const n=panName(e), mm=/^A\s*-?\s*(\d{1,4})$/i.exec(String(n.mat||"").trim());
+  if(mm)return `<span class="pan-crest-mat${mm[1].length>2?" long":""}">A-${mm[1]}</span>`;
+  return `<span class="pan-crest-ico">${navIconHtml("crown")}</span>`;
 }
 /* Couronne de laurier dessinee en SVG : deux branches de feuilles en arc,
    degrade dore. Aucune image externe. */
@@ -127,10 +130,10 @@ function renderOvCmdm(){
   const n=panName(c), today=ymdLocal(new Date());
   const depuis=c.debut?panDuree(c.debut,today):"";
   el.innerHTML=`<section class="pan-ov" aria-label="Commandant-Maréchal en fonction">
-    <div class="pan-ov-crest">${panLaurel(84,"ov")}<span class="pan-ov-ini">${esc(panInitiales(c))}</span></div>
+    <div class="pan-ov-crest">${panLaurel(84,"ov")}<span class="pan-ov-ini">${panCrest(c)}</span></div>
     <div class="pan-ov-main">
       <span class="pan-ov-k">${navIconHtml("crown")} Commandant-Maréchal en fonction</span>
-      <div class="pan-ov-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+      <div class="pan-ov-name">${n.mat?`<span class="pan-mat">${esc(n.mat)}</span>`:""}${esc(n.nom)}</div>
       <div class="pan-ov-meta">
         ${c.debut?`<span>${navIconHtml("calendar")}En poste depuis le ${esc(fmtDate(c.debut))}${depuis?` · ${esc(depuis)}`:""}</span>`:""}
         ${panDiscordHtml(c.discord)}
@@ -176,10 +179,10 @@ function renderPantheon(){
     const n=panName(cur);
     h+=`<section class="pan-current" aria-label="En fonction">
       <div class="pan-current-badge">${navIconHtml("crown")}En fonction</div>
-      <div class="pan-current-crest">${panLaurel(132,"cur")}<span class="pan-current-ini">${esc(panInitiales(cur))}</span></div>
+      <div class="pan-current-crest">${panLaurel(132,"cur")}<span class="pan-current-ini">${panCrest(cur)}</span></div>
       <div class="pan-current-body">
         <div class="pan-rank">${cur.source==="pantheon"?panRoman(rang(cur))+" · ":""}Commandant-Maréchal</div>
-        <div class="pan-current-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+        <div class="pan-current-name">${n.mat?`<span class="pan-mat">${esc(n.mat)}</span>`:""}${esc(n.nom)}</div>
         <div class="pan-meta">
           ${cur.debut?`<span>${navIconHtml("calendar")}Depuis le ${esc(fmtDate(cur.debut))} · ${esc(panDuree(cur.debut,today)||"aujourd'hui")}</span>`:""}
           ${panDiscordHtml(cur.discord)}
@@ -205,7 +208,7 @@ function renderPantheon(){
       return `<li class="pan-plaque" style="--i:${Math.min(i,8)}">
         <div class="pan-plaque-num" aria-label="Rang ${rang(e)}">${panRoman(rang(e))}</div>
         <div class="pan-plaque-body">
-          <div class="pan-plaque-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+          <div class="pan-plaque-name">${n.mat?`<span class="pan-mat">${esc(n.mat)}</span>`:""}${esc(n.nom)}</div>
           <div class="pan-meta">
             <span>${navIconHtml("calendar")}${e.debut?esc(fmtDate(e.debut)):"?"} <span class="pan-arrow">→</span> ${esc(fmtDate(e.fin))}</span>
             ${panDuree(e.debut,e.fin)?`<span class="pan-chip">${esc(panDuree(e.debut,e.fin))} de commandement</span>`:""}
