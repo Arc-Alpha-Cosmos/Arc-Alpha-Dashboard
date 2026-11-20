@@ -10,10 +10,14 @@
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/glass.css">
+<script>/* apparence posee avant le premier affichage, pour eviter un flash mat puis verre */
+try{var _lk=JSON.parse(localStorage.getItem("arcui_look")||'"glass"');var _rt=window.matchMedia&&matchMedia("(prefers-reduced-transparency: reduce)").matches;
+if(_lk!=="mat"&&!_rt)document.documentElement.classList.add("glass-on");}catch(e){document.documentElement.classList.add("glass-on");}</script>
 <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
 </head>
 <body>
-<body>
+<div class="lg-ambient" aria-hidden="true"></div>
 <a class="skip" href="#app">Aller au contenu</a>
 <canvas id="fxc"></canvas>
 <div class="fx-grid"></div>
@@ -1419,6 +1423,15 @@
         <div><div class="uc-name" style="font-size:.9rem" id="accName">nepko</div><div class="uc-role admin" id="accRole">ADMIN</div></div>
       </div>
       <p class="card-b" id="accDesc">Tu es administrateur.</p>
+
+      <div class="field" style="margin:var(--sp6) 0 0">
+        <label id="lookLbl">Apparence</label>
+        <div class="seg" role="group" aria-labelledby="lookLbl">
+          <button type="button" id="lookGlass" onclick="setLook('glass')">Verre</button>
+          <button type="button" id="lookMat" onclick="setLook('mat')">Mat</button>
+        </div>
+        <div class="mono-xs" id="lookHint" style="margin-top:var(--sp3)">Réglage propre à ce navigateur.</div>
+      </div>
 
       <!-- ÉDITION DU PROFIL -->
       <div style="border-top:1px solid var(--ln);margin-top:1rem;padding-top:1rem">

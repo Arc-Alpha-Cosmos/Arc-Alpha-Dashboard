@@ -575,3 +575,47 @@ document.addEventListener("keydown",e=>{
   e.preventDefault();
   if(inp)inp.focus();else openCmdK();
 });
+
+/* ============================================================
+   Apparence « verre liquide » (css/glass.css)
+   La classe html.glass-on est posee des le <head> pour eviter un flash ;
+   ici on gere le reglage Verre / Mat (fenetre Compte), la preference
+   systeme « reduire la transparence », et la lueur qui suit le pointeur.
+   ============================================================ */
+function lookReduced(){try{return !!(window.matchMedia&&matchMedia("(prefers-reduced-transparency: reduce)").matches);}catch(e){return false;}}
+function lookPref(){return uiPrefs.get("look","glass")==="mat"?"mat":"glass";}
+function applyLook(){
+  const reduced=lookReduced(), on=lookPref()==="glass"&&!reduced;
+  document.documentElement.classList.toggle("glass-on",on);
+  const g=document.getElementById("lookGlass"),m=document.getElementById("lookMat"),h=document.getElementById("lookHint");
+  if(g){g.classList.toggle("on",lookPref()==="glass");g.setAttribute("aria-pressed",lookPref()==="glass");}
+  if(m){m.classList.toggle("on",lookPref()==="mat");m.setAttribute("aria-pressed",lookPref()==="mat");}
+  if(h)h.textContent=reduced?"Ton système demande moins de transparence : l'apparence reste mate.":"Réglage propre à ce navigateur.";
+}
+function setLook(v){
+  uiPrefs.set("look",v==="mat"?"mat":"glass");
+  applyLook();
+  toast(v==="mat"?"Apparence mate":"Apparence verre","info");
+}
+applyLook();
+try{matchMedia("(prefers-reduced-transparency: reduce)").addEventListener("change",applyLook);}catch(e){}
+document.addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#userChip,.side-user .av"))setTimeout(applyLook,0);});
+
+/* Lueur sous le pointeur : seulement a la souris, seulement en verre, et
+   jamais si le systeme demande moins d'animations. Une mise a jour par image. */
+(function(){
+  const SEL=".kpi,.panel,.card,.ann,.mis-card,.rec-card,.perso,.ov-dl,.me-hero,.modal,.notif-panel,.cmdk-box";
+  let el=null,raf=0,x=0,y=0;
+  const calme=()=>{try{return matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){return false;}};
+  const clear=n=>{if(n){n.style.removeProperty("--mx");n.style.removeProperty("--my");}};
+  document.addEventListener("pointermove",e=>{
+    if(e.pointerType!=="mouse"||!document.documentElement.classList.contains("glass-on")||calme())return;
+    const t=e.target.closest?e.target.closest(SEL):null;
+    if(el!==t){clear(el);el=t;}
+    if(!t)return;
+    x=e.clientX;y=e.clientY;
+    if(!raf)raf=requestAnimationFrame(()=>{raf=0;if(!el)return;const r=el.getBoundingClientRect();
+      el.style.setProperty("--mx",(x-r.left).toFixed(0)+"px");el.style.setProperty("--my",(y-r.top).toFixed(0)+"px");});
+  },{passive:true});
+  document.addEventListener("pointerleave",()=>{clear(el);el=null;});
+})();

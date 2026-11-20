@@ -1,0 +1,141 @@
+/* ARC ALPHA - apparence « verre liquide » (2026-11).
+   Inspiree du Liquid Glass d'Apple, adaptee au tableau de bord :
+   - une lumiere d'ambiance fixe derriere le contenu (sans elle, le verre
+     serait invisible sur un fond uni) ;
+   - des surfaces translucides : flou + saturation de ce qui est derriere,
+     voile sombre pour garder le texte lisible ;
+   - un liseré de lumiere sur le bord haut, un reflet en biais, et une lueur
+     qui suit le pointeur au survol (js/app.js, variables --mx / --my) ;
+   - formes en capsule pour les commandes (onglets, interrupteurs, recherche).
+   Tout est sous html.glass-on : le reglage « Mat » (fenetre Compte) ou la
+   preference systeme « reduire la transparence » rendent l'apparence mate.
+   Le flou n'est pose que sur des surfaces, jamais sur les lignes de tableau
+   ni les cases du calendrier, pour rester fluide. */
+
+:root{
+  --lg-tint:rgba(14,19,28,.58);        /* voile des cartes et panneaux */
+  --lg-tint-hi:rgba(14,19,28,.74);     /* voile des fenetres et menus, texte dense */
+  --lg-tint-bar:rgba(10,14,21,.52);    /* voile des barres */
+  --lg-blur:22px;--lg-blur-hi:34px;--lg-sat:170%;
+  --lg-edge:rgba(255,255,255,.09);
+  --lg-rim:inset 0 1px 0 rgba(255,255,255,.11),inset 0 0 0 1px rgba(255,255,255,.035),inset 0 -1px 0 rgba(0,0,0,.25);
+  --lg-spec:linear-gradient(155deg,rgba(255,255,255,.075) 0%,rgba(255,255,255,.02) 30%,rgba(255,255,255,0) 55%);
+  --lg-light:radial-gradient(520px circle at var(--mx,-999px) var(--my,-999px),rgba(255,255,255,.065),transparent 46%);
+  --lg-shadow:0 1px 1px rgba(0,0,0,.18),0 10px 30px rgba(0,0,0,.28);
+}
+
+/* ---------- Lumiere d'ambiance ---------- */
+.lg-ambient{display:none;position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(42vw 42vw at 10% 6%,rgba(0,224,251,.17),transparent 62%),
+    radial-gradient(40vw 40vw at 92% 18%,rgba(77,141,255,.15),transparent 64%),
+    radial-gradient(48vw 48vw at 72% 96%,rgba(139,125,255,.13),transparent 62%),
+    radial-gradient(32vw 32vw at 28% 78%,rgba(0,224,251,.08),transparent 62%)}
+.lg-ambient::after{content:"";position:absolute;inset:0;opacity:.6;
+  background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 85% 75% at 50% 30%,#000 30%,transparent 100%);
+  mask-image:radial-gradient(ellipse 85% 75% at 50% 30%,#000 30%,transparent 100%)}
+html.glass-on .lg-ambient{display:block}
+html.glass-on body{background:#070a10}
+
+/* ---------- Surfaces : cartes, panneaux, listes ---------- */
+html.glass-on :is(.kpi,.panel,.card,.stat-card,.ann,.mis-card,.rec-card,.perso,.ov-dl,.me-hero,.cmd-block,.mlc,.rec-banner,.nav-ed-grp,#v-fichecdm .holo){
+  background:var(--lg-light),var(--lg-spec),var(--lg-tint);
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));
+  backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));
+  border-color:var(--lg-edge);
+  box-shadow:var(--lg-rim),var(--lg-shadow)}
+html.glass-on .ov-dl.grace{background:var(--lg-light),linear-gradient(90deg,rgba(255,154,74,.12),transparent 60%),var(--lg-tint)}
+/* survol : le verre s'eclaire au lieu de changer de couleur */
+html.glass-on :is(.kpi.go,.card[onclick],.card.ptr,.mis-card,.rec-card,.perso,.ann):hover{
+  background:var(--lg-light),var(--lg-spec),rgba(20,27,38,.62);
+  border-color:rgba(255,255,255,.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15),inset 0 0 0 1px rgba(255,255,255,.05),0 16px 40px rgba(0,0,0,.36)}
+html.glass-on .panel-head{border-bottom-color:rgba(255,255,255,.06)}
+html.glass-on .kpi .ic{box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+
+/* Pas de verre dans le verre : a l'interieur d'une surface deja floutee,
+   les blocs deviennent de simples voiles clairs (moins couteux, plus net). */
+html.glass-on :is(.panel,.modal,.card,.notif-panel,.chat-panel,.cmdk-box,.mis-card) :is(.kpi,.card,.stat-card,.ann,.mis-card,.perso,.cmd-block){
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  background:rgba(255,255,255,.035);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+html.glass-on .modal :is([style*="background:var(--s2)"],[style*="background:var(--s1)"]){background:rgba(255,255,255,.04)!important}
+
+/* ---------- Barres : haut, laterale, bas ---------- */
+html.glass-on nav.top-nav{background:var(--lg-spec),var(--lg-tint-bar);
+  -webkit-backdrop-filter:blur(var(--lg-blur-hi)) saturate(180%);backdrop-filter:blur(var(--lg-blur-hi)) saturate(180%);
+  border-bottom-color:rgba(255,255,255,.07);box-shadow:inset 0 -1px 0 rgba(255,255,255,.04)}
+html.glass-on .dash-side{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 30%),rgba(10,14,21,.42);
+  -webkit-backdrop-filter:blur(var(--lg-blur-hi)) saturate(170%);backdrop-filter:blur(var(--lg-blur-hi)) saturate(170%);
+  border-right-color:rgba(255,255,255,.07)}
+/* la carte du compte reste au-dessus du menu qui defile : voile presque opaque, sinon le texte transparait */
+html.glass-on .side-user{background:rgba(11,15,22,.94);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top-color:rgba(255,255,255,.08)}
+html.glass-on .side-item.on{background:linear-gradient(180deg,rgba(0,224,251,.16),rgba(0,224,251,.09));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 1px rgba(0,224,251,.18)}
+html.glass-on .side-item:hover:not(.on){background:rgba(255,255,255,.06)}
+
+/* ---------- Ce qui flotte : fenetres, menus, bulles ---------- */
+html.glass-on :is(.modal,.notif-panel,.cmdk-box,.chat-panel,.mob-menu){
+  background:var(--lg-light),var(--lg-spec),var(--lg-tint-hi);
+  -webkit-backdrop-filter:blur(var(--lg-blur-hi)) saturate(185%);backdrop-filter:blur(var(--lg-blur-hi)) saturate(185%);
+  border-color:rgba(255,255,255,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px rgba(255,255,255,.04),0 30px 80px rgba(0,0,0,.55)}
+html.glass-on .modal-bg{background:rgba(4,6,10,.42)}
+html.glass-on .modal-h,html.glass-on .modal-f{background:transparent;border-color:rgba(255,255,255,.07)}
+html.glass-on #toast{background:var(--lg-spec),rgba(22,29,40,.7);
+  -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%);
+  border-color:rgba(255,255,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 16px 40px rgba(0,0,0,.45)}
+html.glass-on #globalTooltip{background:rgba(22,29,40,.78);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+html.glass-on .chat-bubble.them{background:rgba(255,255,255,.07);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+
+/* ---------- Commandes en capsule ---------- */
+html.glass-on :is(.seg,.roster-search,.cmdk-hint,.sync-wrap,.filters .inline-sel,.inline-sel){
+  background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.025));
+  border-color:rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+html.glass-on :is(.seg,.roster-search,.cmdk-hint,.sync-wrap){border-radius:999px}
+html.glass-on .seg button{border-radius:999px}
+html.glass-on .seg button.on{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.07));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 2px 8px rgba(0,0,0,.25);color:var(--tx)}
+html.glass-on :is(.btn-ghost,.sbtn:not(.green):not(.danger):not(.blue):not(.on)){
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+  border-color:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+html.glass-on :is(.btn-ghost,.sbtn:not(.green):not(.danger):not(.blue):not(.on)):hover{
+  background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.05))}
+html.glass-on .btn-primary,html.glass-on .login-btn,html.glass-on .chat-fab{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(0,0,0,.15),0 6px 18px rgba(0,224,251,.22)}
+html.glass-on .field :is(input,select,textarea){background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.12)}
+html.glass-on .field :is(input,select,textarea):focus{background:rgba(255,255,255,.07)}
+
+/* ---------- Tableaux et calendrier : voiles legers, sans flou ---------- */
+html.glass-on .tbl tbody tr:hover{background:rgba(255,255,255,.045)}
+html.glass-on .cal-day{background:rgba(255,255,255,.025);border-color:rgba(255,255,255,.06)}
+html.glass-on .cal-day.today,html.glass-on .cal-day.sel{background:rgba(0,224,251,.1)}
+html.glass-on .plc{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08)}
+
+/* ---------- Telephone : barre d'onglets flottante en capsule ---------- */
+@media(max-width:980px){
+  html.glass-on{--lg-blur:16px;--lg-blur-hi:24px}
+  html.glass-on .dash-bottom{left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));border-radius:22px;
+    padding:2px 4px;border:1px solid rgba(255,255,255,.12);
+    background:var(--lg-spec),rgba(12,16,24,.55);
+    -webkit-backdrop-filter:blur(28px) saturate(190%);backdrop-filter:blur(28px) saturate(190%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 14px 36px rgba(0,0,0,.5)}
+  html.glass-on .dash-bottom button{border-radius:18px}
+  html.glass-on .dash-bottom button.on{background:linear-gradient(180deg,rgba(0,224,251,.18),rgba(0,224,251,.08));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+  html.glass-on .chat-fab{bottom:calc(84px + env(safe-area-inset-bottom))}
+  html.glass-on .chat-panel{bottom:calc(144px + env(safe-area-inset-bottom))}
+  html.glass-on #toast{bottom:calc(86px + env(safe-area-inset-bottom))}
+  html.glass-on .dash-main{padding-bottom:calc(var(--sp10) + 70px)}
+}
+
+/* Navigateur sans flou d'arriere-plan : voiles plus opaques, lisibilite d'abord */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  html.glass-on{--lg-tint:rgba(16,21,30,.92);--lg-tint-hi:rgba(16,21,30,.97);--lg-tint-bar:rgba(10,14,21,.95)}
+}
+/* Preference systeme : moins de transparence (le JS retire deja la classe ; filet CSS) */
+@media(prefers-reduced-transparency:reduce){
+  html.glass-on .lg-ambient{display:none}
+  html.glass-on{--lg-tint:rgba(16,21,30,.96);--lg-tint-hi:rgba(16,21,30,.98);--lg-tint-bar:rgba(10,14,21,.97)}
+}
