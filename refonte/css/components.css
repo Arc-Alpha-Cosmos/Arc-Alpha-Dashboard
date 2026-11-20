@@ -2004,3 +2004,25 @@ td .empty::before{width:34px;height:34px}
 .nav-ed-tab{font-family:var(--fr);font-size:.84rem}
 .nav-ed-count{font-family:var(--fm);border-radius:5px}
 .fbadges{min-width:164px}
+
+/* ---------- Carte statistique (statCard, js/utils.js) ----------
+   Reprise du StatCard propose par le proprietaire : la carte cliquable se
+   souleve au survol, l'icone est posee sur un leger degrade de la couleur de
+   la carte, et une ligne de variation suit la valeur. */
+.kpi{transition:transform var(--t2) var(--e-out),border-color var(--t1),background var(--t1),box-shadow var(--t2)}
+.kpi.go:hover{transform:translateY(-4px);border-color:var(--ls);background:var(--s1);box-shadow:var(--sh2)}
+.kpi.go:active{transform:translateY(-1px)}
+.kpi.go:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.kpi .ic{color:var(--kc,var(--ac));
+  background:linear-gradient(135deg,color-mix(in srgb,var(--kc,var(--ac)) 32%,transparent),color-mix(in srgb,var(--kc,var(--ac)) 6%,transparent))}
+.kpi-trend{display:inline-flex;align-items:center;gap:3px;width:fit-content;font-size:.8rem;font-weight:600;
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.kpi-trend svg{width:15px;height:15px;flex:0 0 auto}
+.kpi-trend.good{color:var(--gr)}
+.kpi-trend.bad{color:var(--rd)}
+.kpi-trend.neutral{color:var(--tx2)}
+.kpi-trend .ctx{font-weight:400;color:var(--dm);margin-left:var(--sp2)}
+@media(prefers-reduced-motion:reduce){.kpi.go:hover,.kpi.go:active{transform:none}}
+.kpi-trend{white-space:normal;flex-wrap:wrap;row-gap:0}
+.kpi-trend .ctx{white-space:nowrap}
+.kpi .l{padding-right:40px}

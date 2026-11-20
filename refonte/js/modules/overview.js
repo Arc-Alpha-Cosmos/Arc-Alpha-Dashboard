@@ -714,9 +714,10 @@ function renderOvKpis(){
   const abs=(state.absences||[]).filter(a=>a.start_date<=today&&today<=a.end_date).length;
   const lvl=(session&&(session.role==="admin"||session.role==="amiraute"))?99:gradeLevel(getSessionGrade());
   const cards=[];
-  const kpi=(o)=>cards.push(`<div class="kpi${o.tab?" go":""}" style="--kc:${o.c}" ${o.tab?`role="button" tabindex="0" onclick="dashTab('${escJs(o.tab)}')" onkeydown="if(event.key==='Enter')dashTab('${escJs(o.tab)}')"`:""}>
-      <span class="ic">${navIconHtml(o.ic)}</span><span class="v">${o.v}${o.small?`<small>${esc(o.small)}</small>`:""}</span><span class="l">${esc(o.l)}</span><span class="s">${esc(o.s||"")}</span></div>`);
-  kpi({l:"Effectif",v:total,small:"/ "+cible,s:(total>=cible?"cible atteinte":(cible-total)+" place"+(cible-total>1?"s":"")+" à pourvoir")+((_res=>_res?" · "+_res+" en réserve":"")((state.members||[]).filter(m=>(m.categorie||"effectif")==="reserve").length)),c:total>=cible?"var(--gr)":"var(--ac)",ic:"users",tab:"roster"});
+  const kpi=(o)=>cards.push(statCard({title:o.l,value:o.v,unit:o.small,sub:o.s,color:o.c,icon:o.ic,tab:o.tab,trend:o.trend}));
+  const arrivees=countInWindow(eff,m=>m.date_arrivee,30,0);
+  kpi({l:"Effectif",v:total,small:"/ "+cible,s:(total>=cible?"cible atteinte":(cible-total)+" place"+(cible-total>1?"s":"")+" à pourvoir")+((_res=>_res?" · "+_res+" en réserve":"")((state.members||[]).filter(m=>(m.categorie||"effectif")==="reserve").length)),c:total>=cible?"var(--gr)":"var(--ac)",ic:"users",tab:"roster",
+    trend:{cur:arrivees,mode:"abs",neutral:true,ctx:arrivees>1?"arrivées en 30 j":"arrivée en 30 j",hint:"Membres de l'effectif dont la date d'arrivée tombe dans les 30 derniers jours"}});
   kpi({l:"Présents",v:present,small:total?Math.round(present/total*100)+" %":"",s:abs?abs+" absence"+(abs>1?"s":"")+" en cours":"aucune absence en cours",c:!total?"var(--dm)":(present/total>=.7?"var(--gr)":present/total>=.4?"var(--or)":"var(--rd)"),ic:"user-check",tab:"absences"});
   kpi({l:"Rapports de la semaine",v:done,small:"/ "+due,s:due?(due-done?(due-done)+" en attente":"tout est rendu"):"personne n'est attendu",c:due&&done<due?"var(--or)":"var(--gr)",ic:"file-check",tab:"reports"});
   kpi({l:"Blâmes actifs",v:blames,s:blames?"à suivre":"aucun en cours",c:blames?"var(--rd)":"var(--gr)",ic:"alert-triangle",tab:lvl>=GRADE_LEVEL.MAJ?"blames":null});

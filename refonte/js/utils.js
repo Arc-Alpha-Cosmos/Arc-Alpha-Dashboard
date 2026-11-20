@@ -462,3 +462,75 @@ async function contentMerge(mutate){
   state.content=next;
   return next;
 }
+
+/* ============================================================
+   Carte statistique (statCard)
+   Reprise du composant StatCard propose par le proprietaire (React,
+   framer-motion), traduit pour ce site : pas de React ni de Tailwind ici,
+   le survol passe par le CSS (.kpi.go:hover) et l'icone par Lucide.
+   Une seule fabrique pour l'accueil et les Statistiques.
+
+   statCard({title, value, unit, sub, color, icon, tab, trend})
+     color : couleur de la carte (une variable CSS, ex. "var(--gr)")
+     tab   : onglet ouvert au clic ; sans lui, la carte n'est pas cliquable
+     trend : variation, voir statTrend. Absente = pas de ligne de variation.
+   ============================================================ */
+function statCard(o){
+  const go=!!o.tab;
+  const act=go?` role="button" tabindex="0" onclick="dashTab('${escJs(o.tab)}')"`
+    +` onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();dashTab('${escJs(o.tab)}')}"`:"";
+  return `<div class="kpi${go?" go":""}" style="--kc:${o.color||"var(--ac)"}"${act}>
+    <span class="l">${esc(o.title)}</span>
+    <span class="ic" aria-hidden="true">${navIconHtml(o.icon||"activity")}</span>
+    <span class="v">${esc(o.value)}${o.unit?`<small>${esc(o.unit)}</small>`:""}</span>
+    ${statTrend(o.trend)}
+    ${o.sub?`<span class="s">${esc(o.sub)}</span>`:""}
+  </div>`;
+}
+
+/* Variation affichee sous la valeur. Toujours calculee sur des donnees
+   reelles ; quand il n'y a rien a comparer, on n'affiche rien plutot qu'un
+   « +0 % » sans objet.
+     {cur, prev}              pourcentage d'une periode sur l'autre
+     {cur, prev, mode:"pts"}  ecart en points (pour un taux)
+     {cur, mode:"abs"}        simple compte, ex. « +2 arrivees »
+     lowerIsBetter            une hausse est une mauvaise nouvelle (blames...)
+     neutral                  ni bon ni mauvais : couleur neutre
+     ctx                      texte gris apres le chiffre, ex. « vs 30 j prec. »
+     hint                     bulle au survol : ce qui est compare exactement */
+function statTrend(t){
+  if(!t)return "";
+  const cur=Number(t.cur)||0, prev=Number(t.prev)||0;
+  let d, txt;
+  if(t.mode==="pts"){
+    if(t.cur==null||t.prev==null)return "";
+    d=Math.round((cur-prev)*10)/10;
+    txt=(d>0?"+":"")+String(d).replace(".",",")+(Math.abs(d)>=2?" pts":" pt");
+  }else if(t.mode==="abs"){
+    if(!cur)return "";
+    d=cur;txt="+"+cur;
+  }else{
+    if(!cur&&!prev)return "";
+    d=cur-prev;
+    txt=prev?((d>0?"+":"")+Math.round(d/prev*100)+" %"):("+"+cur);
+  }
+  const dir=d>0?"up":(d<0?"down":"flat");
+  const tone=dir==="flat"||t.neutral?"neutral":(((dir==="up")!==!!t.lowerIsBetter)?"good":"bad");
+  const ic=dir==="up"?"arrow-up-right":(dir==="down"?"arrow-down-right":"arrow-right");
+  return `<span class="kpi-trend ${tone}"${t.hint?` title="${esc(t.hint)}"`:""}>${navIconHtml(ic)}${esc(dir==="flat"?"stable":txt)}`
+    +`${t.ctx?`<span class="ctx">${esc(t.ctx)}</span>`:""}</span>`;
+}
+
+/* Nombre d'elements dont la date tombe dans une fenetre de `days` jours
+   finissant aujourd'hui, ou `offset` jours plus tot. La date d'un element est
+   une date simple (AAAA-MM-JJ) ou un horodatage, ramene au jour local. */
+function countInWindow(arr,dateOf,days,offset){
+  const end=addDaysYmd(ymdLocal(new Date()),-(offset||0));
+  const start=addDaysYmd(end,-(days-1));
+  return (arr||[]).filter(x=>{
+    const raw=String(dateOf(x)||"");
+    let d=raw.slice(0,10);
+    if(raw.length>10){const t=new Date(raw);if(!isNaN(t))d=ymdLocal(t);}
+    return /^\d{4}-\d{2}-\d{2}$/.test(d)&&d>=start&&d<=end;
+  }).length;
+}

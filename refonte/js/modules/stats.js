@@ -89,13 +89,33 @@ function renderStats(){
   _statsSeries.effectif=grades.map(g=>({grade:g.l,membres:g.v}));
 
   const absAct=(state.absences||[]).filter(a=>{const t=ymdLocal(new Date());return a.start_date<=t&&t<=a.end_date;}).length;
-  const kpi=(l,v,s,c,ic)=>`<div class="kpi" style="--kc:${c}"><span class="ic">${navIconHtml(ic)}</span><span class="v">${v}</span><span class="l">${esc(l)}</span><span class="s">${esc(s||"")}</span></div>`;
-  kp.innerHTML=kpi("Effectif",eff.length,"cible "+effectifCible(),"var(--ac)","users")
-    +kpi("Taux de rapports",moy===null?"-":moy+" %","moyenne 4 dernières semaines",moy===null?"var(--dm)":(moy>=90?"var(--gr)":moy>=60?"var(--or)":"var(--rd)"),"file-check")
-    +kpi("Blâmes actifs",(state.blames||[]).filter(b=>!b.resolved).length,"sur "+(state.blames||[]).length+" au total","var(--rd)","alert-triangle")
-    +kpi("Formations",(state.formations||[]).filter(f=>f.statut==="Validé").length,"validées depuis le début","var(--gr)","graduation-cap")
-    +kpi("Entraînements",(state.activites||[]).length,"séances enregistrées","var(--ac)","target")
-    +kpi("Absences en cours",absAct,"aujourd'hui",absAct?"var(--or)":"var(--gr)","clock");
+  /* Cartes du haut : statCard (js/utils.js). Les trois cartes d'activite
+     portent sur les 30 derniers jours et se comparent aux 30 jours d'avant ;
+     le taux de rapports compare les 4 dernieres semaines closes aux 4 d'avant. */
+  const W=30, prec="vs 30 j préc.";
+  const valides=(state.formations||[]).filter(f=>f.statut==="Validé");
+  const fCur=countInWindow(valides,f=>f.date||f.created_at,W,0), fPrev=countInWindow(valides,f=>f.date||f.created_at,W,W);
+  const eCur=countInWindow(state.activites,a=>a.date||a.created_at,W,0), ePrev=countInWindow(state.activites,a=>a.date||a.created_at,W,W);
+  const bCur=countInWindow(state.blames,b=>b.created_at,W,0), bPrev=countInWindow(state.blames,b=>b.created_at,W,W);
+  const prevRates=rep.filter(x=>x.v!==null).slice(-8,-4);
+  const moyPrev=prevRates.length?Math.round(prevRates.reduce((s,x)=>s+x.v,0)/prevRates.length*10)/10:null;
+  const arrivees=countInWindow(eff,m=>m.date_arrivee,W,0);
+  const blamesActifs=(state.blames||[]).filter(b=>!b.resolved).length;
+  kp.innerHTML=[
+    statCard({title:"Effectif",value:eff.length,unit:"/ "+effectifCible(),sub:"cible "+effectifCible(),color:"var(--ac)",icon:"users",tab:"roster",
+      trend:{cur:arrivees,mode:"abs",neutral:true,ctx:arrivees>1?"arrivées en 30 j":"arrivée en 30 j"}}),
+    statCard({title:"Taux de rapports",value:moy===null?"-":String(moy).replace(".",",")+" %",sub:"moyenne des 4 dernières semaines",
+      color:moy===null?"var(--dm)":(moy>=90?"var(--gr)":moy>=60?"var(--or)":"var(--rd)"),icon:"file-check",tab:"reports",
+      trend:moy===null||moyPrev===null?null:{cur:moy,prev:moyPrev,mode:"pts",ctx:"vs 4 sem. préc.",hint:"Moyenne des 4 dernières semaines closes, comparée aux 4 semaines d'avant ("+String(moyPrev).replace(".",",")+" %)"}}),
+    statCard({title:"Blâmes sur 30 j",value:bCur,sub:blamesActifs+" actif"+(blamesActifs>1?"s":"")+" aujourd'hui",color:bCur?"var(--rd)":"var(--gr)",icon:"alert-triangle",tab:"blames",
+      trend:{cur:bCur,prev:bPrev,lowerIsBetter:true,ctx:prec,hint:bCur+" sur les 30 derniers jours, "+bPrev+" sur les 30 jours d'avant"}}),
+    statCard({title:"Formations validées",value:fCur,sub:valides.length+" depuis le début",color:"var(--gr)",icon:"graduation-cap",tab:"formations",
+      trend:{cur:fCur,prev:fPrev,ctx:prec,hint:fCur+" sur les 30 derniers jours, "+fPrev+" sur les 30 jours d'avant"}}),
+    statCard({title:"Entraînements",value:eCur,sub:(state.activites||[]).length+" depuis le début",color:"var(--ac)",icon:"target",tab:"entrainements",
+      trend:{cur:eCur,prev:ePrev,ctx:prec,hint:eCur+" sur les 30 derniers jours, "+ePrev+" sur les 30 jours d'avant"}}),
+    statCard({title:"Absences en cours",value:absAct,sub:"aujourd'hui",color:absAct?"var(--or)":"var(--gr)",icon:"clock",tab:"absences"})
+  ].join("");
+  lucideRefresh(kp);
 
   const panel=(t,inner,legend)=>`<section class="panel"><div class="panel-head"><h3><span class="pk">//</span> ${t}</h3></div><div class="panel-body">${inner}${legend||""}</div></section>`;
   ch.innerHTML=panel("Taux de rapports rendus par semaine",svgLine(rep,{unit:"%",max:100,aria:"taux de rapports par semaine"}))
