@@ -1499,6 +1499,149 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   #v-fichecdm .cdm-tabs button{font-size:.8rem;padding:var(--sp4) var(--sp4)}
   #v-fichecdm .cdm-tabs button span{display:none}
 }
+
+/* ===== PANTHEON DES COMMANDANTS-MARECHAUX (2026-11-20) ===== */
+/* ARC ALPHA - Pantheon des Commandants-Marechaux (2026-11).
+   Registre or et nuit, a part du cyan du reste du tableau de bord : c'est la
+   seule page solennelle du site. Couronnes de laurier en SVG (js), rayons de
+   lumiere et degrades d'or en CSS, aucune image externe. Une seule animation :
+   l'entree des plaques a l'ouverture de l'onglet, coupee si le systeme demande
+   moins d'animations. */
+
+:root{
+  --au1:#fff1b8;--au2:#e8b923;--au3:#8a6512;
+  --au-txt:#f3d27a;
+  --au-s:rgba(232,185,35,.12);--au-line:rgba(232,185,35,.28);
+  --au-grad:linear-gradient(135deg,var(--au1) 0%,var(--au2) 45%,var(--au3) 100%);
+}
+.pan-mat{font-family:var(--fm);font-size:.72em;font-weight:600;color:var(--au-txt);letter-spacing:.04em;margin-right:.55em;
+  padding:.1em .45em;border-radius:6px;background:var(--au-s);vertical-align:.15em}
+.pan-meta,.pan-ov-meta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp3) var(--sp6);font-size:.86rem;color:var(--tx2)}
+.pan-meta>span,.pan-ov-meta>span{display:inline-flex;align-items:center;gap:var(--sp3)}
+.pan-meta svg,.pan-ov-meta>span>svg{width:15px;height:15px;color:var(--au2);flex:none}
+.pan-arrow{color:var(--au2);margin:0 .2em}
+.pan-chip{padding:2px 9px;border-radius:999px;background:var(--au-s);color:var(--au-txt);font-size:.78rem;font-weight:600}
+.pan-discord{display:inline-flex;align-items:center;gap:var(--sp3);height:28px;padding:0 var(--sp4);border-radius:999px;cursor:pointer;
+  background:rgba(88,101,242,.12);border:1px solid rgba(88,101,242,.3);color:#c9cdfb;font-size:.82rem;font-weight:500;
+  transition:background var(--t1),border-color var(--t1)}
+.pan-discord:hover{background:rgba(88,101,242,.22);border-color:rgba(88,101,242,.5)}
+.pan-discord svg{width:14px;height:14px}
+.pan-discord svg:last-child{opacity:.6}
+.pan-quote{margin:var(--sp5) 0 0;padding:var(--sp3) 0 var(--sp3) var(--sp6);border-left:2px solid var(--au2);
+  font-family:var(--fr);font-style:italic;font-size:.98rem;line-height:1.6;color:var(--tx)}
+.pan-laurel{display:block;filter:drop-shadow(0 0 10px rgba(232,185,35,.25))}
+
+/* ---------- Vue d'ensemble : bandeau du CMDM en fonction ---------- */
+.pan-ov{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:var(--sp7);
+  margin-bottom:var(--sp6);padding:var(--sp6) var(--sp7);border-radius:var(--r3);overflow:hidden;
+  background:radial-gradient(120% 160% at 0% 50%,rgba(232,185,35,.16),transparent 55%),var(--s1) padding-box,
+    linear-gradient(120deg,rgba(255,241,184,.55),rgba(232,185,35,.25) 35%,rgba(255,255,255,.06) 70%) border-box;
+  border:1px solid transparent;box-shadow:inset 0 1px 0 rgba(255,241,184,.14)}
+.pan-ov-crest{position:relative;width:84px;height:84px;flex:0 0 auto}
+.pan-ov-ini,.pan-current-ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fs);font-weight:700;letter-spacing:.06em;background:var(--au-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pan-ov-ini{font-size:1.15rem;padding-bottom:4px}
+.pan-ov-k{display:inline-flex;align-items:center;gap:var(--sp3);font-size:.76rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--au-txt)}
+.pan-ov-k svg{width:15px;height:15px}
+.pan-ov-name{font-family:var(--fr);font-size:1.75rem;font-weight:600;letter-spacing:-.015em;color:var(--tx);margin:var(--sp2) 0 var(--sp3)}
+.pan-ov-quote{margin:var(--sp4) 0 0;font-family:var(--fr);font-style:italic;font-size:.92rem;color:var(--tx2);
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.pan-ov-act{display:flex;flex-direction:column;gap:var(--sp3);align-items:flex-end}
+.pan-ov-empty{display:flex;align-items:center;gap:var(--sp6);flex-wrap:wrap;grid-template-columns:none;color:var(--tx2);font-size:.9rem}
+
+/* ---------- En-tete du pantheon ---------- */
+.pan-hero{position:relative;text-align:center;padding:var(--sp9) var(--sp6) var(--sp8);margin-bottom:var(--sp7);border-radius:20px;overflow:hidden;
+  background:radial-gradient(70% 90% at 50% 0%,rgba(232,185,35,.18),transparent 70%),
+    radial-gradient(40% 60% at 50% 100%,rgba(0,224,251,.06),transparent 70%),var(--bg2);
+  border:1px solid var(--au-line);box-shadow:inset 0 1px 0 rgba(255,241,184,.12)}
+/* rayons de lumiere, fixes, qui partent de la couronne */
+.pan-hero::before{content:"";position:absolute;left:50%;top:-60%;width:180%;aspect-ratio:1;transform:translateX(-50%);pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 50%,rgba(232,185,35,.07) 0deg 4deg,transparent 4deg 14deg);
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 0%,transparent 45%);mask-image:radial-gradient(circle at 50% 50%,#000 0%,transparent 45%)}
+.pan-hero>*{position:relative}
+.pan-hero-crest{position:relative;width:150px;height:150px;margin:0 auto var(--sp5)}
+.pan-hero-ico{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--au2);padding-bottom:6px}
+.pan-hero-ico svg{width:46px;height:46px;stroke-width:1.5;filter:drop-shadow(0 0 12px rgba(232,185,35,.45))}
+.pan-hero-k{font-family:var(--fm);font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;color:var(--au-txt);opacity:.85}
+.pan-hero-t{margin:var(--sp4) auto var(--sp4);max-width:22ch;font-family:var(--fs);font-weight:700;font-size:clamp(1.3rem,3.2vw,2.1rem);
+  line-height:1.25;letter-spacing:.06em;text-transform:uppercase;background:var(--au-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pan-hero-s{max-width:56ch;margin:0 auto;color:var(--tx2);font-size:.95rem;line-height:1.6}
+.pan-hero-stats{display:flex;justify-content:center;flex-wrap:wrap;gap:var(--sp7) var(--sp9);margin-top:var(--sp7);padding-top:var(--sp6);
+  border-top:1px solid var(--au-line);max-width:640px;margin-left:auto;margin-right:auto}
+.pan-hero-stats div{display:flex;flex-direction:column;gap:var(--sp1)}
+.pan-hero-stats b{font-family:var(--fr);font-size:1.5rem;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+.pan-hero-stats span{font-size:.8rem;color:var(--dm)}
+
+/* ---------- Le CMDM en fonction ---------- */
+.pan-current{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--sp8);
+  padding:var(--sp8);margin-bottom:var(--sp8);border-radius:20px;
+  background:radial-gradient(90% 140% at 0% 0%,rgba(232,185,35,.15),transparent 60%),var(--s1) padding-box,
+    var(--au-grad) border-box;border:1px solid transparent;
+  box-shadow:0 0 0 6px rgba(232,185,35,.04),0 24px 60px rgba(0,0,0,.4),0 0 80px rgba(232,185,35,.08)}
+.pan-current-badge{position:absolute;top:var(--sp6);right:var(--sp6);display:inline-flex;align-items:center;gap:var(--sp3);
+  padding:4px 12px;border-radius:999px;background:var(--au-grad);color:#2a1d02;font-size:.78rem;font-weight:700;letter-spacing:.04em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 14px rgba(232,185,35,.3)}
+.pan-current-badge svg{width:14px;height:14px}
+.pan-current-crest{position:relative;width:132px;height:132px}
+.pan-current-ini{font-size:1.75rem;padding-bottom:6px}
+.pan-rank{font-family:var(--fm);font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--au-txt)}
+.pan-current-name{font-family:var(--fr);font-size:clamp(1.7rem,3.4vw,2.4rem);font-weight:600;letter-spacing:-.02em;margin:var(--sp3) 0 var(--sp5);color:var(--tx)}
+.pan-actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp4);margin-top:var(--sp6)}
+
+/* ---------- Separateur ---------- */
+.pan-sec{display:flex;align-items:center;gap:var(--sp6);margin:0 0 var(--sp7)}
+.pan-sec h3{font-family:var(--fs);font-size:.82rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--au-txt);white-space:nowrap}
+.pan-sec-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--au-line))}
+.pan-sec-line:last-child{background:linear-gradient(90deg,var(--au-line),transparent)}
+
+/* ---------- Les anciens : plaques sur une ligne d'or ---------- */
+.pan-list{list-style:none;margin:0;padding:0 0 0 34px;position:relative;display:flex;flex-direction:column;gap:var(--sp6)}
+.pan-list::before{content:"";position:absolute;left:21px;top:20px;bottom:20px;width:2px;border-radius:2px;
+  background:linear-gradient(180deg,var(--au2),rgba(232,185,35,.15))}
+.pan-plaque{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--sp5);
+  padding:var(--sp7) var(--sp7) var(--sp7) calc(var(--sp7) + 22px);border-radius:var(--r3);
+  background:linear-gradient(135deg,rgba(232,185,35,.07),transparent 40%),var(--s1);border:1px solid rgba(232,185,35,.18);
+  box-shadow:inset 0 1px 0 rgba(255,241,184,.08);transition:border-color var(--t1),transform var(--t2) var(--e-out),box-shadow var(--t2);
+  animation:panIn .5s var(--e-out) backwards;animation-delay:calc(var(--i,0) * 70ms)}
+.pan-plaque:hover{border-color:rgba(232,185,35,.42);transform:translateX(3px);box-shadow:inset 0 1px 0 rgba(255,241,184,.12),0 14px 36px rgba(0,0,0,.35)}
+.pan-plaque-num{position:absolute;left:-34px;top:50%;transform:translate(0,-50%);width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-family:var(--fs);font-weight:700;font-size:.74rem;letter-spacing:.02em;color:#2a1d02;
+  background:var(--au-grad);box-shadow:0 0 0 4px var(--bg),0 0 0 5px rgba(232,185,35,.35),0 6px 18px rgba(232,185,35,.25)}
+.pan-plaque-name{font-family:var(--fr);font-size:1.5rem;font-weight:600;letter-spacing:-.01em;color:var(--tx);margin-bottom:var(--sp4)}
+.pan-plaque-act{display:flex;gap:var(--sp2);align-self:start}
+.pan-empty{display:flex;flex-direction:column;align-items:center;gap:var(--sp4);text-align:center;padding:var(--sp9) var(--sp6);
+  border-radius:var(--r3);border:1px dashed var(--au-line);color:var(--dm)}
+.pan-empty p{font-family:var(--fr);font-size:1.15rem;color:var(--au-txt);margin:var(--sp3) 0 0}
+.pan-empty span{max-width:46ch;font-size:.9rem}
+.pan-empty .btn{margin-top:var(--sp4)}
+@keyframes panIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- Petits ecrans ---------- */
+@media(max-width:820px){
+  .pan-ov{grid-template-columns:auto minmax(0,1fr);gap:var(--sp5);padding:var(--sp6)}
+  .pan-ov-crest{width:64px;height:64px}
+  .pan-ov-crest .pan-laurel{width:64px;height:64px}
+  .pan-ov-ini{font-size:.9rem}
+  .pan-ov-name{font-size:1.2rem}
+  .pan-ov-act{grid-column:1/-1;flex-direction:row;align-items:center;flex-wrap:wrap}
+  .pan-current{grid-template-columns:1fr;justify-items:center;text-align:center;padding:var(--sp9) var(--sp6) var(--sp7);gap:var(--sp5)}
+  .pan-current .pan-meta,.pan-actions{justify-content:center}
+  .pan-current .pan-quote{text-align:left}
+  .pan-current-badge{left:50%;right:auto;transform:translateX(-50%)}
+  .pan-plaque{grid-template-columns:1fr;padding:var(--sp6) var(--sp6) var(--sp6) calc(var(--sp6) + 20px)}
+  .pan-plaque-act{justify-self:end}
+  .pan-hero{padding:var(--sp8) var(--sp5) var(--sp7)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pan-plaque{animation:none}
+  .pan-plaque:hover{transform:none}
+}
+
+/* complements propres a l'ancien site */
+.pan-hint{font-family:var(--fm);font-size:.68rem;color:var(--dm)}
+#pantheonModal .hint{font-family:var(--fr);font-weight:400;color:var(--dm);text-transform:none;letter-spacing:0;margin-left:.3em}
+.pan-ov .sbtn,.pan-current .sbtn{white-space:nowrap}
+
 </style>
 </head>
 <body>
@@ -2050,6 +2193,9 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 
         </div>
 
+        <!-- CMDM EN FONCTION (pantheon) -->
+        <div id="ovCmdm"></div>
+
         <!-- ZONE 1 : bandeau echeance -->
         <section class="ov-dl" id="ovDeadline"></section>
 
@@ -2449,6 +2595,14 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
         <div class="panel"><div class="panel-body" id="reglementDisplay" style="font-family:var(--fr);font-size:.85rem;color:var(--tx);line-height:1.8;min-height:80px">
           <div class="empty"><p>Aucun règlement défini.</p></div>
         </div></div>
+      </div>
+
+      <!-- TAB: PANTHEON -->
+      <div class="dash-tab" data-dtc="pantheon" style="display:none">
+        <div class="sec-head"><h2>Panthéon</h2><span class="line"></span>
+          <button class="sbtn" id="panAddBtn" style="display:none;margin-left:auto" onclick="openPantheonModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5v14"/></svg>Inscrire</button>
+        </div>
+        <div id="pantheonBody"></div>
       </div>
 
       <div class="dash-tab" data-dtc="personnages" style="display:none">
@@ -3451,6 +3605,32 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 </div>
 
 <!-- MODAL: DOCUMENT -->
+<!-- MODAL: PANTHEON -->
+<div class="modal-bg" id="pantheonModal">
+  <div class="modal wide">
+    <div class="modal-h"><div><span class="k">// PANTHÉON</span><h3 id="panModalTitle">Inscrire au panthéon</h3></div>
+      <button class="modal-x" aria-label="Fermer" title="Fermer" onclick="closeModal('pantheonModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-b">
+      <div class="field"><label for="panMember">Membre de l'effectif <span class="hint">facultatif, remplit le nom et le matricule</span></label>
+        <select id="panMember" onchange="panMemberPick(this.value)"></select></div>
+      <div class="form-row fr2">
+        <div class="field"><label for="panMat">Matricule</label><input type="text" id="panMat" maxlength="20" autocomplete="off" placeholder="ex : A-17"></div>
+        <div class="field"><label for="panNom">Nom RP</label><input type="text" id="panNom" maxlength="60" autocomplete="off" placeholder="ex : Alpha"></div>
+      </div>
+      <div class="form-row fr2">
+        <div class="field"><label for="panDebut">Prise de poste</label><input type="date" id="panDebut"></div>
+        <div class="field"><label for="panFin">Départ <span class="hint">vide = toujours en fonction</span></label><input type="date" id="panFin"></div>
+      </div>
+      <div class="field"><label for="panDiscord">Discord</label><input type="text" id="panDiscord" maxlength="40" autocomplete="off" placeholder="ex : alpha.cmdm"></div>
+      <div class="field"><label for="panComment">Commentaire</label>
+        <textarea id="panComment" rows="4" maxlength="500" oninput="panCount()" placeholder="Ce que l'unité retient de son commandement."></textarea>
+        <div class="pan-hint" id="panCommentCount" style="text-align:right;margin-top:var(--sp2)">0 / 500</div></div>
+    </div>
+    <div class="modal-f"><button class="btn btn-ghost" onclick="closeModal('pantheonModal')">Annuler</button><button class="btn btn-primary" onclick="occupe(this,()=>savePantheonEntry())">Enregistrer</button></div>
+  </div>
+</div>
+
 <div class="modal-bg" id="docModal">
   <div class="modal wide">
     <div class="modal-h">
@@ -3994,6 +4174,7 @@ function gradeLevel(g){
 
 function canEdit(tab){
   if(!Auth.ok()) return false;
+  if(tab==="pantheon") return canEditPantheon();
   if(session.role==="admin") return true;
   if(session.role==="brs") return false;
   if(session.role==="amiraute") return true;
@@ -4652,6 +4833,10 @@ async function loadAll(){
     if(row.key==="reglement"){
       state.reglement=row.value;
     }
+    if(row.key==="pantheon"){
+      const pp=JSON.parse(row.value);
+      if(pp&&typeof pp==="object")state.pantheon=pp;
+    }
   }catch(e){console.warn("config: clé illisible",row.key,e);};});
   renderContent();
 }
@@ -4964,7 +5149,7 @@ const DEFAULT_NAV_GROUPS = [
   {id:"gestion", label:"Gestion", icon:"▤", tabs:["roster","formations","entrainements","recrutements","reserve","blacklist","absences","reports","rapports"]},
   {id:"activite", label:"Activité", icon:"◈", tabs:["missions","cmd","polls"]},
   {id:"discipline", label:"Discipline", icon:"⚑", tabs:["blames","announce","reglement"]},
-  {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","personnages","tasks","journal"]},
+  {id:"ressources", label:"Ressources", icon:"▦", tabs:["documents","pantheon","personnages","tasks","journal"]},
   {id:"admin", label:"Admin", icon:"⚙", tabs:["admin"]}
 ];
 
@@ -4988,6 +5173,7 @@ const TAB_META = {
   reglement:{label:"Règlement", icon:"📋"},
   personnages:{label:"Personnages connus", icon:"🎭"},
   documents:{label:"Documents", icon:"📁"},
+  pantheon:{label:"Panthéon", icon:"🏛"},
   tasks:{label:"Tâches", icon:"✅"},
   journal:{label:"Journal", icon:"📜"},
   admin:{label:"Administration", icon:"⚙"}
@@ -5471,6 +5657,7 @@ function isSensitiveLog(text){
 
 function renderOverview(){
   if(_cmdMode){ renderCmdMode(); return; }
+  try{ renderOvCmdm(); }catch(e){ console.warn("pantheon",e); }
   const effectif=state.members.filter(m=>(m.categorie||"effectif")==="effectif");
   const present=effectif.filter(m=>m.status==="present");
   const reserve=state.members.filter(m=>(m.categorie||"effectif")==="reserve");
@@ -10031,6 +10218,373 @@ function uiBusy(){
   return false;
 }
 
+/* ===== PANTHEON DES COMMANDANTS-MARECHAUX (2026-11-20) ===== */
+/* ARC ALPHA - Module pantheon.
+   Les Commandants-Marechaux de l'unite : celui en fonction, et ceux qui l'ont
+   ete. Stockage dans arc_config, cle « pantheon » ({entries:[...]}), comme
+   reportExempt ou regiments : aucune table ni colonne nouvelle. Ecriture par
+   configMerge, qui relit la valeur distante avant d'ecrire.
+
+   Une entree : {id, nom, matricule, member_id, debut, fin, discord, commentaire,
+                 by, at}
+     debut / fin : dates AAAA-MM-JJ ; fin vide = en fonction.
+
+   Le CMDM en fonction : l'entree sans date de fin (la plus recente) ; a
+   defaut, le membre de l'effectif au grade CMDM, avec sa date de promotion. */
+
+if(!state.pantheon)state.pantheon={entries:[]};
+const PANTHEON_COMMENT_MAX=500;
+let _panEditId=null;
+
+function canEditPantheon(){
+  if(!Auth.ok())return false;
+  if(session.role==="admin")return true;
+  if(session.role==="brs"||session.role==="amiraute")return false;
+  return gradeLevel(getSessionGrade())>=6;
+}
+function panEntries(){
+  const p=state.pantheon;
+  return (p&&Array.isArray(p.entries)?p.entries:[]).filter(e=>e&&e.id&&(e.nom||e.matricule));
+}
+function panById(id){ return panEntries().find(e=>String(e.id)===String(id))||null; }
+function panFormer(){
+  return panEntries().filter(e=>e.fin).sort((a,b)=>String(a.debut||"").localeCompare(String(b.debut||"")));
+}
+/* Le CMDM en fonction. `source` dit d'ou vient l'information. */
+function panCurrent(){
+  const cur=panEntries().filter(e=>!e.fin).sort((a,b)=>String(b.debut||"").localeCompare(String(a.debut||"")))[0];
+  if(cur)return Object.assign({source:"pantheon"},cur);
+  const m=(state.members||[]).find(x=>(x.categorie||"effectif")==="effectif"&&x.grade==="CMDM");
+  if(!m)return null;
+  return {source:"effectif",id:null,nom:m.nom||"",matricule:m.matricule||"",member_id:m.id,
+    debut:m.date_promo||"",fin:null,discord:"",commentaire:""};
+}
+/* Libelle a jour : si l'entree est liee a un membre encore present, on prend
+   son nom actuel (memes regles que memberLabel ailleurs). */
+function panName(e){
+  const m=e&&e.member_id!=null?memberById(e.member_id):null;
+  return {mat:(m&&m.matricule)||e.matricule||"",nom:(m&&m.nom)||e.nom||""};
+}
+
+/* ---------- outils d'affichage ---------- */
+function panRoman(n){
+  const t=[[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+  let s="";for(const [v,r] of t)while(n>=v){s+=r;n-=v;}return s||"-";
+}
+function panDays(a,b){
+  const pa=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(a||"")),pb=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(b||""));
+  if(!pa||!pb)return null;
+  return Math.round((new Date(+pb[1],+pb[2]-1,+pb[3])-new Date(+pa[1],+pa[2]-1,+pa[3]))/864e5);
+}
+function panDuree(a,b){
+  const d=panDays(a,b);
+  if(d===null||d<0)return "";
+  if(d<31)return d+(d>1?" jours":" jour");
+  const mois=Math.floor(d/30.44);
+  if(mois<12)return mois+" mois";
+  const ans=Math.floor(mois/12),r=mois%12;
+  return ans+(ans>1?" ans":" an")+(r?" et "+r+" mois":"");
+}
+function panInitiales(e){
+  const n=panName(e);
+  const src=(n.nom||n.mat||"?").replace(/[^A-Za-zÀ-ÿ0-9 ]/g," ").trim().split(/\s+/);
+  return ((src[0]||"?")[0]+(src[1]?src[1][0]:"")).toUpperCase();
+}
+/* Couronne de laurier dessinee en SVG : deux branches de feuilles en arc,
+   degrade dore. Aucune image externe. */
+function panLaurel(size,uid){
+  const g="lg"+uid, R=34, rad=a=>a*Math.PI/180, out=[];
+  const leaf=(r,deg,rot,s)=>{
+    const x=50+r*Math.cos(rad(deg)), y=50+r*Math.sin(rad(deg));
+    return {x,y,rot,s};
+  };
+  /* branche gauche : du bas (100 deg) vers le haut (250 deg), feuilles
+     alternees dehors / dedans, inclinees le long du cercle */
+  const left=[];
+  for(let i=0;i<11;i++){
+    const deg=104+i*13.5, s=1-i*0.045, tan=deg+90;
+    left.push(leaf(R+3.6,deg,tan+38,s));
+    left.push(leaf(R-3.6,deg+6,tan-38,s*0.9));
+  }
+  const draw=l=>`<ellipse cx="${l.x.toFixed(1)}" cy="${l.y.toFixed(1)}" rx="${(5.4*l.s).toFixed(1)}" ry="${(2.2*l.s).toFixed(1)}" transform="rotate(${l.rot.toFixed(1)} ${l.x.toFixed(1)} ${l.y.toFixed(1)})"/>`;
+  left.forEach(l=>{out.push(draw(l));out.push(draw({x:100-l.x,y:l.y,rot:180-l.rot,s:l.s}));});
+  const p=deg=>[50+R*Math.cos(rad(deg)),50+R*Math.sin(rad(deg))].map(v=>v.toFixed(1));
+  const [ax,ay]=p(100),[bx,by]=p(250);
+  return `<svg class="pan-laurel" viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true">
+    <defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff1b8"/><stop offset=".45" stop-color="#e8b923"/><stop offset="1" stop-color="#8a6512"/></linearGradient></defs>
+    <g fill="none" stroke="url(#${g})" stroke-width="1.3" stroke-linecap="round" opacity=".85">
+      <path d="M${ax} ${ay} A${R} ${R} 0 0 1 ${bx} ${by}"/>
+      <path d="M${(100-ax).toFixed(1)} ${ay} A${R} ${R} 0 0 0 ${(100-bx).toFixed(1)} ${by}"/>
+    </g>
+    <g fill="url(#${g})">${out.join("")}</g>
+    <path d="M44 86 L50 82 L56 86" fill="none" stroke="url(#${g})" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+function panDiscordHtml(d){
+  const v=String(d||"").trim();
+  if(!v)return "";
+  return `<button type="button" class="pan-discord" onclick="panCopy(this,'${escJs(v)}')" title="Copier l'identifiant Discord" aria-label="Copier l'identifiant Discord ${esc(v)}">
+    ${panIco("message-circle")}<span>${esc(v)}</span>${panIco("copy")}</button>`;
+}
+function panCopy(btn,v){
+  const ok=()=>{toast("Identifiant Discord copié : "+v,"success");};
+  try{navigator.clipboard.writeText(v).then(ok,()=>toast("Copie refusée par le navigateur","error"));}
+  catch(e){toast("Copie impossible","error");}
+}
+
+/* ---------- vue d'ensemble : le CMDM en fonction ---------- */
+function renderOvCmdm(){
+  const el=document.getElementById("ovCmdm");
+  if(!el)return;
+  const c=panCurrent();
+  if(!c){
+    el.innerHTML=canEditPantheon()
+      ?`<div class="pan-ov pan-ov-empty"><span class="pan-ov-k">${panIco("crown")} Commandement</span>
+         <span>Aucun Commandant-Maréchal n'est désigné dans l'effectif.</span>
+         <button class="sbtn" onclick="openPantheonModal()">Renseigner le commandement</button></div>`:"";return;
+  }
+  const n=panName(c), today=ymdLocal(new Date());
+  const depuis=c.debut?panDuree(c.debut,today):"";
+  el.innerHTML=`<section class="pan-ov" aria-label="Commandant-Maréchal en fonction">
+    <div class="pan-ov-crest">${panLaurel(84,"ov")}<span class="pan-ov-ini">${esc(panInitiales(c))}</span></div>
+    <div class="pan-ov-main">
+      <span class="pan-ov-k">${panIco("crown")} Commandant-Maréchal en fonction</span>
+      <div class="pan-ov-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+      <div class="pan-ov-meta">
+        ${c.debut?`<span>${panIco("calendar")}En poste depuis le ${esc(fmtDate(c.debut))}${depuis?` · ${esc(depuis)}`:""}</span>`:""}
+        ${panDiscordHtml(c.discord)}
+      </div>
+      ${c.commentaire?`<p class="pan-ov-quote">« ${esc(c.commentaire)} »</p>`:""}
+    </div>
+    <div class="pan-ov-act">
+      <button class="sbtn" onclick="dashTab('pantheon')">${panIco("landmark")}Panthéon</button>
+      ${canEditPantheon()&&c.source==="effectif"?`<button class="sbtn" onclick="openPantheonModal(null,true)">Compléter sa fiche</button>`:""}
+    </div>
+  </section>`;
+}
+
+/* ---------- onglet Pantheon ---------- */
+function renderPantheon(){
+  const root=document.getElementById("pantheonBody");
+  if(!root)return;
+  const edit=canEditPantheon();
+  const addBtn=document.getElementById("panAddBtn");
+  if(addBtn)addBtn.style.display=edit?"":"none";
+  const former=panFormer(), cur=panCurrent(), today=ymdLocal(new Date());
+  /* rang chronologique : I pour le premier CMDM de l'histoire de l'unite */
+  const tous=panEntries().slice().sort((a,b)=>String(a.debut||"").localeCompare(String(b.debut||"")));
+  const rang=e=>{const i=tous.findIndex(x=>String(x.id)===String(e.id));return i<0?tous.length+1:i+1;};
+  const totalJours=former.reduce((s,e)=>s+(Math.max(0,panDays(e.debut,e.fin)||0)),0);
+  const moy=former.length?panDuree("2000-01-01",addDaysYmd("2000-01-01",Math.round(totalJours/former.length))):"";
+  const premier=tous[0];
+
+  let h=`<header class="pan-hero">
+    <div class="pan-hero-crest">${panLaurel(150,"hero")}<span class="pan-hero-ico">${panIco("landmark")}</span></div>
+    <div class="pan-hero-k">ARC Alpha · Mémoire du commandement</div>
+    <h2 class="pan-hero-t">Panthéon des Commandants-Maréchaux</h2>
+    <p class="pan-hero-s">Ceux qui ont porté le commandement de l'unité. Leurs noms restent ici, dans l'ordre où ils ont servi.</p>
+    <div class="pan-hero-stats">
+      <div><b>${tous.length+(cur&&cur.source==="effectif"?1:0)}</b><span>Commandant${tous.length>1?"s":""} inscrit${tous.length>1?"s":""}</span></div>
+      ${premier&&premier.debut?`<div><b>${esc(String(premier.debut).slice(0,4))}</b><span>Premier commandement</span></div>`:""}
+      ${moy?`<div><b>${esc(moy)}</b><span>Durée moyenne</span></div>`:""}
+    </div>
+  </header>`;
+
+  if(cur){
+    const n=panName(cur);
+    h+=`<section class="pan-current" aria-label="En fonction">
+      <div class="pan-current-badge">${panIco("crown")}En fonction</div>
+      <div class="pan-current-crest">${panLaurel(132,"cur")}<span class="pan-current-ini">${esc(panInitiales(cur))}</span></div>
+      <div class="pan-current-body">
+        <div class="pan-rank">${cur.source==="pantheon"?panRoman(rang(cur))+" · ":""}Commandant-Maréchal</div>
+        <div class="pan-current-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+        <div class="pan-meta">
+          ${cur.debut?`<span>${panIco("calendar")}Depuis le ${esc(fmtDate(cur.debut))} · ${esc(panDuree(cur.debut,today)||"aujourd'hui")}</span>`:""}
+          ${panDiscordHtml(cur.discord)}
+        </div>
+        ${cur.commentaire?`<blockquote class="pan-quote">${esc(cur.commentaire)}</blockquote>`:""}
+        ${edit?`<div class="pan-actions">${cur.source==="pantheon"
+          ?`<button class="sbtn" onclick="openPantheonModal('${escJs(cur.id)}')">${panIco("pencil")}Modifier</button>
+             <button class="sbtn" onclick="panEndTerm('${escJs(cur.id)}')">${panIco("flag")}Clore son commandement</button>`
+          :`<button class="sbtn" onclick="openPantheonModal(null,true)">${panIco("pencil")}Compléter sa fiche</button>
+             <span class="pan-hint">Repris de l'effectif : ajoute son Discord et un mot.</span>`}</div>`:""}
+      </div>
+    </section>`;
+  }
+
+  h+=`<div class="pan-sec"><span class="pan-sec-line"></span><h3>Les anciens commandants</h3><span class="pan-sec-line"></span></div>`;
+  if(!former.length){
+    h+=`<div class="pan-empty">${panLaurel(90,"empty")}<p>Le panthéon attend son premier nom.</p>
+      <span>Quand un Commandant-Maréchal quitte son poste, son commandement est inscrit ici.</span>
+      ${edit?`<button class="btn btn-primary" onclick="openPantheonModal()">${panIco("plus")}Inscrire un ancien CMDM</button>`:""}</div>`;
+  }else{
+    h+=`<ol class="pan-list">`+former.slice().reverse().map((e,i)=>{
+      const n=panName(e);
+      return `<li class="pan-plaque" style="--i:${Math.min(i,8)}">
+        <div class="pan-plaque-num" aria-label="Rang ${rang(e)}">${panRoman(rang(e))}</div>
+        <div class="pan-plaque-body">
+          <div class="pan-plaque-name"><span class="pan-mat">${esc(n.mat)}</span>${esc(n.nom)}</div>
+          <div class="pan-meta">
+            <span>${panIco("calendar")}${e.debut?esc(fmtDate(e.debut)):"?"} <span class="pan-arrow">→</span> ${esc(fmtDate(e.fin))}</span>
+            ${panDuree(e.debut,e.fin)?`<span class="pan-chip">${esc(panDuree(e.debut,e.fin))} de commandement</span>`:""}
+            ${panDiscordHtml(e.discord)}
+          </div>
+          ${e.commentaire?`<blockquote class="pan-quote">${esc(e.commentaire)}</blockquote>`:""}
+        </div>
+        ${edit?`<div class="pan-plaque-act">
+          <button class="icon-btn" onclick="openPantheonModal('${escJs(e.id)}')" title="Modifier" aria-label="Modifier ${esc(n.mat)}">${panIco("pencil")}</button>
+          <button class="icon-btn del" onclick="deletePantheonEntry('${escJs(e.id)}')" title="Retirer du panthéon" aria-label="Retirer ${esc(n.mat)} du panthéon">${panIco("trash-2")}</button>
+        </div>`:""}
+      </li>`;
+    }).join("")+`</ol>`;
+  }
+  root.innerHTML=h;
+}
+
+/* ---------- edition ---------- */
+function openPantheonModal(id,fromRoster){
+  if(!canEditPantheon()){toast("Réservé aux CMD, CMDM et à l'administration","error");return;}
+  
+  const e=id?panById(id):null;
+  _panEditId=e?e.id:null;
+  const g=k=>document.getElementById(k);
+  /* liste des membres pour pre-remplir le nom et le matricule */
+  const sel=g("panMember");
+  if(sel){
+    const ms=sortMembers((state.members||[]).filter(m=>(m.categorie||"effectif")!=="blacklist"));
+    sel.innerHTML='<option value="">Aucun (ancien membre, hors effectif)</option>'+ms.map(m=>
+      `<option value="${esc(m.id)}">${esc((m.matricule||"?")+" - "+(m.nom||"?")+" ("+(m.grade||"ARC")+")")}</option>`).join("");
+  }
+  let pre=e;
+  if(!pre&&fromRoster){const c=panCurrent();if(c&&c.source==="effectif")pre=c;}
+  g("panMember").value=pre&&pre.member_id!=null?String(pre.member_id):"";
+  g("panNom").value=pre?pre.nom||"":"";
+  g("panMat").value=pre?pre.matricule||"":"";
+  g("panDebut").value=pre&&pre.debut?String(pre.debut).slice(0,10):"";
+  g("panFin").value=pre&&pre.fin?String(pre.fin).slice(0,10):"";
+  g("panDiscord").value=pre?pre.discord||"":"";
+  g("panComment").value=pre?pre.commentaire||"":"";
+  panCount();
+  g("panModalTitle").textContent=e?"Modifier l'inscription":(fromRoster?"Fiche du CMDM en fonction":"Inscrire au panthéon");
+  g("pantheonModal").classList.add("show");
+}
+function panMemberPick(v){
+  const m=memberById(v);
+  if(!m)return;
+  const g=k=>document.getElementById(k);
+  g("panNom").value=m.nom||"";g("panMat").value=m.matricule||"";
+  if(!g("panDebut").value&&m.grade==="CMDM"&&m.date_promo)g("panDebut").value=String(m.date_promo).slice(0,10);
+}
+function panCount(){
+  const t=document.getElementById("panComment"),c=document.getElementById("panCommentCount");
+  if(t&&c)c.textContent=(t.value||"").length+" / "+PANTHEON_COMMENT_MAX;
+}
+
+async function savePantheonEntry(){
+  if(!canEditPantheon()){toast("Réservé aux CMD, CMDM et à l'administration","error");return;}
+  const g=k=>(document.getElementById(k)||{}).value||"";
+  const mid=g("panMember").trim();
+  const nom=g("panNom").trim().slice(0,60), mat=g("panMat").trim().slice(0,20);
+  const debut=g("panDebut").trim(), fin=g("panFin").trim();
+  const discord=g("panDiscord").trim().slice(0,40), commentaire=g("panComment").trim();
+  if(!nom&&!mat)return panFieldError("panNom","Indique au moins le nom RP ou le matricule.");
+  if(!debut)return panFieldError("panDebut","Indique la date de prise de poste.");
+  if(fin&&fin<debut)return panFieldError("panFin","Le départ doit être après la prise de poste.");
+  if(fin&&fin>ymdLocal(new Date()))return panFieldError("panFin","Le départ ne peut pas être dans le futur. Laisse vide si le CMDM est toujours en poste.");
+  if(commentaire.length>PANTHEON_COMMENT_MAX)return panFieldError("panComment","Le commentaire dépasse "+PANTHEON_COMMENT_MAX+" caractères.");
+
+  /* un seul CMDM en fonction : en inscrire un nouveau clot le precedent */
+  const autreActuel=!fin?panEntries().find(x=>!x.fin&&String(x.id)!==String(_panEditId)):null;
+  if(autreActuel){
+    const n=panName(autreActuel);
+    const ok=await uiConfirm({kicker:"// PANTHÉON",title:"Passation de commandement",
+      message:`${n.mat} ${n.nom} est inscrit comme CMDM en fonction.\n\nSon commandement sera clos au ${fmtDate(debut)} et il rejoindra les anciens commandants.`,
+      okText:"Confirmer la passation",cancelText:"Annuler"});
+    if(!ok)return;
+  }
+  const entry={id:_panEditId||("p"+Date.now().toString(36)),nom,matricule:mat,
+    member_id:mid||null,debut,fin:fin||null,discord,commentaire,
+    by:session?.user||"?",at:new Date().toISOString()};
+  const next=await configMerge("pantheon",state.pantheon,o=>{
+    const list=Array.isArray(o.entries)?o.entries.slice():[];
+    if(autreActuel){
+      const k=list.findIndex(x=>String(x.id)===String(autreActuel.id));
+      if(k>=0)list[k]=Object.assign({},list[k],{fin:debut<list[k].debut?list[k].debut:debut});
+    }
+    const i=list.findIndex(x=>String(x.id)===String(entry.id));
+    if(i>=0)list[i]=Object.assign({},list[i],entry);else list.push(entry);
+    o.entries=list;
+  });
+  if(next===null){toast("Base injoignable : rien n'a été enregistré, ta saisie est conservée","error");return;}
+  state.pantheon=next;
+  closeModal("pantheonModal");
+  renderPantheon();renderOvCmdm();
+  const qui=(mat+" "+nom).trim();
+  toast(_panEditId?"Inscription mise à jour":(fin?qui+" inscrit au panthéon":qui+" inscrit comme CMDM en fonction"),"success");
+  await logActivity(`${session?.user} a ${_panEditId?"modifié l'inscription de":"inscrit"} ${qui} au panthéon des CMDM`);
+}
+
+async function panEndTerm(id){
+  if(!canEditPantheon())return;
+  const e=panById(id);if(!e)return;
+  const n=panName(e), today=ymdLocal(new Date());
+  const ok=await uiConfirm({kicker:"// PANTHÉON",title:"Clore le commandement",
+    message:`${n.mat} ${n.nom} quitte le poste de Commandant-Maréchal aujourd'hui (${fmtDate(today)}) et rejoint les anciens commandants.\n\nTu pourras corriger la date ensuite.`,
+    okText:"Clore le commandement"});
+  if(!ok)return;
+  const next=await configMerge("pantheon",state.pantheon,o=>{
+    o.entries=(Array.isArray(o.entries)?o.entries:[]).map(x=>String(x.id)===String(id)?Object.assign({},x,{fin:today<x.debut?x.debut:today}):x);
+  });
+  if(next===null){toast("Base injoignable : rien n'a été enregistré","error");return;}
+  state.pantheon=next;
+  renderPantheon();renderOvCmdm();
+  toast(`${n.mat} rejoint le panthéon`,"success");
+  await logActivity(`${session?.user} a clos le commandement de ${n.mat} ${n.nom} (panthéon des CMDM)`);
+}
+
+async function deletePantheonEntry(id){
+  if(!canEditPantheon())return;
+  const e=panById(id);if(!e)return;
+  const n=panName(e);
+  const ok=await uiConfirm({kicker:"// PANTHÉON",title:"Retirer du panthéon",
+    message:`Retirer ${n.mat} ${n.nom} du panthéon ? Son inscription, son Discord et le commentaire seront effacés.`,
+    okText:"Retirer",danger:true});
+  if(!ok)return;
+  const next=await configMerge("pantheon",state.pantheon,o=>{
+    o.entries=(Array.isArray(o.entries)?o.entries:[]).filter(x=>String(x.id)!==String(id));
+  });
+  if(next===null){toast("Base injoignable : rien n'a été supprimé","error");return;}
+  state.pantheon=next;
+  renderPantheon();renderOvCmdm();
+  toast("Inscription retirée","info");
+  await logActivity(`${session?.user} a retiré ${n.mat} ${n.nom} du panthéon des CMDM`);
+}
+
+/* Icones (traces Lucide, licence ISC) dessinees en ligne : l'ancien site ne
+   charge pas la bibliotheque d'icones. */
+const PAN_ICO={
+  crown:'<path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"/><path d="M5 21h14"/>',
+  calendar:'<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+  "message-circle":'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  copy:'<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  landmark:'<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  pencil:'<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  "trash-2":'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>'
+};
+function panIco(n){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(PAN_ICO[n]||"")+'</svg>';
+}
+/* Erreur de saisie : message et champ en evidence, la saisie est gardee. */
+function panFieldError(id,msg){
+  toast(msg,"error");
+  const el=document.getElementById(id);
+  if(el){try{el.focus();}catch(e){}}
+  return false;
+}
+
 const TAB_RENDER={
   overview  :{fn:"renderOverview",  on:["members","blames","absences","reports","announces","cmdmissions","tasks"]},
   monespace :{fn:"renderMonEspace", on:["members","blames","reports","tasks","cmdmissions"]},
@@ -10051,6 +10605,7 @@ const TAB_RENDER={
   reglement :{fn:"renderReglement", on:["config"]},
   personnages:{fn:"renderPersonnages", on:[]},
   documents :{fn:"renderDocuments", on:["documents"]},
+  pantheon  :{fn:"renderPantheon",  on:["config","members"]},
   tasks     :{fn:"renderTasks",     on:["tasks","members"]},
   journal   :{fn:"renderJournal",   on:["activity"]},
   admin     :{fn:"renderAdmin",     on:["users","tickets","config"]}
@@ -10111,6 +10666,13 @@ async function pollRealtime(){
           }
           if(row.key==="reglement"){
             if(row.value!==state.reglement){ state.reglement=row.value; cfgChanged=true; }
+          }
+          if(row.key==="pantheon"){
+            const pp=JSON.parse(row.value);
+            if(pp&&typeof pp==="object"&&JSON.stringify(pp)!==JSON.stringify(state.pantheon||{})){
+              state.pantheon=pp; cfgChanged=true;
+              try{ if(_activeTab==="overview")renderOvCmdm(); }catch(e){}
+            }
           }
           if(row.key==="content"){
             const _raw=JSON.parse(row.value);

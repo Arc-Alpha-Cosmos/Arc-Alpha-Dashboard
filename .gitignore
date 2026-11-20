@@ -7,3 +7,6 @@ REFONTE_*.md
 outils/
 refonte/_test.html
 refonte/_frame.html
+
+_test_root.html
+_frame_root.html
