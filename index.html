@@ -1652,6 +1652,98 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
 #pantheonModal .hint{font-family:var(--fr);font-weight:400;color:var(--dm);text-transform:none;letter-spacing:0;margin-left:.3em}
 .pan-ov .sbtn,.pan-current .sbtn{white-space:nowrap}
 
+
+/* ===== VERRE LIQUIDE, UNIFORME (2026-11-20) =====
+   Une seule matiere pour toutes les surfaces : verre fume, flou de ce qui
+   est derriere, liseré de lumiere en haut et reflet en biais. Trois
+   opacites, choisies pour la lisibilite :
+   - --lg-op   (.86) : la majorite, panneaux, cartes, tableaux, listes ;
+   - --lg-hi   (.94) : ce qui flotte au-dessus du contenu (fenetres, menus,
+                       messagerie, bulles d'aide), ou le texte doit rester net ;
+   - --lg-lite (.62) : les bandeaux de mise en avant (echeance, CMDM en
+                       fonction, en-tete du pantheon), peu de texte, plus clairs.
+   Sans flou disponible, ou si le systeme demande moins de transparence,
+   tout redevient presque opaque. */
+:root{
+  --lg-op:rgba(13,18,28,.86);
+  --lg-hi:rgba(12,17,26,.94);
+  --lg-lite:rgba(13,18,28,.62);
+  --lg-blur:20px;--lg-sat:160%;
+  --lg-edge:rgba(150,225,255,.13);
+  --lg-spec:linear-gradient(155deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,.015) 32%,rgba(255,255,255,0) 55%);
+  --lg-rim:inset 0 1px 0 rgba(255,255,255,.09),inset 0 0 0 1px rgba(255,255,255,.025);
+  --lg-shadow:0 10px 30px rgba(0,0,0,.32)
+}
+/* lumiere d'ambiance fixe : sans elle le verre ne se voit pas sur un fond uni */
+body{background:
+  radial-gradient(46vw 46vw at 8% 4%,rgba(0,229,255,.10),transparent 62%),
+  radial-gradient(42vw 42vw at 94% 20%,rgba(77,141,255,.09),transparent 64%),
+  radial-gradient(50vw 50vw at 70% 98%,rgba(124,92,255,.08),transparent 62%),
+  var(--bg);background-attachment:fixed}
+
+/* ---------- surfaces principales : verre opaque ---------- */
+:is(.panel,.card,.stat-card,.cmd-block,.ann,.mis-card,.rec-card,.perso,.mlc,.nav-ed-grp,.medal-card,.pan-plaque){
+  background:var(--lg-spec),var(--lg-op);
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));
+  border-color:var(--lg-edge);box-shadow:var(--lg-rim),var(--lg-shadow)}
+:is(.card,.stat-card,.ann,.mis-card,.perso):hover{
+  background:var(--lg-spec),rgba(18,25,37,.88);border-color:rgba(150,225,255,.24);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 24px rgba(0,229,255,.10),0 14px 36px rgba(0,0,0,.38)}
+.panel:hover{border-color:rgba(150,225,255,.2)}
+/* les bordures de couleur qui portent un sens restent visibles */
+.perso{border-left-color:var(--pc,var(--ac))}
+.medal-card{border-left-width:3px}
+/* en-tetes de panneau et de tableau : un voile clair dans le verre */
+.panel-head{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border-bottom-color:rgba(255,255,255,.07)}
+.tbl th{background:rgba(20,28,42,.96)}
+.tbl tbody tr:hover,#rosterBody tr:hover{background:rgba(255,255,255,.04)}
+
+/* pas de verre dans le verre : a l'interieur d'une surface floutee, les blocs
+   deviennent de simples voiles (plus net et moins couteux) */
+:is(.panel,.modal,.card,.cmd-block,.chat-panel,.cmdk-box,.mis-card) :is(.card,.stat-card,.ann,.mis-card,.perso,.cmd-block,.rec-card,.medal-card){
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  background:rgba(255,255,255,.035);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+
+/* ---------- bandeaux de mise en avant : verre plus clair ---------- */
+.ov-dl{background:var(--lg-spec),linear-gradient(90deg,rgba(0,229,255,.12),rgba(0,229,255,0) 62%),var(--lg-lite);
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));
+  box-shadow:var(--lg-rim),var(--lg-shadow)}
+.ov-dl.grace{background:var(--lg-spec),linear-gradient(90deg,rgba(255,138,61,.14),rgba(255,138,61,0) 62%),var(--lg-lite)}
+.pan-ov{background:radial-gradient(120% 160% at 0% 50%,rgba(232,185,35,.16),transparent 55%),var(--lg-lite) padding-box,
+    linear-gradient(120deg,rgba(255,241,184,.55),rgba(232,185,35,.25) 35%,rgba(255,255,255,.08) 70%) border-box;
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));
+  box-shadow:inset 0 1px 0 rgba(255,241,184,.16),var(--lg-shadow)}
+.pan-hero{background:radial-gradient(70% 90% at 50% 0%,rgba(232,185,35,.18),transparent 70%),var(--lg-lite);
+  -webkit-backdrop-filter:blur(24px) saturate(var(--lg-sat));backdrop-filter:blur(24px) saturate(var(--lg-sat))}
+.pan-current{background:radial-gradient(90% 140% at 0% 0%,rgba(232,185,35,.15),transparent 60%),var(--lg-op) padding-box,var(--au-grad) border-box;
+  -webkit-backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat));backdrop-filter:blur(var(--lg-blur)) saturate(var(--lg-sat))}
+.pan-plaque{background:linear-gradient(135deg,rgba(232,185,35,.07),transparent 40%),var(--lg-op);border-color:rgba(232,185,35,.2)}
+
+/* ---------- ce qui flotte : verre presque opaque ---------- */
+:is(.modal,.cmdk-box,.chat-panel,.mob-menu){
+  background:var(--lg-spec),var(--lg-hi);
+  -webkit-backdrop-filter:blur(30px) saturate(175%);backdrop-filter:blur(30px) saturate(175%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.11),0 30px 80px rgba(0,0,0,.55)}
+:is(.chat-head,.chat-input,.chat-picker-search){background:rgba(255,255,255,.035)}
+.chat-bubble.them{background:rgba(255,255,255,.06)}
+#toast,#globalTooltip{background:var(--lg-spec),var(--lg-hi);
+  -webkit-backdrop-filter:blur(24px) saturate(175%);backdrop-filter:blur(24px) saturate(175%)}
+nav{background:var(--lg-spec),rgba(8,11,18,.78)}
+.modal-bg{background:rgba(3,5,10,.62)}
+
+/* ---------- champs : un voile, plus de bloc plein ---------- */
+.field :is(input,select,textarea),.roster-search,.inline-sel{background:rgba(255,255,255,.045);border-color:rgba(150,225,255,.14)}
+.field :is(input,select,textarea):focus{background:rgba(255,255,255,.07)}
+.field select option,.inline-sel option{background:#121925;color:var(--tx)}
+
+/* ---------- lisibilite d'abord ---------- */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  :root{--lg-op:rgba(15,21,32,.97);--lg-hi:rgba(15,21,32,.99);--lg-lite:rgba(15,21,32,.92)}
+}
+@media(prefers-reduced-transparency:reduce){
+  :root{--lg-op:rgba(15,21,32,.98);--lg-hi:rgba(15,21,32,.99);--lg-lite:rgba(15,21,32,.95)}
+}
+@media(max-width:980px){ :root{--lg-blur:14px} }
 </style>
 </head>
 <body>
