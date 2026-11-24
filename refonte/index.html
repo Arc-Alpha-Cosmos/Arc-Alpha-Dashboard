@@ -2350,10 +2350,12 @@ if(_lk!=="mat"&&!_rt)document.documentElement.classList.add("glass-on");}catch(e
         <div class="field"><label for="panMat">Matricule</label><input type="text" id="panMat" maxlength="20" autocomplete="off" placeholder="ex : A-17"></div>
         <div class="field"><label for="panNom">Nom RP</label><input type="text" id="panNom" maxlength="60" autocomplete="off" placeholder="ex : Alpha"></div>
       </div>
-      <div class="form-row fr2">
+      <label class="pan-check" id="panNoDatesRow"><input type="checkbox" id="panNoDates" onchange="panModeSync()"><span><b>Dates précises inconnues</b> : indiquer seulement combien de mois il a servi</span></label>
+      <div class="form-row fr2" id="panDatesRow">
         <div class="field"><label for="panDebut">Prise de poste</label><input type="date" id="panDebut"></div>
         <div class="field"><label for="panFin">Départ <span class="hint">vide = toujours en fonction</span></label><input type="date" id="panFin"></div>
       </div>
+      <div class="field" id="panMoisRow" style="display:none"><label for="panMois">Durée du commandement <span class="hint">en mois</span></label><input type="number" id="panMois" min="1" max="240" step="1" inputmode="numeric" placeholder="ex : 8"></div>
       <div class="field"><label for="panDiscord">Discord</label><input type="text" id="panDiscord" maxlength="40" autocomplete="off" placeholder="ex : alpha.cmdm"></div>
       <div class="field"><label for="panComment">Commentaire</label>
         <textarea id="panComment" rows="4" maxlength="500" oninput="panCount()" placeholder="Ce que l'unité retient de son commandement."></textarea>

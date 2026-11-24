@@ -1647,6 +1647,9 @@ body.edit-mode [data-e]:focus{outline:2px solid var(--ac);background:rgba(0,229,
   .pan-plaque:hover{transform:none}
 }
 
+.pan-check{display:flex;align-items:center;gap:var(--sp4);margin:0 0 var(--sp6);font-size:.88rem;color:var(--tx2);cursor:pointer;user-select:none}
+.pan-check input{width:16px;height:16px;margin:0;flex:none;accent-color:var(--au2);cursor:pointer}
+.pan-check b{color:var(--tx);font-weight:600}
 /* complements propres a l'ancien site */
 .pan-hint{font-family:var(--fm);font-size:.68rem;color:var(--dm)}
 #pantheonModal .hint{font-family:var(--fr);font-weight:400;color:var(--dm);text-transform:none;letter-spacing:0;margin-left:.3em}
@@ -3720,10 +3723,12 @@ nav{background:var(--lg-spec),rgba(8,11,18,.78)}
         <div class="field"><label for="panMat">Matricule</label><input type="text" id="panMat" maxlength="20" autocomplete="off" placeholder="ex : A-17"></div>
         <div class="field"><label for="panNom">Nom RP</label><input type="text" id="panNom" maxlength="60" autocomplete="off" placeholder="ex : Alpha"></div>
       </div>
-      <div class="form-row fr2">
+      <label class="pan-check" id="panNoDatesRow"><input type="checkbox" id="panNoDates" onchange="panModeSync()"><span><b>Dates précises inconnues</b> : indiquer seulement combien de mois il a servi</span></label>
+      <div class="form-row fr2" id="panDatesRow">
         <div class="field"><label for="panDebut">Prise de poste</label><input type="date" id="panDebut"></div>
         <div class="field"><label for="panFin">Départ <span class="hint">vide = toujours en fonction</span></label><input type="date" id="panFin"></div>
       </div>
+      <div class="field" id="panMoisRow" style="display:none"><label for="panMois">Durée du commandement <span class="hint">en mois</span></label><input type="number" id="panMois" min="1" max="240" step="1" inputmode="numeric" placeholder="ex : 8"></div>
       <div class="field"><label for="panDiscord">Discord</label><input type="text" id="panDiscord" maxlength="40" autocomplete="off" placeholder="ex : alpha.cmdm"></div>
       <div class="field"><label for="panComment">Commentaire</label>
         <textarea id="panComment" rows="4" maxlength="500" oninput="panCount()" placeholder="Ce que l'unité retient de son commandement."></textarea>
@@ -10349,12 +10354,26 @@ function panEntries(){
   return (p&&Array.isArray(p.entries)?p.entries:[]).filter(e=>e&&e.id&&(e.nom||e.matricule));
 }
 function panById(id){ return panEntries().find(e=>String(e.id)===String(id))||null; }
+/* Un ancien CMDM : une date de depart, ou seulement une duree en mois quand
+   ses dates ne sont pas connues (joueurs d'avant le tableau de bord). */
+function panMois(e){ const n=parseInt(e&&e.mois,10); return n>0?n:0; }
+function panIsFormer(e){ return !!(e&&(e.fin||panMois(e))); }
+/* ordre chronologique ; les commandements sans dates passent en premier
+   (ils precedent le tableau de bord), dans l'ordre ou ils ont ete inscrits */
+function panChrono(a,b){ return String(a.debut||"").localeCompare(String(b.debut||"")); }
 function panFormer(){
-  return panEntries().filter(e=>e.fin).sort((a,b)=>String(a.debut||"").localeCompare(String(b.debut||"")));
+  return panEntries().filter(panIsFormer).sort(panChrono);
 }
+function panMoisTxt(n){
+  if(n<12)return n+" mois";
+  const ans=Math.floor(n/12),r=n%12;
+  return ans+(ans>1?" ans":" an")+(r?" et "+r+" mois":"");
+}
+function panDureeE(e){ return panMois(e)?panMoisTxt(panMois(e)):panDuree(e.debut,e.fin); }
+function panJours(e){ return panMois(e)?Math.round(panMois(e)*30.44):Math.max(0,panDays(e.debut,e.fin)||0); }
 /* Le CMDM en fonction. `source` dit d'ou vient l'information. */
 function panCurrent(){
-  const cur=panEntries().filter(e=>!e.fin).sort((a,b)=>String(b.debut||"").localeCompare(String(a.debut||"")))[0];
+  const cur=panEntries().filter(e=>!panIsFormer(e)).sort((a,b)=>String(b.debut||"").localeCompare(String(a.debut||"")))[0];
   if(cur)return Object.assign({source:"pantheon"},cur);
   const m=(state.members||[]).find(x=>(x.categorie||"effectif")==="effectif"&&x.grade==="CMDM");
   if(!m)return null;
@@ -10480,9 +10499,10 @@ function renderPantheon(){
   /* rang chronologique : I pour le premier CMDM de l'histoire de l'unite */
   const tous=panEntries().slice().sort((a,b)=>String(a.debut||"").localeCompare(String(b.debut||"")));
   const rang=e=>{const i=tous.findIndex(x=>String(x.id)===String(e.id));return i<0?tous.length+1:i+1;};
-  const totalJours=former.reduce((s,e)=>s+(Math.max(0,panDays(e.debut,e.fin)||0)),0);
+  const totalJours=former.reduce((s,e)=>s+panJours(e),0);
   const moy=former.length?panDuree("2000-01-01",addDaysYmd("2000-01-01",Math.round(totalJours/former.length))):"";
-  const premier=tous[0];
+  /* l'annee du premier commandement n'a de sens que si tous les anciens sont dates */
+  const premier=former.some(e=>!e.debut)?null:tous.find(e=>e.debut);
 
   let h=`<header class="pan-hero">
     <div class="pan-hero-crest">${panLaurel(150,"hero")}<span class="pan-hero-ico">${panIco("landmark")}</span></div>
@@ -10531,8 +10551,8 @@ function renderPantheon(){
         <div class="pan-plaque-body">
           <div class="pan-plaque-name">${n.mat?`<span class="pan-mat">${esc(n.mat)}</span>`:""}${esc(n.nom)}</div>
           <div class="pan-meta">
-            <span>${panIco("calendar")}${e.debut?esc(fmtDate(e.debut)):"?"} <span class="pan-arrow">→</span> ${esc(fmtDate(e.fin))}</span>
-            ${panDuree(e.debut,e.fin)?`<span class="pan-chip">${esc(panDuree(e.debut,e.fin))} de commandement</span>`:""}
+            ${e.debut||e.fin?`<span>${panIco("calendar")}${e.debut?esc(fmtDate(e.debut)):"?"} <span class="pan-arrow">→</span> ${e.fin?esc(fmtDate(e.fin)):"?"}</span>`:`<span>${panIco("calendar")}Dates non connues</span>`}
+            ${panDureeE(e)?`<span class="pan-chip">${esc(panDureeE(e))} de commandement</span>`:""}
             ${panDiscordHtml(e.discord)}
           </div>
           ${e.commentaire?`<blockquote class="pan-quote">${esc(e.commentaire)}</blockquote>`:""}
@@ -10570,11 +10590,26 @@ function openPantheonModal(id,fromRoster){
   g("panFin").value=pre&&pre.fin?String(pre.fin).slice(0,10):"";
   g("panDiscord").value=pre?pre.discord||"":"";
   g("panComment").value=pre?pre.commentaire||"":"";
+  g("panNoDates").checked=!!(pre&&panMois(pre));
+  g("panMois").value=pre&&panMois(pre)?String(panMois(pre)):"";
+  panModeSync();
   panCount();
   g("panModalTitle").textContent=e?"Modifier l'inscription":(fromRoster?"Fiche du CMDM en fonction":"Inscrire au panthéon");
   g("pantheonModal").classList.add("show");
 }
+/* La duree seule n'est proposee que pour un ancien hors effectif : un membre
+   de l'effectif a ses dates dans le tableau de bord. */
+function panModeSync(){
+  const g=k=>document.getElementById(k);
+  const hors=!g("panMember").value, chk=g("panNoDates");
+  g("panNoDatesRow").style.display=hors?"":"none";
+  if(!hors)chk.checked=false;
+  const sans=chk.checked;
+  g("panDatesRow").style.display=sans?"none":"";
+  g("panMoisRow").style.display=sans?"":"none";
+}
 function panMemberPick(v){
+  panModeSync();
   const m=memberById(v);
   if(!m)return;
   const g=k=>document.getElementById(k);
@@ -10593,14 +10628,17 @@ async function savePantheonEntry(){
   const nom=g("panNom").trim().slice(0,60), mat=g("panMat").trim().slice(0,20);
   const debut=g("panDebut").trim(), fin=g("panFin").trim();
   const discord=g("panDiscord").trim().slice(0,40), commentaire=g("panComment").trim();
+  const sansDates=!mid&&!!(document.getElementById("panNoDates")||{}).checked;
+  const mois=parseInt(g("panMois"),10);
   if(!nom&&!mat)return panFieldError("panNom","Indique au moins le nom RP ou le matricule.");
-  if(!debut)return panFieldError("panDebut","Indique la date de prise de poste.");
-  if(fin&&fin<debut)return panFieldError("panFin","Le départ doit être après la prise de poste.");
-  if(fin&&fin>ymdLocal(new Date()))return panFieldError("panFin","Le départ ne peut pas être dans le futur. Laisse vide si le CMDM est toujours en poste.");
+  if(sansDates){ if(!(mois>=1&&mois<=240))return panFieldError("panMois","Indique combien de mois il a servi (entre 1 et 240)."); }
+  else if(!debut)return panFieldError("panDebut","Indique la date de prise de poste.");
+  if(!sansDates&&fin&&fin<debut)return panFieldError("panFin","Le départ doit être après la prise de poste.");
+  if(!sansDates&&fin&&fin>ymdLocal(new Date()))return panFieldError("panFin","Le départ ne peut pas être dans le futur. Laisse vide si le CMDM est toujours en poste.");
   if(commentaire.length>PANTHEON_COMMENT_MAX)return panFieldError("panComment","Le commentaire dépasse "+PANTHEON_COMMENT_MAX+" caractères.");
 
   /* un seul CMDM en fonction : en inscrire un nouveau clot le precedent */
-  const autreActuel=!fin?panEntries().find(x=>!x.fin&&String(x.id)!==String(_panEditId)):null;
+  const autreActuel=(!fin&&!sansDates)?panEntries().find(x=>!panIsFormer(x)&&String(x.id)!==String(_panEditId)):null;
   if(autreActuel){
     const n=panName(autreActuel);
     const ok=await uiConfirm({kicker:"// PANTHÉON",title:"Passation de commandement",
@@ -10609,7 +10647,7 @@ async function savePantheonEntry(){
     if(!ok)return;
   }
   const entry={id:_panEditId||("p"+Date.now().toString(36)),nom,matricule:mat,
-    member_id:mid||null,debut,fin:fin||null,discord,commentaire,
+    member_id:mid||null,debut:sansDates?"":debut,fin:sansDates?null:(fin||null),mois:sansDates?mois:null,discord,commentaire,
     by:session?.user||"?",at:new Date().toISOString()};
   const next=await configMerge("pantheon",state.pantheon,o=>{
     const list=Array.isArray(o.entries)?o.entries.slice():[];
@@ -10626,7 +10664,7 @@ async function savePantheonEntry(){
   closeModal("pantheonModal");
   renderPantheon();renderOvCmdm();
   const qui=(mat+" "+nom).trim();
-  toast(_panEditId?"Inscription mise à jour":(fin?qui+" inscrit au panthéon":qui+" inscrit comme CMDM en fonction"),"success");
+  toast(_panEditId?"Inscription mise à jour":((fin||sansDates)?qui+" inscrit au panthéon":qui+" inscrit comme CMDM en fonction"),"success");
   await logActivity(`${session?.user} a ${_panEditId?"modifié l'inscription de":"inscrit"} ${qui} au panthéon des CMDM`);
 }
 
